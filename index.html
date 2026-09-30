@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clube de Vantagens — Alliance Jiu Jitsu Mogi das Cruzes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --preto:#111111;--carvao:#1A1A1A;--grafite:#252525;--papel:#FFFFFF;
+  --cinza:#9A9A9A;--linha:rgba(255,255,255,.14);--linha-clara:rgba(0,0,0,.12);
+  --ouro:#FFC629;--sangue:#FFC629;--sobre-ouro:#141414;
+  --ok:#2E9E5B;--nao:#D6453E;
+  --display:'Poppins',system-ui,sans-serif;--texto:'Poppins',system-ui,sans-serif;--larg:1180px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--preto);color:var(--papel);font-family:var(--texto);font-weight:400;font-size:16px;line-height:1.7;-webkit-font-smoothing:antialiased}
+img{max-width:100%;display:block}
+a{color:inherit}
+button{font-family:inherit}
+h1,h2,h3{margin:0}
+.env{max-width:var(--larg);margin:0 auto;padding:0 24px}
+.display{font-family:var(--display);font-weight:700;text-transform:uppercase;line-height:1.12;letter-spacing:-.005em}
+.olho{font-family:var(--display);font-weight:300;font-style:italic;text-transform:uppercase;letter-spacing:.34em;font-size:13px;color:var(--cinza)}
+.meta{font-size:13px;color:var(--cinza)}
+.vazio{color:var(--cinza);font-size:15px}
+
+header{position:sticky;top:0;z-index:50;background:rgba(17,17,17,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--linha)}
+.barra{display:flex;align-items:center;justify-content:space-between;gap:20px;height:74px}
+.marca{display:flex;align-items:center;gap:14px;text-decoration:none}
+.marca img{height:34px;filter:brightness(0) invert(1)}
+.marca .sub{font-family:var(--display);font-weight:300;text-transform:uppercase;letter-spacing:.24em;font-size:10px;color:var(--cinza);border-left:1px solid var(--linha);padding-left:14px;line-height:1.4}
+nav ul{display:flex;gap:26px;list-style:none;margin:0;padding:0}
+nav a{font-family:var(--display);font-weight:500;text-transform:uppercase;font-size:12px;letter-spacing:.16em;text-decoration:none;opacity:.85;padding:6px 0;border-bottom:1px solid transparent}
+nav a:hover,nav a.on{opacity:1;color:var(--ouro);border-bottom-color:var(--ouro)}
+.cta{font-family:var(--display);font-weight:500;text-transform:uppercase;font-size:12px;letter-spacing:.16em;background:var(--ouro);color:var(--sobre-ouro);border:1px solid var(--ouro);padding:14px 24px;cursor:pointer;text-decoration:none;display:inline-block;transition:background .15s,color .15s}
+.cta:hover{background:transparent;color:var(--ouro)}
+.cta-linha{background:transparent;border:1px solid var(--ouro);color:var(--ouro)}
+.cta-linha:hover{background:var(--ouro);color:var(--sobre-ouro)}
+.bloco.claro .cta-linha{border-color:var(--preto);color:var(--preto)}
+.bloco.claro .cta-linha:hover{background:var(--preto);color:#fff}
+
+.hero{padding:104px 0 88px;border-bottom:1px solid var(--linha)}
+.hero h1{font-size:clamp(40px,6vw,80px);max-width:13ch}
+.hero p{color:var(--cinza);max-width:50ch;margin:26px 0 34px;font-size:17px}
+.acoes{display:flex;gap:14px;flex-wrap:wrap}
+.selos{display:flex;gap:44px;flex-wrap:wrap;margin-top:56px;padding-top:28px;border-top:1px solid var(--linha)}
+.selo .v{font-family:var(--display);font-weight:700;font-size:36px;line-height:1;color:var(--ouro)}
+.selo .l{font-size:13px;color:var(--cinza)}
+
+.bloco{padding:88px 0;border-bottom:1px solid var(--linha)}
+.bloco.claro{background:#FFFFFF;color:var(--preto);border-bottom-color:var(--linha-clara)}
+.bloco.claro .lista td{border-bottom-color:var(--linha-clara)}
+.bloco.claro .olho,.bloco.claro .meta{color:#7A7A7A}
+.tit{font-size:clamp(28px,3.6vw,46px)}
+
+.passos{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--linha-clara);border:1px solid var(--linha-clara);margin-top:38px}
+.passo{background:var(--papel);padding:34px 26px 30px}
+.passo .n{font-family:var(--display);font-weight:500;font-style:italic;font-size:11px;letter-spacing:.24em;color:#C99A00}
+.passo h3{font-family:var(--display);text-transform:uppercase;font-size:21px;margin:12px 0 8px;font-weight:700;line-height:1.15}
+.passo p{margin:0;font-size:15px;color:#555555;line-height:1.65}
+
+.busca{display:flex;gap:10px;margin:0 0 18px;flex-wrap:wrap}
+.busca input{flex:1;min-width:240px;background:var(--grafite);border:1px solid var(--linha);color:var(--papel);padding:15px 16px;font-family:inherit;font-size:15px}
+.busca input::placeholder{color:#5F5F5C}
+.busca input:focus{outline:2px solid var(--ouro);outline-offset:-2px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:32px}
+.chip{font-family:var(--display);font-weight:500;text-transform:uppercase;letter-spacing:.14em;font-size:11px;padding:9px 15px;border:1px solid var(--linha);background:none;color:var(--cinza);cursor:pointer}
+.chip:hover{color:var(--ouro);border-color:var(--ouro)}
+.chip.on{background:var(--ouro);color:var(--sobre-ouro);border-color:var(--ouro)}
+
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.card{background:var(--carvao);border:1px solid var(--linha);text-decoration:none;display:flex;flex-direction:column;transition:border-color .15s}
+.card:hover{border-color:var(--papel)}
+.foto{background:var(--grafite);display:flex;align-items:center;justify-content:center;color:#585858;font-family:var(--display);font-weight:300;font-style:italic;letter-spacing:.22em;font-size:11px;text-transform:uppercase}
+.card .foto{aspect-ratio:16/10}
+.card-corpo{padding:18px 20px 20px;display:flex;flex-direction:column;gap:6px;flex:1}
+.card h3{font-family:var(--display);text-transform:uppercase;font-size:17px;font-weight:600;line-height:1.2}
+.beneficio-linha{margin-top:auto;padding-top:14px;border-top:1px solid var(--linha);font-size:14px;color:var(--ouro)}
+.tag{font-family:var(--display);font-weight:500;text-transform:uppercase;letter-spacing:.12em;font-size:10px;padding:5px 10px;background:var(--ouro);color:var(--sobre-ouro);align-self:flex-start}
+.tag.neutra{background:var(--grafite);color:var(--cinza)}
+
+.recruta{background:var(--ouro);color:var(--sobre-ouro);padding:84px 0;border-bottom:0}
+.recruta h2{font-size:clamp(30px,4vw,52px);max-width:17ch}
+.recruta p{max-width:48ch;margin:20px 0 32px;font-size:17px;color:rgba(20,20,20,.78)}
+.recruta .olho{color:rgba(20,20,20,.62)!important}
+.recruta .cta{background:var(--sobre-ouro);color:var(--ouro);border-color:var(--sobre-ouro)}
+.recruta .cta:hover{background:transparent;color:var(--sobre-ouro)}
+
+.capa{aspect-ratio:21/7;margin-bottom:32px}
+.pills{display:flex;gap:12px;flex-wrap:wrap;margin:22px 0 40px}
+.pill{border:1px solid var(--linha);padding:11px 16px;font-size:14px;color:var(--cinza);text-decoration:none}
+.pill:hover{border-color:var(--papel);color:var(--papel)}
+.ben{border-left:3px solid var(--ouro);background:var(--carvao);padding:20px 22px;margin-bottom:12px}
+.ben.perm{border-left-color:var(--linha)}
+.ben h3{font-family:var(--display);text-transform:uppercase;font-size:19px;font-weight:600;margin:9px 0 4px;line-height:1.2}
+
+.carteirinha{background:#FFFFFF;color:var(--preto);padding:30px 32px 40px;position:relative;overflow:hidden;max-width:460px}
+.carteirinha::after{content:"";position:absolute;left:0;right:0;bottom:0;height:14px;background:var(--preto)}
+.carteirinha::before{content:"";position:absolute;right:34px;bottom:0;width:44px;height:14px;background:var(--ouro);z-index:2}
+.carteirinha .nome{font-family:var(--display);text-transform:uppercase;font-size:23px;font-weight:700;line-height:1.15;margin-top:10px}
+.carteirinha .cpf{font-family:var(--display);font-weight:400;font-size:24px;letter-spacing:.05em;margin-top:6px}
+.situacao{font-family:var(--display);font-weight:500;text-transform:uppercase;letter-spacing:.14em;font-size:11px;color:var(--ok);margin:18px 0 0}
+.situacao span{color:#7A7A7A;letter-spacing:0;font-family:var(--texto);text-transform:none;font-size:13px}
+
+.numeros{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:34px 0}
+.num{background:var(--carvao);border:1px solid var(--linha);padding:22px 20px}
+.num .v{font-family:var(--display);font-weight:700;font-size:34px;line-height:1;color:var(--ouro)}
+.num .l{font-size:13px;color:var(--cinza);margin-top:4px}
+.lista{width:100%;border-collapse:collapse;font-size:15px}
+.lista td{padding:14px 0;border-bottom:1px solid var(--linha)}
+.lista td:first-child{color:var(--cinza);width:100px}
+.lista td:last-child{text-align:right;color:var(--cinza)}
+
+.abas{display:flex;gap:26px;border-bottom:1px solid var(--linha);margin-bottom:32px;flex-wrap:wrap}
+.aba{font-family:var(--display);font-weight:500;text-transform:uppercase;letter-spacing:.14em;font-size:12px;background:none;border:0;border-bottom:2px solid transparent;color:var(--cinza);padding:14px 0;cursor:pointer}
+.aba.on{color:var(--ouro);border-bottom-color:var(--ouro)}
+
+.terminal{max-width:420px}
+.terminal label{font-family:var(--display);font-weight:500;text-transform:uppercase;letter-spacing:.16em;font-size:11px;color:var(--cinza);display:block;margin-bottom:10px}
+.terminal input{width:100%;background:var(--carvao);border:2px solid var(--ouro);color:var(--papel);font-family:var(--display);font-weight:500;font-size:30px;text-align:center;padding:16px;letter-spacing:.04em}
+.terminal input:focus{outline:3px solid var(--ouro);outline-offset:2px}
+.btn-cheio{width:100%;margin-top:12px;font-family:var(--display);font-weight:500;text-transform:uppercase;letter-spacing:.16em;font-size:13px;background:var(--ouro);color:var(--sobre-ouro);border:1px solid var(--ouro);padding:17px;cursor:pointer}
+.btn-cheio:hover{background:transparent;color:var(--ouro)}
+.veredito{padding:30px 22px;text-align:center;margin-top:18px}
+.veredito.sim{background:var(--ok);color:#04240F}
+.veredito.nao{background:var(--nao);color:#3A0906}
+.veredito .t{font-family:var(--display);font-weight:700;text-transform:uppercase;font-size:28px;line-height:1.1}
+.veredito .n{font-size:17px;margin-top:6px}
+.veredito .d{font-size:14px;margin-top:4px;opacity:.85}
+.opcoes{display:grid;gap:10px;margin-top:16px}
+.opcao{text-align:left;background:var(--carvao);border:1px solid var(--linha);border-left:4px solid var(--ouro);color:var(--papel);padding:16px 18px;cursor:pointer;font-family:inherit}
+.opcao.perm{border-left-color:var(--linha)}
+.opcao[disabled]{opacity:.45;cursor:default}
+.opcao .t{font-family:var(--display);font-weight:600;text-transform:uppercase;font-size:16px;display:block;line-height:1.2}
+.opcao .r{font-size:14px;color:var(--cinza);display:block;margin-top:2px}
+.opcao .a{font-family:var(--display);font-weight:500;text-transform:uppercase;letter-spacing:.14em;font-size:10px;display:block;margin-top:10px;color:var(--ouro)}
+.opcao.feito{border-left-color:var(--ok)}
+.opcao.feito .a{color:#7FD3A0}
+.erro{color:#FF8A82;font-size:14px;min-height:20px;margin:8px 0 0}
+
+.form{max-width:400px;background:var(--carvao);border:1px solid var(--linha);padding:34px}
+.form label{font-family:var(--display);font-weight:500;text-transform:uppercase;letter-spacing:.16em;font-size:10px;color:var(--cinza);display:block;margin:0 0 8px}
+.form input{width:100%;background:var(--grafite);border:1px solid var(--linha);color:var(--papel);padding:14px;font-family:inherit;font-size:15px;margin-bottom:20px}
+.form input:focus{outline:2px solid var(--ouro);outline-offset:-2px}
+.consent{display:flex;gap:10px;font-size:13px;color:var(--cinza);line-height:1.5;margin-bottom:22px}
+.consent input{width:auto;margin:3px 0 0}
+
+footer{background:var(--carvao);padding:64px 0 30px}
+.rodape{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:40px}
+footer h4{font-family:var(--display);text-transform:uppercase;letter-spacing:.2em;font-size:11px;color:var(--ouro);margin:0 0 16px;font-weight:500}
+footer ul{list-style:none;margin:0;padding:0;font-size:15px}
+footer li{margin-bottom:9px}
+footer a{text-decoration:none;opacity:.85}
+footer a:hover{opacity:1;color:#fff}
+.creditos{margin-top:46px;padding-top:22px;border-top:1px solid var(--linha);font-size:13px;color:var(--cinza);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+
+.pagina{display:none}
+.pagina.on{display:block}
+.topo{padding:60px 0 40px;border-bottom:1px solid var(--linha)}
+.topo h1{font-size:clamp(32px,4.4vw,56px)}
+.topo p{color:var(--cinza);max-width:56ch;margin-top:14px}
+
+@media(max-width:900px){
+  nav{display:none}
+  .marca .sub{display:none}
+  .passos,.cards,.numeros{grid-template-columns:1fr}
+  .rodape{grid-template-columns:1fr}
+  .selos{gap:26px}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto}}
+:focus-visible{outline:2px solid var(--ouro);outline-offset:3px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="env barra">
+    <a class="marca" href="#home">
+      <img src="https://alliancemogi.com.br/wp-content/uploads/Alliance-Mogi.svg" alt="Alliance Mogi das Cruzes">
+      <span class="sub">Clube de<br>vantagens</span>
+    </a>
+    <nav>
+      <ul>
+        <li><a href="#home">Início</a></li>
+        <li><a href="#sobre">O que é</a></li>
+        <li><a href="#parceiros">Parceiros</a></li>
+        <li><a href="#seja">Seja parceiro</a></li>
+      </ul>
+    </nav>
+    <div style="display:flex;gap:10px;align-items:center">
+      <a class="cta cta-linha" href="#login" style="padding:13px 18px">Entrar</a>
+      <a class="cta" href="#entrar">Quero fazer parte</a>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- ============ HOME DO CLUBE ============ -->
+<section class="pagina on" id="p-home">
+  <div class="hero">
+    <div class="env">
+      <p class="olho">Adicional ao seu plano</p>
+      <h1 class="display" style="margin-top:22px"><span style="color:var(--ouro)">Bem-vindo ao clube de vantagens</span><br>Alliance Mogi das Cruzes</h1>
+      <p>Seu kimono abre porta fora do tatame. A Alliance fechou parceria com comércios da cidade: você chega, informa o CPF e o desconto sai na hora. Sem cupom, sem app, sem carteirinha impressa. Adicione ao seu plano por <strong style="color:var(--ouro)">R$ 19,90 por mês</strong> na recepção.</p>
+      <div class="acoes">
+        <div style="display:flex;gap:10px;align-items:center">
+      <a class="cta cta-linha" href="#login" style="padding:13px 18px">Entrar</a>
+      <a class="cta" href="#entrar">Quero fazer parte</a>
+    </div>
+        <a class="cta cta-linha" href="#parceiros">Ver os parceiros</a>
+      </div>
+      <div class="selos">
+        <div class="selo"><div class="v">24</div><div class="l">parceiros em Mogi</div></div>
+        <div class="selo"><div class="v">R$ 19,90</div><div class="l">por mês, no seu boleto</div></div>
+        <div class="selo"><div class="v">R$ 340</div><div class="l">economia média por ano</div></div>
+        <div class="selo"><div class="v">1 corte</div><div class="l">de cabelo já paga o mês</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bloco claro">
+    <div class="env">
+      <p class="olho">Como funciona</p>
+      <h2 class="display tit" style="margin-top:8px">Três passos, <span style="color:#C99A00">uma vez só</span></h2>
+      <div class="passos">
+        <div class="passo">
+          <span class="n">Passo 01</span>
+          <h3>Peça para entrar</h3>
+          <p>Preencha nome, CPF e WhatsApp. Um minuto, sem compromisso.</p>
+        </div>
+        <div class="passo">
+          <span class="n">Passo 02</span>
+          <h3>A recepção adiciona ao plano</h3>
+          <p>Os R$ 19,90 entram no seu próximo boleto e o acesso é liberado. Sem cartão, sem taxa de adesão.</p>
+        </div>
+        <div class="passo">
+          <span class="n">Passo 03</span>
+          <h3>Informe o CPF no caixa</h3>
+          <p>O parceiro confere na hora e aplica o desconto. Não precisa mostrar nada.</p>
+        </div>
+        <div class="passo" style="grid-column:1/-1;background:#F4F4F4">
+          <span class="n">Importante</span>
+          <h3>Cancele quando quiser</h3>
+          <p>Avise a recepção e o adicional sai do próximo boleto. Sem multa, sem fidelidade, sem conversa de retenção.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bloco">
+    <div class="env">
+      <p class="olho">Em destaque</p>
+      <h2 class="display tit" style="margin-top:8px;margin-bottom:34px">Onde os alunos <span style="color:var(--ouro)">já economizam</span></h2>
+      <div class="cards" id="destaques"></div>
+      <p style="margin-top:32px"><a class="cta cta-linha" href="#parceiros">Ver todos os 24 parceiros</a></p>
+    </div>
+  </div>
+
+
+  <div class="bloco">
+    <div class="env">
+      <p class="olho">A conta</p>
+      <h2 class="display tit" style="margin-top:8px">Vale a pena <span style="color:var(--ouro)">para você?</span></h2>
+      <p style="color:var(--cinza);max-width:52ch;margin-top:16px">Depende de quanto você usa. Se for um corte de cabelo por mês, já se paga. Se você não usar nada, não vale — e nesse caso é melhor não assinar.</p>
+
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-top:38px">
+        <div style="border:1px solid var(--linha);padding:28px">
+          <p class="olho">Custo</p>
+          <p class="display" style="font-size:44px;margin-top:10px">R$ 19,90</p>
+          <p class="meta">por mês, somado ao seu boleto</p>
+          <p class="meta" style="margin-top:18px;padding-top:18px;border-top:1px solid var(--linha)">R$ 238,80 por ano</p>
+        </div>
+        <div style="border:1px solid var(--ouro);padding:28px">
+          <p class="olho" style="color:var(--ouro)">Retorno em um mês típico</p>
+          <table class="lista" style="margin-top:12px">
+            <tbody>
+              <tr><td style="width:auto;color:var(--papel)">1 corte de cabelo (30% off)</td><td>R$ 18,00</td></tr>
+              <tr><td style="width:auto;color:var(--papel)">2 almoços no parceiro</td><td>R$ 16,00</td></tr>
+              <tr><td style="width:auto;color:var(--papel)">Suplemento (12% off)</td><td>R$ 24,00</td></tr>
+              <tr><td style="width:auto;color:var(--ouro)">Total economizado</td><td style="color:var(--ouro)">R$ 58,00</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p class="meta" style="margin-top:18px">Valores de exemplo com base nos descontos vigentes. O seu resultado depende de quanto você usar.</p>
+    </div>
+  </div>
+
+  <div class="recruta">
+    <div class="env">
+      <p class="olho">Para estabelecimentos</p>
+      <h2 class="display" style="margin-top:14px">Coloque seu negócio na frente de <span style="border-bottom:4px solid var(--sobre-ouro)">400 alunos</span></h2>
+      <p>Entrar no clube é gratuito para o seu negócio. Você define o desconto, cadastra em cinco minutos e recebe um painel com quantas pessoas usaram. Sem mensalidade, sem comissão. E como o aluno paga para participar, quem chega até você já veio decidido a usar.</p>
+      <a class="cta" href="#seja">Quero ser parceiro</a>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============ O QUE É O CLUBE ============ -->
+<section class="pagina" id="p-sobre">
+  <div class="topo">
+    <div class="env">
+      <p class="olho">Clube de vantagens</p>
+      <h1 class="display" style="margin-top:14px">O que é o clube</h1>
+      <p>Uma rede de comércios de Mogi das Cruzes que dá desconto para quem treina na Alliance. Adicional opcional de R$ 19,90 por mês no seu plano.</p>
+    </div>
+  </div>
+
+  <div class="bloco">
+    <div class="env" style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start">
+      <div>
+        <p class="olho">A ideia</p>
+        <h2 class="display" style="margin-top:8px;font-size:clamp(26px,3vw,38px)">Um adicional <span style="color:var(--ouro)">que se paga sozinho</span></h2>
+        <p style="color:var(--cinza)">A Alliance procurou negócios da cidade e negociou condição para os alunos. O comércio ganha clientes recorrentes, você ganha desconto, e a academia cobra um adicional para manter a operação de pé — captar parceiro, negociar condição e sustentar a plataforma.</p>
+        <p style="color:var(--cinza)">Não é programa de pontos. Não acumula, não expira saldo, não tem nível. É desconto direto, na hora de pagar.</p>
+      </div>
+      <div>
+        <p class="olho">O que você tem acesso</p>
+        <table class="lista" style="margin-top:14px"><tbody>
+          <tr><td style="width:auto;color:var(--papel)">Descontos nos parceiros</td><td>ilimitado</td></tr>
+          <tr><td style="width:auto;color:var(--papel)">Promoções por temporada</td><td>rotativo</td></tr>
+          <tr><td style="width:auto;color:var(--papel)">Conteúdo técnico gravado</td><td>só membros</td></tr>
+          <tr><td style="width:auto;color:var(--papel)">Sorteios da academia</td><td>só membros</td></tr>
+          <tr><td style="width:auto;color:var(--ouro)">Custo</td><td style="color:var(--ouro)">R$ 19,90/mês</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="bloco claro">
+    <div class="env">
+      <p class="olho">Perguntas que sempre aparecem</p>
+      <h2 class="display tit" style="margin-top:8px;margin-bottom:34px">Antes de perguntar <span style="color:#C99A00">na recepção</span></h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:34px 60px">
+        <div>
+          <h3 class="display" style="font-size:19px">Quanto custa?</h3>
+          <p style="color:#555555;margin:6px 0 0">R$ 19,90 por mês, somados ao seu boleto da academia. Não tem taxa de adesão nem cobrança separada.</p>
+        </div>
+        <div>
+          <h3 class="display" style="font-size:19px">Por que preciso de aprovação?</h3>
+          <p style="color:#555555;margin:6px 0 0">Porque o clube é só para aluno matriculado e o valor entra no seu boleto. A recepção confirma as duas coisas antes de liberar.</p>
+        </div>
+        <div>
+          <h3 class="display" style="font-size:19px">Preciso mostrar carteirinha?</h3>
+          <p style="color:#555555;margin:6px 0 0">Não. Você fala o CPF no caixa e o parceiro confere na hora pelo celular dele.</p>
+        </div>
+        <div>
+          <h3 class="display" style="font-size:19px">Meus dados ficam expostos?</h3>
+          <p style="color:#555555;margin:6px 0 0">O parceiro vê apenas se você tem direito e seu primeiro nome. Nada de telefone, e-mail, endereço ou plano.</p>
+        </div>
+        <div>
+          <h3 class="display" style="font-size:19px">Como eu cancelo?</h3>
+          <p style="color:#555555;margin:6px 0 0">Avisa a recepção e o adicional sai do próximo boleto. Sem multa e sem prazo mínimo. Se trancar a matrícula, o clube pausa junto.</p>
+        </div>
+        <div>
+          <h3 class="display" style="font-size:19px">Posso emprestar para alguém?</h3>
+          <p style="color:#555555;margin:6px 0 0">Não. O CPF é seu e o uso fica registrado. Uso indevido tira você do clube.</p>
+        </div>
+      </div>
+      <p style="margin-top:44px"><a class="cta" href="#entrar">Quero fazer parte</a></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DIRETÓRIO ============ -->
+<section class="pagina" id="p-parceiros">
+  <div class="topo">
+    <div class="env">
+      <p class="olho">Clube de vantagens</p>
+      <h1 class="display" style="margin-top:14px">Parceiros</h1>
+      <p>Todo aluno com matrícula ativa tem desconto nestes estabelecimentos.</p>
+    </div>
+  </div>
+  <div class="bloco" style="padding-top:40px">
+    <div class="env">
+      <div class="busca"><input type="text" id="q" placeholder="Buscar barbearia, restaurante, clínica…"></div>
+      <div class="chips" id="chips"></div>
+      <div class="cards" id="lista"></div>
+      <p class="vazio" id="sem" style="display:none">Nenhum parceiro com esse filtro. Tente outra categoria.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PÁGINA DO PARCEIRO ============ -->
+<section class="pagina" id="p-parceiro">
+  <div class="bloco" style="padding-top:40px">
+    <div class="env">
+      <div class="capa foto">foto · fachada e interior</div>
+      <p class="olho">Barbearia · Centro</p>
+      <h1 class="display" style="margin-top:12px;font-size:clamp(30px,4vw,48px)">Barbearia Corte Reto</h1>
+      <p class="meta" style="margin-top:8px">Rua Dr. Ricardo Vilela, 320 · 1,2 km da academia · 4,8 (37 avaliações)</p>
+      <div class="pills">
+        <a class="pill" href="#parceiro">Chamar no WhatsApp</a>
+        <a class="pill" href="#parceiro">Como chegar</a>
+        <span class="pill">Seg a sáb, 9h às 20h</span>
+      </div>
+      <p class="olho">Seus benefícios aqui</p>
+      <div style="margin-top:16px">
+        <div class="ben">
+          <span class="tag">Até 30/09/2026</span>
+          <h3>Corte de cabelo — 30% off</h3>
+          <p class="meta">Promoção de setembro. Segunda a quinta, uma vez por semana por membro.</p>
+        </div>
+        <div class="ben perm">
+          <span class="tag neutra">Permanente</span>
+          <h3>Barba — 10% off</h3>
+          <p class="meta">Sem limite de uso. Vale todos os dias, inclusive sábado.</p>
+        </div>
+      </div>
+      <div style="margin-top:32px;padding:22px;border:1px solid var(--linha);display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+        <div style="flex:1;min-width:240px">
+          <strong class="display" style="font-size:15px;letter-spacing:.1em">Como usar</strong>
+          <p class="meta" style="margin:6px 0 0">Diga que é aluno da Alliance e informe seu CPF. O desconto entra no caixa.</p>
+        </div>
+        <a class="cta cta-linha" href="#membro">Ver minha carteirinha</a>
+      </div>
+      <p style="margin-top:30px"><a href="#parceiros" class="meta">← Voltar para os parceiros</a></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SEJA PARCEIRO ============ -->
+<section class="pagina" id="p-seja">
+  <div class="topo">
+    <div class="env">
+      <p class="olho">Para estabelecimentos</p>
+      <h1 class="display" style="margin-top:14px">Seja parceiro</h1>
+      <p>Gratuito, sem mensalidade e sem comissão. Você define o desconto e acompanha quantas pessoas usaram.</p>
+    </div>
+  </div>
+  <div class="bloco claro" style="padding-top:56px">
+    <div class="env">
+      <div class="passos">
+        <div class="passo"><span class="n">Passo 01</span><h3>Cadastre o negócio</h3><p>Nome, endereço, horário, fotos e telefone. Cinco minutos.</p></div>
+        <div class="passo"><span class="n">Passo 02</span><h3>Defina o benefício</h3><p>Percentual, combo ou brinde. Permanente ou campanha com data.</p></div>
+        <div class="passo"><span class="n">Passo 03</span><h3>Atenda pelo terminal</h3><p>O cliente informa o CPF, você confere na hora pelo celular.</p></div>
+      </div>
+      <p style="margin-top:40px"><a class="cta cta-linha" href="#acesso">Já sou parceiro, quero entrar</a></p>
+    </div>
+  </div>
+
+  <div class="bloco">
+    <div class="env" style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start">
+      <div>
+        <p class="olho">Candidatura</p>
+        <h2 class="display" style="margin-top:8px;font-size:clamp(26px,3vw,38px)">Cadastre <span style="color:var(--ouro)">seu negócio</span></h2>
+        <p style="color:var(--cinza);max-width:44ch">A Alliance analisa o pedido e responde em até dois dias úteis. Aprovado, você recebe um e-mail com o link de acesso e a senha do terminal.</p>
+        <div style="margin-top:30px;padding:20px 22px;border-left:3px solid var(--ouro);background:var(--carvao)">
+          <strong class="display" style="font-size:14px;letter-spacing:.1em">O que a Alliance avalia</strong>
+          <p class="meta" style="margin:6px 0 0">Se o negócio faz sentido para quem treina, se o desconto é real e se a localização atende os alunos. Categorias já bem servidas podem entrar em fila.</p>
+        </div>
+      </div>
+      <div class="form" style="max-width:none">
+        <label for="s-estab">Nome do estabelecimento</label>
+        <input id="s-estab" type="text" placeholder="Barbearia Corte Reto">
+        <label for="s-cat">Categoria</label>
+        <input id="s-cat" type="text" placeholder="Barbearia, restaurante, clínica…">
+        <label for="s-resp">Responsável</label>
+        <input id="s-resp" type="text" placeholder="Nome de quem vai operar o terminal">
+        <label for="s-email">E-mail para o acesso</label>
+        <input id="s-email" type="email" placeholder="contato@seunegocio.com.br">
+        <label for="s-zap">WhatsApp</label>
+        <input id="s-zap" type="text" placeholder="(11) 90000-0000">
+        <label for="s-end">Endereço</label>
+        <input id="s-end" type="text" placeholder="Rua, número e bairro">
+        <label for="s-ben">Que benefício você quer oferecer</label>
+        <input id="s-ben" type="text" placeholder="Ex.: 15% de desconto no corte, seg a qui">
+        <button class="btn-cheio" id="s-enviar">Enviar candidatura</button>
+        <p class="erro" id="s-erro"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CANDIDATURA ENVIADA ============ -->
+<section class="pagina" id="p-analise-parceiro">
+  <div class="bloco" style="padding-top:80px">
+    <div class="env" style="max-width:620px">
+      <p class="olho">Candidatura enviada</p>
+      <h1 class="display" style="margin-top:14px;font-size:clamp(30px,4vw,48px)">A Alliance <span style="color:var(--ouro)">vai analisar</span></h1>
+      <p style="color:var(--cinza)">Resposta em até dois dias úteis. Se aprovado, você recebe um e-mail com o link do terminal e os dados de acesso.</p>
+
+      <div style="margin-top:38px;border:1px solid var(--linha)">
+        <div style="padding:18px 22px;border-bottom:1px solid var(--linha);display:flex;gap:16px;align-items:center">
+          <span class="display" style="color:var(--ok);font-size:13px;letter-spacing:.14em;min-width:96px">Concluído</span>
+          <span>Candidatura enviada</span>
+        </div>
+        <div style="padding:18px 22px;border-bottom:1px solid var(--linha);display:flex;gap:16px;align-items:center;background:var(--carvao)">
+          <span class="display" style="color:var(--ouro);font-size:13px;letter-spacing:.14em;min-width:96px">Agora</span>
+          <span>A Alliance avalia o negócio e o benefício</span>
+        </div>
+        <div style="padding:18px 22px;display:flex;gap:16px;align-items:center;opacity:.5">
+          <span class="display" style="font-size:13px;letter-spacing:.14em;min-width:96px">Depois</span>
+          <span>E-mail com os dados de acesso ao terminal</span>
+        </div>
+      </div>
+
+      <p class="meta" style="margin-top:28px">Dúvidas? Fale com a Alliance pelo WhatsApp (11) 94300.3693.</p>
+      <div class="acoes" style="margin-top:26px">
+        <a class="cta cta-linha" href="#parceiros">Ver quem já está no clube</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SOLICITAR ============ -->
+<section class="pagina" id="p-entrar">
+  <div class="bloco" style="padding-top:60px">
+    <div class="env" style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start">
+      <div>
+        <p class="olho">Clube de vantagens</p>
+        <h1 class="display" style="margin-top:14px;font-size:clamp(30px,4vw,48px)">Quero fazer parte</h1>
+        <p style="color:var(--cinza);max-width:44ch">Preencha com o CPF que está na sua matrícula. A recepção confirma e adiciona os R$ 19,90 ao seu próximo boleto.</p>
+        <div style="margin-top:30px;padding:20px 22px;border-left:3px solid var(--ouro);background:var(--carvao)">
+          <strong class="display" style="font-size:14px;letter-spacing:.1em">R$ 19,90 no próximo boleto</strong>
+          <p class="meta" style="margin:6px 0 0">Sem taxa de adesão, sem fidelidade. Cancela avisando a recepção e sai do boleto seguinte. Disponível apenas para alunos matriculados.</p>
+        </div>
+        <p class="meta" style="margin-top:26px">Já tem acesso? <a href="#membro" style="color:var(--papel)">Entrar</a></p>
+        <p class="meta">É um estabelecimento? <a href="#acesso" style="color:var(--papel)">Entrar na área do parceiro</a></p>
+      </div>
+      <div class="form">
+        <label for="f-nome">Nome completo</label>
+        <input id="f-nome" type="text" placeholder="Rafael Moreira">
+        <label for="f-cpf">CPF</label>
+        <input id="f-cpf" type="text" inputmode="numeric" placeholder="000.000.000-00" maxlength="14">
+        <label for="f-tel">WhatsApp</label>
+        <input id="f-tel" type="text" placeholder="(11) 90000-0000">
+        <label for="f-turma">Turma que você treina</label>
+        <input id="f-turma" type="text" placeholder="Fundamentos, 19h">
+        <div class="consent">
+          <input type="checkbox" id="f-ok">
+          <label for="f-ok" style="font-family:var(--texto);text-transform:none;letter-spacing:0;font-size:13px;color:var(--cinza);margin:0">Autorizo que estabelecimentos parceiros consultem meu CPF para verificar se tenho direito ao benefício.</label>
+        </div>
+        <button class="btn-cheio" id="f-enviar">Quero assinar</button>
+        <p class="erro" id="f-erro"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ EM ANÁLISE ============ -->
+<section class="pagina" id="p-analise">
+  <div class="bloco" style="padding-top:80px">
+    <div class="env" style="max-width:620px">
+      <p class="olho">Pedido enviado</p>
+      <h1 class="display" style="margin-top:14px;font-size:clamp(30px,4vw,48px)">Aguardando a academia</h1>
+      <p style="color:var(--cinza)">A recepção vai confirmar sua matrícula e incluir o adicional no seu boleto. Você recebe um WhatsApp quando o acesso estiver liberado — normalmente no mesmo dia.</p>
+
+      <div style="margin-top:38px;border:1px solid var(--linha)">
+        <div style="padding:18px 22px;border-bottom:1px solid var(--linha);display:flex;gap:16px;align-items:center">
+          <span class="display" style="color:var(--ok);font-size:13px;letter-spacing:.14em;min-width:96px">Concluído</span>
+          <span>Pedido enviado</span>
+        </div>
+        <div style="padding:18px 22px;border-bottom:1px solid var(--linha);display:flex;gap:16px;align-items:center;background:var(--carvao)">
+          <span class="display" style="color:var(--ouro);font-size:13px;letter-spacing:.14em;min-width:96px">Agora</span>
+          <span>A recepção confirma e inclui no boleto</span>
+        </div>
+        <div style="padding:18px 22px;display:flex;gap:16px;align-items:center;opacity:.5">
+          <span class="display" style="font-size:13px;letter-spacing:.14em;min-width:96px">Depois</span>
+          <span>Acesso liberado e carteirinha ativa</span>
+        </div>
+      </div>
+
+      <p class="meta" style="margin-top:28px">Está com pressa? Fale direto com a recepção pelo WhatsApp (11) 94300.3693.</p>
+      <div class="acoes" style="margin-top:26px">
+        <a class="cta cta-linha" href="#parceiros">Ver os parceiros enquanto isso</a>
+        <button class="cta" id="simular">Simular acesso aprovado</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ APROVAÇÕES (RECEPÇÃO) ============ -->
+<section class="pagina" id="p-aprovacoes">
+  <div class="topo">
+    <div class="env">
+      <p class="olho">Recepção Alliance Mogi</p>
+      <h1 class="display" style="margin-top:14px">Pedidos de acesso</h1>
+      <p>Alunos que pediram acesso e estabelecimentos que se candidataram ao clube.</p>
+    </div>
+  </div>
+  <div class="bloco" style="padding-top:40px">
+    <div class="env">
+      <div class="numeros" style="grid-template-columns:repeat(3,1fr)">
+        <div class="num"><div class="v" id="n-pend">3</div><div class="l">aguardando</div></div>
+        <div class="num"><div class="v">128</div><div class="l">assinantes ativos</div></div>
+        <div class="num"><div class="v">6</div><div class="l">vencendo este mês</div></div>
+      </div>
+      <div class="abas" id="abas-r">
+        <button class="aba on" data-aba="alunos">Alunos</button>
+        <button class="aba" data-aba="negocios">Estabelecimentos</button>
+      </div>
+
+      <div class="pr" data-aba="alunos">
+        <div id="fila"></div>
+        <p class="vazio" id="fila-vazia" style="display:none">Nenhum pedido na fila. Tudo em dia.</p>
+      </div>
+
+      <div class="pr" data-aba="negocios" style="display:none">
+        <p class="meta" style="margin-bottom:18px">Ao aprovar, o sistema cria o login e envia por e-mail os dados de acesso ao terminal.</p>
+        <div id="fila2"></div>
+        <p class="vazio" id="fila2-vazia" style="display:none">Nenhuma candidatura na fila.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============ ESCOLHA DE LOGIN ============ -->
+<section class="pagina" id="p-login">
+  <div class="bloco" style="padding-top:80px">
+    <div class="env" style="max-width:860px">
+      <p class="olho">Entrar</p>
+      <h1 class="display" style="margin-top:14px;font-size:clamp(30px,4vw,48px)">Qual é o <span style="color:var(--ouro)">seu acesso?</span></h1>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:44px">
+        <a href="#login-membro" style="text-decoration:none;border:1px solid var(--linha);padding:34px 30px;display:block;transition:border-color .15s" onmouseover="this.style.borderColor='var(--ouro)'" onmouseout="this.style.borderColor='var(--linha)'">
+          <p class="olho">Sou aluno</p>
+          <h2 class="display" style="font-size:26px;margin-top:10px">Área do membro</h2>
+          <p class="meta" style="margin-top:10px">Sua carteirinha, histórico de benefícios, conteúdos e sorteios.</p>
+          <p style="color:var(--ouro);font-size:13px;margin-top:20px">Entrar →</p>
+        </a>
+        <a href="#acesso" style="text-decoration:none;border:1px solid var(--linha);padding:34px 30px;display:block;transition:border-color .15s" onmouseover="this.style.borderColor='var(--ouro)'" onmouseout="this.style.borderColor='var(--linha)'">
+          <p class="olho">Sou estabelecimento</p>
+          <h2 class="display" style="font-size:26px;margin-top:10px">Área do parceiro</h2>
+          <p class="meta" style="margin-top:10px">Terminal de consulta, painel de uso e gestão do seu estabelecimento.</p>
+          <p style="color:var(--ouro);font-size:13px;margin-top:20px">Entrar →</p>
+        </a>
+      </div>
+      <p class="meta" style="margin-top:32px">Ainda não tem acesso? <a href="#entrar" style="color:var(--ouro)">Sou aluno e quero assinar</a> · <a href="#seja" style="color:var(--ouro)">Tenho um negócio e quero ser parceiro</a></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LOGIN DO MEMBRO ============ -->
+<section class="pagina" id="p-login-membro">
+  <div class="bloco" style="padding-top:70px">
+    <div class="env" style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start">
+      <div>
+        <p class="olho">Área do membro</p>
+        <h1 class="display" style="margin-top:14px;font-size:clamp(30px,4vw,48px)">Entrar</h1>
+        <p style="color:var(--cinza);max-width:44ch">Use o CPF que você cadastrou e a senha que recebeu por WhatsApp quando a recepção aprovou seu acesso.</p>
+        <p class="meta" style="margin-top:26px">Ainda não assina? <a href="#entrar" style="color:var(--ouro)">Quero fazer parte</a></p>
+        <p class="meta">É um estabelecimento? <a href="#acesso" style="color:var(--ouro)">Área do parceiro</a></p>
+      </div>
+      <div class="form">
+        <label for="m-cpf">CPF</label>
+        <input id="m-cpf" type="text" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" value="111.444.777-35">
+        <label for="m-senha">Senha</label>
+        <input id="m-senha" type="password" placeholder="••••••••" value="demonstracao">
+        <button class="btn-cheio" id="m-entrar">Entrar</button>
+        <p class="erro" id="m-erro"></p>
+        <p class="meta" style="margin-top:16px">Esqueceu a senha? Fale com a recepção.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ÁREA DO MEMBRO ============ -->
+<section class="pagina" id="p-membro">
+  <div style="background:var(--carvao);border-bottom:1px solid var(--linha)">
+    <div class="env" style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 24px;flex-wrap:wrap">
+      <span class="olho" style="font-style:normal">Área do membro · Rafael Moreira</span>
+      <button class="cta cta-linha" id="sair-membro" style="padding:9px 16px;font-size:11px">Sair</button>
+    </div>
+  </div>
+  <div class="topo">
+    <div class="env">
+      <p class="olho">Sua conta</p>
+      <h1 class="display" style="margin-top:14px">Olá, Rafael</h1>
+    </div>
+  </div>
+  <div class="bloco" style="padding-top:40px">
+    <div class="env">
+      <div class="abas" id="abas-m">
+        <button class="aba on" data-aba="carteira">Carteirinha</button>
+        <button class="aba" data-aba="historico">Meus benefícios</button>
+        <button class="aba" data-aba="conteudo">Conteúdos</button>
+        <button class="aba" data-aba="sorteio">Sorteios</button>
+      </div>
+
+      <div class="pm" data-aba="carteira">
+        <div class="carteirinha">
+          <p class="olho" style="color:#7A7A7A">Alliance Mogi · clube de vantagens</p>
+          <p class="nome">Rafael Moreira</p>
+          <p class="cpf">111.444.777-35</p>
+          <p class="situacao">Assinante ativo <span>· renova em 30/09/2026</span></p>
+          <p style="color:#7A7A7A;font-size:14px;margin:12px 0 0">Informe seu CPF no estabelecimento parceiro para receber o benefício.</p>
+        </div>
+        <div class="numeros">
+          <div class="num"><div class="v">12</div><div class="l">benefícios usados</div></div>
+          <div class="num"><div class="v">R$ 340</div><div class="l">economia estimada</div></div>
+          <div class="num"><div class="v">5</div><div class="l">parceiros visitados</div></div>
+        </div>
+      </div>
+
+      <div class="pm" data-aba="historico" style="display:none">
+        <table class="lista"><tbody>
+          <tr><td>12/08</td><td>Barbearia Corte Reto</td><td>Corte de cabelo</td></tr>
+          <tr><td>05/08</td><td>Padaria Vergaças</td><td>Café + pão na chapa</td></tr>
+          <tr><td>28/07</td><td>Barbearia Corte Reto</td><td>Barba</td></tr>
+          <tr><td>19/07</td><td>Clínica Vida Ativa</td><td>Fisioterapia</td></tr>
+          <tr><td>02/07</td><td>PetCenter Mogi</td><td>Banho e tosa</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="pm" data-aba="conteudo" style="display:none">
+        <div class="cards">
+          <a class="card" href="#membro"><div class="foto">vídeo</div><div class="card-corpo"><span class="tag">Membros</span><h3>Passagem de guarda</h3><p class="meta">Seminário com Paulinho Baraúna, 48 min</p></div></a>
+          <a class="card" href="#membro"><div class="foto">pdf</div><div class="card-corpo"><span class="tag">Membros</span><h3>Guia de competição</h3><p class="meta">Peso, treino e cabeça nas 6 semanas antes</p></div></a>
+          <a class="card" href="#membro"><div class="foto">agenda</div><div class="card-corpo"><span class="tag neutra">Membros e parceiros</span><h3>Campanhas 2026</h3><p class="meta">Datas em que o clube puxa movimento</p></div></a>
+        </div>
+      </div>
+
+      <div class="pm" data-aba="sorteio" style="display:none">
+        <div class="ben">
+          <span class="tag">Aberto</span>
+          <h3>Kimono Alliance + 1 mensalidade</h3>
+          <p class="meta">Participe até 30/09/2026 · 84 inscritos</p>
+          <button class="cta" style="margin-top:14px" id="b-sorteio">Participar</button>
+          <span id="m-sorteio" style="margin-left:12px;font-size:14px"></span>
+        </div>
+        <div class="ben perm">
+          <span class="tag neutra">Encerrado</span>
+          <h3>Par de luvas + faixa</h3>
+          <p class="meta">Encerrado em 31/07/2026 · 112 inscritos · ganhadora: Camila S.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============ LOGIN DO PARCEIRO ============ -->
+<section class="pagina" id="p-acesso">
+  <div class="bloco" style="padding-top:70px">
+    <div class="env" style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start">
+      <div>
+        <p class="olho">Área do parceiro</p>
+        <h1 class="display" style="margin-top:14px;font-size:clamp(30px,4vw,48px)">Entrar</h1>
+        <p style="color:var(--cinza);max-width:44ch">Acesso exclusivo dos estabelecimentos parceiros. É aqui que você consulta o CPF do cliente, registra o uso e acompanha os números.</p>
+        <div style="margin-top:30px;padding:20px 22px;border-left:3px solid var(--ouro);background:var(--carvao)">
+          <strong class="display" style="font-size:14px;letter-spacing:.1em">Cada estabelecimento tem login próprio</strong>
+          <p class="meta" style="margin:6px 0 0">Não compartilhe a senha entre parceiros. Toda consulta fica registrada com a conta que a fez.</p>
+        </div>
+        <p class="meta" style="margin-top:26px">Ainda não é parceiro? <a href="#seja" style="color:var(--ouro)">Veja como entrar no clube</a></p>
+      </div>
+      <div class="form">
+        <label for="l-email">E-mail</label>
+        <input id="l-email" type="email" placeholder="contato@corteretobarbearia.com.br" value="contato@corteretobarbearia.com.br">
+        <label for="l-senha">Senha</label>
+        <input id="l-senha" type="password" placeholder="••••••••" value="demonstracao">
+        <button class="btn-cheio" id="l-entrar">Entrar</button>
+        <p class="erro" id="l-erro"></p>
+        <p class="meta" style="margin-top:16px">Esqueceu a senha? Fale com a recepção da Alliance.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TERMINAL ============ -->
+<section class="pagina" id="p-terminal">
+  <div style="background:var(--carvao);border-bottom:1px solid var(--linha)">
+    <div class="env" style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 24px;flex-wrap:wrap">
+      <span class="olho" style="font-style:normal">Área do parceiro · Barbearia Corte Reto</span>
+      <button class="cta cta-linha" id="sair" style="padding:9px 16px;font-size:11px">Sair</button>
+    </div>
+  </div>
+  <div class="topo">
+    <div class="env">
+      <p class="olho">Atendimento</p>
+      <h1 class="display" style="margin-top:14px">Terminal</h1>
+      <p>Digite o CPF do cliente para verificar se ele tem benefício.</p>
+    </div>
+  </div>
+  <div class="bloco" style="padding-top:40px">
+    <div class="env">
+      <div class="abas" id="abas-p">
+        <button class="aba on" data-aba="term">Consultar</button>
+        <button class="aba" data-aba="pain">Painel</button>
+        <button class="aba" data-aba="ben">Meus benefícios</button>
+        <button class="aba" data-aba="estab">Meu estabelecimento</button>
+      </div>
+
+      <div class="pp" data-aba="term">
+        <div class="terminal">
+          <label for="t-cpf">CPF do membro</label>
+          <input id="t-cpf" type="text" inputmode="numeric" maxlength="14" placeholder="000.000.000-00">
+          <p class="erro" id="t-erro"></p>
+          <button class="btn-cheio" id="t-btn">Verificar</button>
+          <div id="t-saida"></div>
+          <p class="meta" style="margin-top:18px">Para testar: 111.444.777-35 (ativo) · 529.982.247-25 (vencido) · qualquer outro (não cadastrado)</p>
+        </div>
+      </div>
+
+      <div class="pp" data-aba="pain" style="display:none">
+        <div class="numeros" style="grid-template-columns:repeat(4,1fr)">
+          <div class="num"><div class="v">2</div><div class="l">hoje</div></div>
+          <div class="num"><div class="v">38</div><div class="l">no mês</div></div>
+          <div class="num"><div class="v">214</div><div class="l">no total</div></div>
+          <div class="num"><div class="v">96</div><div class="l">membros</div></div>
+        </div>
+        <table class="lista"><tbody>
+          <tr><td>Hoje 14:32</td><td>Corte de cabelo</td><td>Rafael</td></tr>
+          <tr><td>Hoje 11:05</td><td>Barba</td><td>Juliana</td></tr>
+          <tr><td>Ontem 18:40</td><td>Corte de cabelo</td><td>Diego</td></tr>
+          <tr><td>Ontem 16:12</td><td>Corte de cabelo</td><td>Camila</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="pp" data-aba="ben" style="display:none">
+        <div class="ben"><span class="tag">No ar</span><h3>Corte de cabelo — 30% off</h3><p class="meta">1x por semana · até 30/09/2026</p></div>
+        <div class="ben perm"><span class="tag neutra">No ar</span><h3>Barba — 10% off</h3><p class="meta">Sem limite · permanente</p></div>
+        <div class="ben perm" style="opacity:.55"><span class="tag neutra">Fora da vigência</span><h3>Combo pai e filho</h3><p class="meta">Encerrou em 10/08/2026</p></div>
+        <p style="margin-top:20px"><button class="cta cta-linha">Novo benefício</button></p>
+      </div>
+
+      <div class="pp" data-aba="estab" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start">
+          <div class="form" style="max-width:none">
+            <label for="e-nome">Nome do estabelecimento</label>
+            <input id="e-nome" type="text" value="Barbearia Corte Reto">
+            <label for="e-cat">Categoria</label>
+            <input id="e-cat" type="text" value="Barbearia">
+            <label for="e-end">Endereço</label>
+            <input id="e-end" type="text" value="Rua Dr. Ricardo Vilela, 320 — Centro">
+            <label for="e-zap">WhatsApp</label>
+            <input id="e-zap" type="text" value="(11) 90000-0000">
+            <label for="e-hor">Horário de funcionamento</label>
+            <input id="e-hor" type="text" value="Seg a sáb, 9h às 20h">
+            <button class="btn-cheio">Salvar alterações</button>
+          </div>
+          <div>
+            <p class="olho">Fotos</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px">
+              <div class="foto" style="aspect-ratio:4/3">fachada</div>
+              <div class="foto" style="aspect-ratio:4/3">interior</div>
+              <div class="foto" style="aspect-ratio:4/3">equipe</div>
+              <div class="foto" style="aspect-ratio:4/3;border:1px dashed var(--linha);background:transparent">+ enviar</div>
+            </div>
+            <p class="meta" style="margin-top:14px">A primeira foto aparece na listagem de parceiros. Use imagem horizontal, mínimo 1200px de largura.</p>
+            <div style="margin-top:26px;padding:18px 20px;border:1px solid var(--linha)">
+              <strong class="display" style="font-size:13px;letter-spacing:.1em">Como sua página aparece</strong>
+              <p class="meta" style="margin:6px 0 12px">Confira antes de salvar.</p>
+              <a class="cta cta-linha" href="#parceiro">Ver minha página</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="env">
+    <div class="rodape">
+      <div>
+        <img src="https://alliancemogi.com.br/wp-content/uploads/Alliance-Mogi.svg" alt="Alliance Mogi das Cruzes" style="height:40px;filter:brightness(0) invert(1);margin-bottom:16px">
+        <p class="meta" style="max-width:34ch">Adicional opcional de R$ 19,90/mês para alunos matriculados na Alliance Jiu Jitsu Mogi das Cruzes.</p>
+        <p style="margin-top:16px"><a href="https://alliancemogi.com.br" class="meta" style="color:var(--papel)">← Voltar para alliancemogi.com.br</a></p>
+      </div>
+      <div>
+        <h4>Clube</h4>
+        <ul>
+          <li><a href="#parceiros">Parceiros</a></li>
+          <li><a href="#entrar">Ativar acesso</a></li>
+          <li><a href="#seja">Seja parceiro</a></li>
+          <li><a href="#acesso">Área do parceiro</a></li>
+          <li><a href="#aprovacoes">Recepção</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Academia</h4>
+        <ul>
+          <li class="meta">Rua Antônio Vergaças, 46<br>Mogi das Cruzes — SP</li>
+          <li><a href="tel:+551147621700">+55 (11) 4762.1700</a></li>
+          <li><a href="mailto:hello@alliancemogi.com.br">hello@alliancemogi.com.br</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="creditos">
+      <span>Alliance Mogi das Cruzes (2026) — protótipo para avaliação de estrutura</span>
+      <span>Política de privacidade</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  'use strict';
+
+  var parceiros=[
+    {n:'Barbearia Corte Reto',c:'Barbearia',d:'1,2 km',b:'30% no corte até 30/09',nota:'4,8',link:true},
+    {n:'Padaria Vergaças',c:'Restaurante',d:'0,8 km',b:'Café + pão por R$ 9',nota:'4,6'},
+    {n:'Clínica Vida Ativa',c:'Clínica',d:'2,4 km',b:'20% em fisioterapia',nota:'4,9'},
+    {n:'PetCenter Mogi',c:'Pet',d:'3,1 km',b:'10% em banho e tosa',nota:'4,5'},
+    {n:'Restaurante Tatame',c:'Restaurante',d:'1,6 km',b:'Sobremesa por conta da casa',nota:'4,7'},
+    {n:'Studio Força Pura',c:'Academia',d:'2,0 km',b:'Isenção da matrícula',nota:'4,4'},
+    {n:'Eletro Silva',c:'Eletricista',d:'atende em domicílio',b:'15% na visita técnica',nota:'4,8'},
+    {n:'Óticas Mogi Centro',c:'Ótica',d:'1,1 km',b:'25% em armações',nota:'4,6'},
+    {n:'Suplementos do Tatame',c:'Nutrição',d:'0,5 km',b:'12% em toda a loja',nota:'4,9'}
+  ];
+  var cats=['Todos','Barbearia','Restaurante','Clínica','Academia','Pet','Eletricista','Ótica','Nutrição'];
+  var filtro='Todos';
+
+  function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+  function cardHTML(p){
+    return '<a class="card" href="'+(p.link?'#parceiro':'#parceiros')+'">'+
+      '<div class="foto">foto · '+esc(p.c.toLowerCase())+'</div>'+
+      '<div class="card-corpo"><h3>'+esc(p.n)+'</h3>'+
+      '<p class="meta">'+esc(p.c)+' · '+esc(p.d)+' · '+esc(p.nota)+'</p>'+
+      '<p class="beneficio-linha">'+esc(p.b)+'</p></div></a>';
+  }
+
+  function pintarChips(){
+    document.getElementById('chips').innerHTML=cats.map(function(c){
+      return '<button class="chip'+(c===filtro?' on':'')+'" data-cat="'+esc(c)+'">'+esc(c)+'</button>';
+    }).join('');
+    document.querySelectorAll('.chip').forEach(function(b){
+      b.onclick=function(){filtro=b.dataset.cat;pintarChips();pintarLista();};
+    });
+  }
+
+  function pintarLista(){
+    var t=(document.getElementById('q').value||'').toLowerCase().trim();
+    var l=parceiros.filter(function(p){
+      var okC=(filtro==='Todos'||p.c===filtro);
+      var okT=!t||p.n.toLowerCase().indexOf(t)>-1||p.c.toLowerCase().indexOf(t)>-1;
+      return okC&&okT;
+    });
+    document.getElementById('sem').style.display=l.length?'none':'block';
+    document.getElementById('lista').innerHTML=l.map(cardHTML).join('');
+  }
+
+  function mascara(v){
+    v=v.replace(/\D/g,'').slice(0,11);
+    if(v.length>9)return v.replace(/(\d{3})(\d{3})(\d{3})(\d+)/,'$1.$2.$3-$4');
+    if(v.length>6)return v.replace(/(\d{3})(\d{3})(\d+)/,'$1.$2.$3');
+    if(v.length>3)return v.replace(/(\d{3})(\d+)/,'$1.$2');
+    return v;
+  }
+
+  var paginas={home:'p-home',sobre:'p-sobre',parceiros:'p-parceiros',parceiro:'p-parceiro',
+    seja:'p-seja','analise-parceiro':'p-analise-parceiro',entrar:'p-entrar',analise:'p-analise',
+    login:'p-login','login-membro':'p-login-membro',membro:'p-membro',
+    acesso:'p-acesso',terminal:'p-terminal',aprovacoes:'p-aprovacoes'};
+
+  // Áreas logadas: quem não tem sessão cai na porta certa.
+  var parceiroLogado=false, membroLogado=false;
+  var porta={terminal:['parceiro','acesso'], membro:['membro','login-membro']};
+
+  function rotear(){
+    var id=(location.hash||'#home').slice(1);
+    if(!paginas[id])id='home';
+    if(porta[id]){
+      var tipo=porta[id][0];
+      var logado=(tipo==='parceiro')?parceiroLogado:membroLogado;
+      if(!logado)id=porta[id][1];
+    }
+    Object.keys(paginas).forEach(function(k){
+      document.getElementById(paginas[k]).classList.toggle('on',k===id);
+    });
+    document.querySelectorAll('nav a').forEach(function(a){
+      a.classList.toggle('on',a.getAttribute('href')==='#'+id);
+    });
+    window.scrollTo(0,0);
+  }
+
+  function abas(id,classe){
+    var c=document.getElementById(id);
+    if(!c)return;
+    c.querySelectorAll('.aba').forEach(function(b){
+      b.onclick=function(){
+        c.querySelectorAll('.aba').forEach(function(x){x.classList.remove('on');});
+        b.classList.add('on');
+        document.querySelectorAll('.'+classe).forEach(function(p){
+          p.style.display=(p.dataset.aba===b.dataset.aba)?'block':'none';
+        });
+      };
+    });
+  }
+
+  var i=document.getElementById('t-cpf'),tb=document.getElementById('t-btn'),
+      te=document.getElementById('t-erro'),ts=document.getElementById('t-saida');
+
+  i.addEventListener('input',function(){i.value=mascara(i.value);te.textContent='';});
+  i.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();tb.click();}});
+
+  tb.onclick=function(){
+    var v=i.value.replace(/\D/g,'');
+    ts.innerHTML='';
+    if(v.length!==11){te.textContent='Digite os 11 números do CPF.';return;}
+    te.textContent='';
+    if(v==='11144477735'){
+      ts.innerHTML='<div class="veredito sim"><div class="t">Tem benefício</div><div class="n">Rafael</div></div>'+
+        '<div class="opcoes">'+
+        '<button class="opcao"><span class="t">Corte de cabelo — 30% off</span><span class="r">Promoção de setembro, seg a qui</span><span class="a">Registrar uso</span></button>'+
+        '<button class="opcao perm"><span class="t">Barba — 10% off</span><span class="r">Permanente, sem limite</span><span class="a">Registrar uso</span></button></div>';
+      ts.querySelectorAll('.opcao').forEach(function(op){
+        op.onclick=function(){
+          op.querySelector('.a').textContent='Registrado às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+          op.classList.add('feito');
+          ts.querySelectorAll('.opcao').forEach(function(x){x.disabled=true;});
+        };
+      });
+    }else if(v==='52998224725'){
+      ts.innerHTML='<div class="veredito nao"><div class="t">Sem benefício</div><div class="n">Bruno</div><div class="d">Matrícula vencida</div></div>';
+    }else{
+      ts.innerHTML='<div class="veredito nao"><div class="t">Sem benefício</div><div class="d">CPF não cadastrado no clube</div></div>';
+    }
+  };
+
+  var fc=document.getElementById('f-cpf'),fb=document.getElementById('f-enviar'),
+      fe=document.getElementById('f-erro'),fn=document.getElementById('f-nome'),fo=document.getElementById('f-ok');
+
+  fc.addEventListener('input',function(){fc.value=mascara(fc.value);fe.textContent='';});
+  fb.onclick=function(){
+    if(!fn.value.trim()){fe.textContent='Informe seu nome completo.';return;}
+    if(fc.value.replace(/\D/g,'').length!==11){fe.textContent='Digite os 11 números do CPF.';return;}
+    if(!fo.checked){fe.textContent='Marque a autorização para continuar.';return;}
+    fe.textContent='';
+    location.hash='#analise';
+  };
+
+  var bs=document.getElementById('b-sorteio');
+  if(bs)bs.onclick=function(){
+    var m=document.getElementById('m-sorteio');
+    m.textContent='Você está participando';
+    m.style.color='#7FD3A0';
+    bs.remove();
+  };
+
+  var le=document.getElementById('l-entrar'),lerr=document.getElementById('l-erro');
+  le.onclick=function(){
+    var em=document.getElementById('l-email').value.trim();
+    var sn=document.getElementById('l-senha').value;
+    if(!em||!sn){lerr.textContent='Preencha e-mail e senha.';return;}
+    lerr.textContent='';
+    parceiroLogado=true;
+    location.hash='#terminal';
+    rotear();
+  };
+
+  var sair=document.getElementById('sair');
+  if(sair)sair.onclick=function(){
+    parceiroLogado=false;
+    location.hash='#home';
+    rotear();
+  };
+
+  var me=document.getElementById('m-entrar'),merr=document.getElementById('m-erro'),mcpf=document.getElementById('m-cpf');
+  mcpf.addEventListener('input',function(){mcpf.value=mascara(mcpf.value);merr.textContent='';});
+  me.onclick=function(){
+    if(mcpf.value.replace(/\D/g,'').length!==11){merr.textContent='Digite os 11 números do CPF.';return;}
+    if(!document.getElementById('m-senha').value){merr.textContent='Informe a senha.';return;}
+    merr.textContent='';
+    membroLogado=true;
+    location.hash='#membro';
+    rotear();
+  };
+
+  var sm=document.getElementById('sair-membro');
+  if(sm)sm.onclick=function(){membroLogado=false;location.hash='#home';rotear();};
+
+  var se=document.getElementById('s-enviar'),serr=document.getElementById('s-erro');
+  se.onclick=function(){
+    var obrig=[['s-estab','o nome do estabelecimento'],['s-resp','o responsável'],['s-email','o e-mail para o acesso'],['s-ben','o benefício que você quer oferecer']];
+    for(var k=0;k<obrig.length;k++){
+      if(!document.getElementById(obrig[k][0]).value.trim()){
+        serr.textContent='Informe '+obrig[k][1]+'.';return;
+      }
+    }
+    serr.textContent='';
+    location.hash='#analise-parceiro';
+  };
+
+  var sim=document.getElementById('simular');
+  if(sim)sim.onclick=function(){membroLogado=true;location.hash='#membro';rotear();};
+
+  document.getElementById('q').addEventListener('input',pintarLista);
+  window.addEventListener('hashchange',rotear);
+
+  var fila=[
+    {n:'Juliana Prado',cpf:'529.982.247-25',t:'Feminino, 9h',q:'há 2 horas'},
+    {n:'Diego Nakamura',cpf:'111.444.777-35',t:'Avançado, 20h',q:'há 5 horas'},
+    {n:'Camila Souza',cpf:'390.533.447-05',t:'Fundamentos, 7h',q:'ontem'}
+  ];
+
+  function pintarFila(){
+    var alvo=document.getElementById('fila');
+    document.getElementById('fila-vazia').style.display=fila.length?'none':'block';
+    document.getElementById('n-pend').textContent=fila.length;
+    alvo.innerHTML=fila.map(function(p,idx){
+      return '<div class="ben perm" data-i="'+idx+'" style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">'+
+        '<div style="flex:1;min-width:230px">'+
+        '<h3 style="margin:0">'+esc(p.n)+'</h3>'+
+        '<p class="meta" style="margin:4px 0 0">'+esc(p.cpf)+' · '+esc(p.t)+' · pedido '+esc(p.q)+'</p></div>'+
+        '<div style="display:flex;gap:10px"><button class="cta ok">Aprovar</button>'+
+        '<button class="cta cta-linha nao">Recusar</button></div>'+
+        '<p class="meta res" style="width:100%;margin:0"></p></div>';
+    }).join('');
+
+    alvo.querySelectorAll('.ben').forEach(function(bloco){
+      var res=bloco.querySelector('.res');
+      bloco.querySelector('.ok').onclick=function(){
+        res.innerHTML='<span style="color:#7FD3A0">Aprovado · adicional no boleto · válido até 30/09/2026 · WhatsApp enviado</span>';
+        bloco.querySelectorAll('button').forEach(function(b){b.remove();});
+        bloco.style.borderLeftColor='#2E9E5B';
+      };
+      bloco.querySelector('.nao').onclick=function(){
+        res.innerHTML='<span style="color:#FF8A82">Recusado · matrícula não localizada</span>';
+        bloco.querySelectorAll('button').forEach(function(b){b.remove();});
+        bloco.style.opacity='.6';
+      };
+    });
+  }
+
+  var fila2=[
+    {n:'Açaí do Tatame',cat:'Alimentação',r:'Marcos Ferreira',e:'contato@acaidotatame.com.br',b:'10% em toda a loja',q:'há 1 dia'},
+    {n:'Fisio Movimento',cat:'Clínica',r:'Dra. Paula Reis',e:'contato@fisiomovimento.com.br',b:'20% na primeira sessão',q:'há 3 dias'}
+  ];
+
+  function pintarFila2(){
+    var alvo=document.getElementById('fila2');
+    document.getElementById('fila2-vazia').style.display=fila2.length?'none':'block';
+    alvo.innerHTML=fila2.map(function(p){
+      return '<div class="ben perm">'+
+        '<h3 style="margin:0">'+esc(p.n)+'</h3>'+
+        '<p class="meta" style="margin:4px 0 10px">'+esc(p.cat)+' · '+esc(p.r)+' · '+esc(p.e)+' · candidatura '+esc(p.q)+'</p>'+
+        '<p style="margin:0 0 14px;color:var(--ouro);font-size:14px">Benefício proposto: '+esc(p.b)+'</p>'+
+        '<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="cta ok">Aprovar e enviar acesso</button>'+
+        '<button class="cta cta-linha nao">Recusar</button></div>'+
+        '<p class="meta res" style="margin:12px 0 0"></p></div>';
+    }).join('');
+
+    alvo.querySelectorAll('.ben').forEach(function(bloco){
+      var res=bloco.querySelector('.res');
+      bloco.querySelector('.ok').onclick=function(){
+        res.innerHTML='<span style="color:#7FD3A0">Aprovado · login criado · e-mail com link do terminal e senha provisória enviado</span>';
+        bloco.querySelectorAll('button').forEach(function(b){b.remove();});
+        bloco.style.borderLeftColor='#2E9E5B';
+      };
+      bloco.querySelector('.nao').onclick=function(){
+        res.innerHTML='<span style="color:#FF8A82">Recusado · e-mail de retorno enviado</span>';
+        bloco.querySelectorAll('button').forEach(function(b){b.remove();});
+        bloco.style.opacity='.6';
+      };
+    });
+  }
+
+  pintarFila();
+  pintarFila2();
+  abas('abas-r','pr');
+  document.getElementById('destaques').innerHTML=parceiros.slice(0,3).map(cardHTML).join('');
+  pintarChips();
+  pintarLista();
+  abas('abas-m','pm');
+  abas('abas-p','pp');
+  rotear();
+})();
+</script>
+</body>
+</html>
