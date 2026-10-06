@@ -21,6 +21,29 @@ class CAV_Entrada {
 		return $p ? get_permalink( $p ) : home_url( '/' );
 	}
 
+	/**
+	 * Para onde a pessoa vai e como o link se chama ("Meu terminal", "Minha carteirinha"...).
+	 * Devolve null para quem não tem uma área própria do clube.
+	 */
+	public static function area( $user ) {
+		if ( ! ( $user instanceof WP_User ) || ! $user->ID ) {
+			return null;
+		}
+		if ( user_can( $user, 'cav_gerenciar' ) ) {
+			return [ 'url' => admin_url( 'admin.php?page=cav-relatorio' ), 'rotulo' => 'Painel do clube' ];
+		}
+		if ( in_array( 'cav_recepcao', (array) $user->roles, true ) ) {
+			return [ 'url' => admin_url( 'admin.php?page=cav-aprovacoes' ), 'rotulo' => 'Aprovações' ];
+		}
+		if ( in_array( 'cav_parceiro', (array) $user->roles, true ) ) {
+			return [ 'url' => self::pagina( 'terminal' ), 'rotulo' => 'Meu terminal' ];
+		}
+		if ( in_array( 'cav_membro', (array) $user->roles, true ) ) {
+			return [ 'url' => self::pagina( 'minha-carteirinha' ), 'rotulo' => 'Minha carteirinha' ];
+		}
+		return null;
+	}
+
 	private static function so_papel_do_clube( $user ) {
 		if ( ! ( $user instanceof WP_User ) ) {
 			return false;
@@ -42,14 +65,9 @@ class CAV_Entrada {
 			return $destino;
 		}
 
-		if ( in_array( 'cav_recepcao', (array) $user->roles, true ) ) {
-			return admin_url( 'admin.php?page=cav-aprovacoes' );
-		}
-		if ( in_array( 'cav_parceiro', (array) $user->roles, true ) ) {
-			return self::pagina( 'terminal' );
-		}
-		if ( in_array( 'cav_membro', (array) $user->roles, true ) ) {
-			return self::pagina( 'minha-carteirinha' );
+		$area = self::area( $user );
+		if ( $area ) {
+			return $area['url'];
 		}
 
 		return $destino;

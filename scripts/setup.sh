@@ -103,6 +103,7 @@ NOTA='<p>Monte esta página no Elementor. O protótipo de referência está em i
 
 ID_HOME=$(criar_pagina "Início" "inicio" "$NOTA")
 ID_SOBRE=$(criar_pagina "O que é o clube" "o-que-e" "$NOTA")
+ID_ENTRAR=$(criar_pagina "Entrar" "entrar" "$NOTA")
 ID_FAZER=$(criar_pagina "Quero fazer parte" "quero-fazer-parte" '[cav_solicitar]')
 ID_SEJA=$(criar_pagina "Seja parceiro" "seja-parceiro" '[cav_candidatura]')
 
@@ -119,13 +120,20 @@ wp option update show_on_front page >/dev/null
 wp option update page_on_front "$ID_HOME" >/dev/null
 
 echo "==> Menu principal"
-if ! wp menu list --fields=name --format=csv | grep -qx "Principal"; then
+# Versão 2: Início, O que é, Parceiros, Seja parceiro. "Quero fazer parte" e "Entrar" são botões do cabeçalho.
+if [ "$(wp option get cav_menu_versao 2>/dev/null || true)" != "2" ]; then
+	wp menu delete Principal >/dev/null 2>&1 || true
 	wp menu create "Principal" >/dev/null
-	for id in "$ID_HOME" "$ID_SOBRE" "$ID_FAZER" "$ID_SEJA"; do
-		wp menu item add-post Principal "$id" >/dev/null
-	done
+	wp menu item add-post Principal "$ID_HOME" >/dev/null
+	wp menu item add-post Principal "$ID_SOBRE" >/dev/null
+	wp menu item add-custom Principal "Parceiros" "/parceiros/" >/dev/null
+	wp menu item add-post Principal "$ID_SEJA" >/dev/null
+	wp option update cav_menu_versao 2 >/dev/null
 fi
 wp menu location assign Principal menu-1 >/dev/null 2>&1 || true
+
+echo "==> Páginas no Elementor"
+wp eval-file /scripts/paginas-elementor.php ${REFAZER_PAGINAS:+refazer} || echo "   (não consegui montar as páginas; veja a mensagem acima)"
 
 echo "==> Paleta e fontes no Elementor"
 wp eval-file /scripts/elementor-kit.php || echo "   (não consegui aplicar a paleta; veja o README, seção Paleta)"

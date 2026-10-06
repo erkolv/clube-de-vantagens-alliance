@@ -66,7 +66,13 @@ Para derrubar tudo: `docker compose down`. Para apagar também o banco: `docker 
 
 ## Onde editar
 
-**Páginas institucionais** (início, o que é o clube, seja parceiro): no Elementor, usando `index.html` como guia. O setup cria as páginas com um texto de apoio no lugar.
+**Páginas do site** (Início, O que é o clube, Entrar, Quero fazer parte, Seja parceiro): o setup já grava o conteúdo no Elementor. É só abrir a página e **Editar com Elementor** para mudar texto, botão ou ordem das seções. O setup não mexe numa página que já foi montada, então o que você editar fica.
+
+Para voltar uma página ao modelo original: `REFAZER_PAGINAS=1 ./scripts/setup.sh` (apaga as edições feitas nas cinco páginas acima). O conteúdo de cada uma está em `scripts/lib/paginas.php`.
+
+**Cabeçalho e rodapé** ficam no tema filho (`template-parts/header.php` e `footer.php`), sem precisar do Elementor Pro. O menu é o "Principal" (Aparência → Menus). Os botões Entrar, Quero fazer parte e, depois do login, "Meu terminal" ou "Minha carteirinha" são fixos no cabeçalho.
+
+**Lista e página de parceiros** (`/parceiros/`): busca por nome, filtro por categoria e, em cada parceiro, os benefícios vigentes. Vêm do tema filho (`archive-cav_parceiro.php`, `single-cav_parceiro.php`). O shortcode `[clube_parceiros limite="6"]` mostra os últimos parceiros em qualquer página.
 
 **Páginas com shortcode.** O setup já cria cada uma com o shortcode certo:
 
@@ -106,12 +112,15 @@ Gera dois zips em `dist/`: `clube-alliance.zip` e `clube-alliance-child.zip`. No
 
 - **E-mail em produção.** Localmente o Mailpit recebe tudo. No site de verdade o `wp_mail` sozinho costuma cair em spam ou nem sair, e os e-mails de aprovação dependem disso. Configure um SMTP (Brevo, Amazon SES ou Postmark) antes de abrir os formulários.
 - **Elementor Pro.** É pago e não dá para instalar pelo script. Instale com a sua licença se for usar o Theme Builder para o cabeçalho, o rodapé e a página individual do parceiro.
-- **Diretório com busca e filtro.** O plugin ainda não tem. Hoje existe a listagem simples em `/parceiros/`. Busca por categoria e distância pede o Voxel ou o GeoDirectory, ou um shortcode próprio.
-- **Benefícios dentro da página do parceiro.** Ainda não há shortcode que os puxe para a página do estabelecimento.
+- **Diretório por distância.** A lista de parceiros busca por nome e categoria. Busca por distância ou mapa pede o Voxel ou o GeoDirectory.
 - **Parceiro editar o próprio cadastro pelo site.** Hoje só pelo painel do WordPress.
 - **Telas de login.** Usa a tela padrão do WordPress. Depois de entrar, parceiro vai para `/terminal/`, aluno para `/minha-carteirinha/` e recepção para as aprovações. A escolha de acesso do protótipo (aluno ou parceiro) ainda não existe no plugin.
 - **Sorteios.** Com o clube pago, a participação passa a ter contrapartida financeira. Vale a Alliance confirmar com o contador se precisa de autorização da SPA/Ministério da Fazenda antes do primeiro.
 
 ## Estado dos testes
 
-Os arquivos PHP do plugin, do tema e dos scripts passam na checagem de sintaxe (`php -l`). O `docker-compose.yml`, o `setup.sh`, a configuração do Codespaces e a aplicação da paleta no Elementor foram escritos sem poder rodar (quem escreveu não tinha Docker nem acesso ao wordpress.org). Na primeira execução pode aparecer um ajuste. Se aparecer, o erro do passo que falhou diz onde olhar.
+Confirmado no Codespaces: o setup, o WordPress, o plugin, o login por perfil e o terminal de consulta.
+
+Conferido só por simulação: o visual do cabeçalho, do rodapé e das páginas (num navegador, com uma imitação do HTML do Elementor, no computador e no celular), e a sintaxe de todos os arquivos PHP.
+
+Ainda sem confirmação: a gravação das páginas no Elementor de verdade (`scripts/paginas-elementor.php`) e a aplicação da paleta (`scripts/elementor-kit.php`). Se uma página abrir como texto simples em vez do layout, o Elementor recusou a estrutura; o texto está lá como reserva e o erro ajuda a corrigir.
