@@ -64,3 +64,18 @@
 
 .cav-erro,
 .cav-erro-form { color: #ff8a82; }
+
+/* Área do aluno (painel, ofertas, agenda): mesma inversão para o fundo preto. */
+.cav-membro-raiz {
+	--cav-tinta:    #ffffff;
+	--cav-marca:    #ffc629;
+	--cav-destaque: #ffc629;
+	--cav-papel:    #1a1a1a;
+	--cav-linha:    rgba(255, 255, 255, .16);
+	--cav-fraco:    #a8a8a8;
+	--cav-sim:      #4cd37f;
+	--cav-nao:      #ff7a74;
+	--cav-fonte-titulo: 'Poppins', system-ui, sans-serif;
+	--cav-fonte-texto:  'Poppins', system-ui, sans-serif;
+}
+.cav-membro-raiz .cav-oferta__foto { background: #252525; }

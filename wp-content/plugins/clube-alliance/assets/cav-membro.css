@@ -1,0 +1,233 @@
+/* Clube Alliance: área do aluno (painel, ofertas, agenda). Os tokens seguem os do cav.css. */
+
+.cav-membro-raiz {
+	--cav-tinta:    var(--e-global-color-text, #101010);
+	--cav-marca:    var(--e-global-color-primary, #101010);
+	--cav-destaque: var(--e-global-color-accent, #ffc629);
+	--cav-papel:    #ffffff;
+	--cav-linha:    rgba(0, 0, 0, .12);
+	--cav-fraco:    var(--e-global-color-secondary, #6b6b6b);
+	--cav-sim:      #0f7b3d;
+	--cav-nao:      #b0231f;
+	--cav-raio:     4px;
+	--cav-fonte-titulo: var(--e-global-typography-primary-font-family, inherit);
+	--cav-fonte-texto:  var(--e-global-typography-text-font-family, inherit);
+
+	font-family: var(--cav-fonte-texto);
+	color: var(--cav-tinta);
+	max-width: 1100px;
+	margin-inline: auto;
+	box-sizing: border-box;
+}
+.cav-membro-raiz *, .cav-membro-raiz *::before, .cav-membro-raiz *::after { box-sizing: border-box; }
+.cav-membro-raiz h2, .cav-membro-raiz h3 { font-family: var(--cav-fonte-titulo); }
+.cav-membro-raiz .cav-card { max-width: none; }
+
+.cav-so-leitor {
+	position: absolute;
+	width: 1px; height: 1px;
+	margin: -1px; padding: 0;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+/* ---------- Menu da área ---------- */
+.cav-menu-membro { margin: 0 0 2rem; border-bottom: 1px solid var(--cav-linha); }
+.cav-menu-membro ul {
+	display: flex;
+	gap: .25rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+	scrollbar-width: thin;
+}
+.cav-menu-membro a {
+	display: block;
+	padding: .8rem 1rem;
+	border-bottom: 3px solid transparent;
+	font-size: .8rem;
+	font-weight: 600;
+	letter-spacing: .1em;
+	text-transform: uppercase;
+	text-decoration: none;
+	white-space: nowrap;
+	color: var(--cav-fraco);
+}
+@media (min-width: 640px) { .cav-menu-membro ul { flex-wrap: wrap; overflow-x: visible; } }
+.cav-menu-membro a:hover { color: var(--cav-tinta); }
+.cav-menu-membro a[aria-current="page"] { color: var(--cav-tinta); border-bottom-color: var(--cav-destaque); }
+
+/* ---------- Painel ---------- */
+.cav-saudacao h2 { margin: 0 0 .4rem; font-size: clamp(1.8rem, 4vw, 2.6rem); line-height: 1.1; }
+.cav-status { margin: 0 0 1.5rem; font-size: .95rem; }
+.cav-status.is-ativa { color: var(--cav-sim); }
+.cav-status.is-inativa { color: var(--cav-nao); }
+.cav-status span { color: var(--cav-fraco); }
+
+.cav-numeros-membro {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 1rem;
+	margin: 0 0 2.5rem;
+}
+.cav-numeros-membro div {
+	padding: 1.1rem 1.25rem;
+	border: 1px solid var(--cav-linha);
+	border-radius: var(--cav-raio);
+}
+.cav-numeros-membro strong { display: block; font-family: var(--cav-fonte-titulo); font-size: 2rem; line-height: 1; color: var(--cav-destaque); }
+.cav-numeros-membro span { display: block; margin-top: .4rem; font-size: .82rem; color: var(--cav-fraco); }
+
+.cav-secao { margin: 0 0 2.75rem; }
+.cav-secao__topo { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: 1.1rem; }
+.cav-secao__topo h3 { margin: 0; font-size: 1.25rem; }
+.cav-secao__mais { font-size: .78rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; text-decoration: none; color: var(--cav-destaque); white-space: nowrap; }
+.cav-secao__mais:hover { text-decoration: underline; }
+
+.cav-lista-simples { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--cav-linha); }
+.cav-lista-simples li { display: flex; flex-wrap: wrap; gap: .25rem 1rem; align-items: baseline; padding: .9rem 0; border-bottom: 1px solid var(--cav-linha); }
+.cav-lista-simples strong { font-weight: 600; }
+.cav-lista-simples span { color: var(--cav-fraco); font-size: .92rem; }
+.cav-lista-simples em { margin-left: auto; font-style: normal; font-size: .85rem; color: var(--cav-fraco); }
+
+.cav-nota { margin: 1.5rem 0 0; font-size: .85rem; color: var(--cav-fraco); }
+
+/* ---------- Ofertas ---------- */
+.cav-ofertas-grade {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+	gap: 1.25rem;
+}
+
+.cav-oferta {
+	display: flex;
+	flex-direction: column;
+	border: 1px solid var(--cav-linha);
+	border-radius: var(--cav-raio);
+	overflow: hidden;
+	background: var(--cav-papel);
+}
+.cav-oferta__foto {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	aspect-ratio: 4 / 3;
+	background: rgba(127, 127, 127, .14);
+	overflow: hidden;
+}
+.cav-oferta__foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cav-oferta__inicial { font-family: var(--cav-fonte-titulo); font-size: 3.6rem; font-weight: 700; color: var(--cav-destaque); }
+.cav-oferta__selo {
+	position: absolute;
+	top: .75rem;
+	left: .75rem;
+	padding: .3rem .6rem;
+	background: var(--cav-destaque);
+	color: #141414;
+	font-size: .72rem;
+	font-weight: 700;
+	letter-spacing: .08em;
+	text-transform: uppercase;
+	line-height: 1.2;
+}
+.cav-oferta__selo-grande {
+	display: inline-block;
+	align-self: flex-start;
+	margin-bottom: .75rem;
+	padding: .35rem .7rem;
+	background: var(--cav-destaque);
+	color: #141414;
+	font-family: var(--cav-fonte-titulo);
+	font-size: 1.25rem;
+	font-weight: 700;
+	line-height: 1.1;
+}
+.cav-oferta__corpo { display: flex; flex-direction: column; flex: 1; padding: 1.1rem 1.2rem 1.25rem; }
+.cav-oferta__titulo { margin: 0 0 .4rem; font-size: 1.05rem; line-height: 1.3; }
+.cav-oferta__resumo { margin: 0 0 .9rem; font-size: .9rem; line-height: 1.55; color: var(--cav-fraco); }
+.cav-oferta__precos { display: flex; flex-wrap: wrap; align-items: baseline; gap: .15rem .75rem; margin: auto 0 .6rem; }
+.cav-oferta__de { font-size: .9rem; color: var(--cav-fraco); }
+.cav-oferta__por { font-family: var(--cav-fonte-titulo); font-size: 1.5rem; font-weight: 700; color: var(--cav-tinta); }
+.cav-oferta__como { margin: 0; padding-top: .7rem; border-top: 1px solid var(--cav-linha); font-size: .8rem; color: var(--cav-fraco); }
+.cav-oferta--desconto { border-color: var(--cav-destaque); }
+.cav-oferta--desconto .cav-oferta__corpo { padding-top: 1.4rem; }
+
+/* ---------- Agenda ---------- */
+.cav-agenda__layout { display: grid; grid-template-columns: minmax(280px, 380px) 1fr; gap: 2.5rem; align-items: start; }
+
+.cav-calendario { border: 1px solid var(--cav-linha); border-radius: var(--cav-raio); padding: 1rem; }
+.cav-calendario__topo { display: flex; align-items: center; justify-content: space-between; margin-bottom: .75rem; }
+.cav-calendario__topo h3 { margin: 0; font-size: 1.05rem; }
+.cav-calendario__nav { display: inline-flex; align-items: center; justify-content: center; width: 2.2rem; height: 2.2rem; border: 1px solid var(--cav-linha); text-decoration: none; color: var(--cav-tinta); }
+.cav-calendario__nav:hover { border-color: var(--cav-destaque); color: var(--cav-destaque); }
+.cav-calendario__grade { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.cav-calendario__grade th { padding: .4rem 0; font-size: .68rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--cav-fraco); }
+.cav-calendario__grade td { height: 2.6rem; padding: 0; text-align: center; font-size: .9rem; border: 0; }
+.cav-calendario__grade td.is-hoje { font-weight: 700; box-shadow: inset 0 0 0 1px var(--cav-fraco); }
+.cav-calendario__grade td.tem-evento a {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+	background: var(--cav-destaque);
+	color: #141414;
+	font-weight: 700;
+	text-decoration: none;
+}
+
+.cav-agenda__titulo { margin: 0 0 1rem; font-size: 1.25rem; text-transform: capitalize; }
+.cav-eventos { display: flex; flex-direction: column; gap: 1rem; }
+
+.cav-evento { display: flex; gap: 1.1rem; padding: 1.1rem 1.2rem; border: 1px solid var(--cav-linha); border-radius: var(--cav-raio); scroll-margin-top: 6rem; }
+.cav-evento:target { border-color: var(--cav-destaque); }
+.cav-evento__data { flex: none; width: 3.6rem; text-align: center; }
+.cav-evento__data strong { display: block; font-family: var(--cav-fonte-titulo); font-size: 2rem; line-height: 1; color: var(--cav-destaque); }
+.cav-evento__data span { display: block; margin-top: .2rem; font-size: .72rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--cav-fraco); }
+.cav-evento__corpo { min-width: 0; }
+.cav-evento__titulo { margin: .4rem 0 .25rem; font-size: 1.1rem; line-height: 1.3; }
+.cav-evento__quando { margin: 0 0 .5rem; font-size: .88rem; color: var(--cav-fraco); }
+.cav-evento__desc { margin: 0 0 .75rem; font-size: .92rem; line-height: 1.55; }
+.cav-evento__corpo p:last-child { margin-bottom: 0; }
+
+.cav-tag {
+	display: inline-block;
+	padding: .2rem .55rem;
+	background: var(--cav-destaque);
+	color: #141414;
+	font-size: .66rem;
+	font-weight: 700;
+	letter-spacing: .1em;
+	text-transform: uppercase;
+	line-height: 1.3;
+}
+.cav-tag--graduacao { background: transparent; color: var(--cav-tinta); box-shadow: inset 0 0 0 1px var(--cav-destaque); }
+.cav-tag--evento, .cav-tag--treino { background: transparent; color: var(--cav-fraco); box-shadow: inset 0 0 0 1px var(--cav-linha); }
+
+.cav-link-botao {
+	display: inline-block;
+	padding: .55rem 1rem;
+	border: 1px solid var(--cav-destaque);
+	font-size: .75rem;
+	font-weight: 700;
+	letter-spacing: .1em;
+	text-transform: uppercase;
+	text-decoration: none;
+	color: var(--cav-tinta);
+}
+.cav-link-botao:hover { background: var(--cav-destaque); color: #141414; }
+
+@media (max-width: 860px) {
+	.cav-agenda__layout { grid-template-columns: 1fr; gap: 1.75rem; }
+	.cav-numeros-membro { grid-template-columns: 1fr; }
+}
+@media (max-width: 520px) {
+	.cav-evento { flex-direction: column; gap: .5rem; }
+	.cav-evento__data { width: auto; text-align: left; display: flex; align-items: baseline; gap: .5rem; }
+	.cav-ofertas-grade { grid-template-columns: 1fr; }
+}

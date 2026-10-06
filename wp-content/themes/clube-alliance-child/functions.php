@@ -36,8 +36,13 @@ add_action( 'wp_enqueue_scripts', function () {
 	// versão escura: o CSS só sai nas páginas em que um shortcode do plugin roda.
 	$arquivo = get_stylesheet_directory() . '/assets/cav-escuro.css';
 
-	if ( wp_style_is( 'cav', 'registered' ) && is_readable( $arquivo ) ) {
-		wp_add_inline_style( 'cav', file_get_contents( $arquivo ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+	if ( is_readable( $arquivo ) ) {
+		$escuro = file_get_contents( $arquivo ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+		foreach ( [ 'cav', 'cav-membro' ] as $handle ) {
+			if ( wp_style_is( $handle, 'registered' ) ) {
+				wp_add_inline_style( $handle, $escuro );
+			}
+		}
 	}
 }, 20 );
 

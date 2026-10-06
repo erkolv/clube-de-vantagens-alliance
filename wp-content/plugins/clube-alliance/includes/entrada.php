@@ -39,7 +39,7 @@ class CAV_Entrada {
 			return [ 'url' => self::pagina( 'terminal' ), 'rotulo' => 'Meu terminal' ];
 		}
 		if ( in_array( 'cav_membro', (array) $user->roles, true ) ) {
-			return [ 'url' => self::pagina( 'minha-carteirinha' ), 'rotulo' => 'Minha carteirinha' ];
+			return [ 'url' => self::pagina( 'area-do-membro' ), 'rotulo' => 'Minha área' ];
 		}
 		return null;
 	}
@@ -81,7 +81,7 @@ class CAV_Entrada {
 		return $mostrar;
 	}
 
-	/** Membro não tem o que fazer no painel: volta para a carteirinha. */
+	/** Membro não tem o que fazer no painel de administração: volta para a área dele. */
 	public static function tirar_membro_do_admin() {
 		if ( wp_doing_ajax() || ! is_user_logged_in() ) {
 			return;
@@ -97,7 +97,7 @@ class CAV_Entrada {
 			return;
 		}
 
-		wp_safe_redirect( self::pagina( 'minha-carteirinha' ) );
+		wp_safe_redirect( self::pagina( 'area-do-membro' ) );
 		exit;
 	}
 }

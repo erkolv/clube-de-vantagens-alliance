@@ -237,7 +237,7 @@ if ( ! function_exists( 'cav_pg_id' ) ) {
 						cav_pg_olho( 'Sou aluno' ),
 						cav_pg_titulo( 'Área do membro', 'h3' ),
 						cav_pg_texto( '<p>Sua carteirinha, histórico de benefícios, conteúdos e sorteios.</p>' ),
-						cav_pg_botao( 'Entrar como aluno', '/wp-login.php?redirect_to=%2Fminha-carteirinha%2F' ),
+						cav_pg_botao( 'Entrar como aluno', '/wp-login.php?redirect_to=%2Farea-do-membro%2F' ),
 					] ),
 					cav_pg_contem( 'clube-caixa clube-caixa--link', [
 						cav_pg_olho( 'Sou estabelecimento' ),

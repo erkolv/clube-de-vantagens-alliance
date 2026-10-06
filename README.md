@@ -51,11 +51,13 @@ Quando terminar:
 - Painel: http://localhost:8080/wp-admin (`admin` / `admin123`)
 - E-mails que o site enviar: http://localhost:8025
 
+Com o `--demo` entram também 4 produtos com foto e preço, 3 descontos exclusivos, 5 eventos (as datas são sempre a partir do dia em que você rodou) e 1 sorteio de exemplo.
+
 Contas de teste (senha `demo123`):
 
 | Usuário | O que é |
 |---|---|
-| `aluno.demo` | Aluno ativo, CPF 111.444.777-35 |
+| `aluno.demo` | Aluno ativo, CPF 111.444.777-35. Depois de entrar cai em `/area-do-membro/` |
 | `aluno.vencido` | Matrícula vencida, CPF 529.982.247-25 |
 | `parceiro.demo` | Opera a Barbearia Corte Reto |
 | `recepcao.demo` | Cai direto na tela de aprovações |
@@ -74,6 +76,17 @@ Para voltar uma página ao modelo original: `REFAZER_PAGINAS=1 ./scripts/setup.s
 
 **Lista e página de parceiros** (`/parceiros/`): busca por nome, filtro por categoria e, em cada parceiro, os benefícios vigentes. Vêm do tema filho (`archive-cav_parceiro.php`, `single-cav_parceiro.php`). O shortcode `[clube_parceiros limite="6"]` mostra os últimos parceiros em qualquer página.
 
+**Área do aluno.** Quem entra como aluno cai em `/area-do-membro/`, com um menu (Painel, Carteirinha, Benefícios, Ofertas, Agenda, Sorteios, Conteúdos) no topo de todas essas páginas. O setup cria as páginas novas e coloca o menu nas que já existiam.
+
+- **Painel**: saudação e validade, números de uso, próximos eventos, ofertas em destaque e sorteios abertos.
+- **Ofertas** (`/ofertas/`): *Descontos exclusivos na academia* e *Produtos com desconto*, cada produto com foto, preço cheio riscado e preço do clube. No painel do WordPress: **Ofertas da academia → Adicionar**. A foto é a *Imagem destacada*; o texto vira a descrição; o selo ("-20%") sai do cálculo dos dois preços, ou digite o seu ("GRÁTIS"). Dá para marcar uma data final, e a oferta some sozinha depois dela.
+- **Agenda** (`/agenda/`): calendário do mês com setas para os outros meses, mais a lista de eventos do mês. No painel: **Agenda → Adicionar**, com tipo (seminário, campeonato, graduação, treino aberto, evento), data (e data final para eventos de vários dias), horário, local e um link opcional.
+- **Sorteios**: os de sempre; o painel mostra os abertos.
+
+Hoje só quem é administrador cadastra ofertas e eventos. A recepção ainda não tem essa permissão.
+
+Para pôr um pedaço disso em outra página: `[cav_proximos_eventos qtd="3"]` e `[cav_ofertas tipo="produto" qtd="4"]` (`tipo` pode ser `produto` ou `desconto`).
+
 **Páginas com shortcode.** O setup já cria cada uma com o shortcode certo:
 
 | Página | Shortcode |
@@ -82,6 +95,9 @@ Para voltar uma página ao modelo original: `REFAZER_PAGINAS=1 ./scripts/setup.s
 | Seja parceiro | `[cav_candidatura]` |
 | Minha carteirinha | `[cav_carteirinha]` |
 | Meus benefícios | `[cav_meus_usos]` |
+| Área do membro (painel) | `[cav_menu_membro]` `[cav_painel_membro]` |
+| Ofertas da academia | `[cav_menu_membro]` `[cav_ofertas]` |
+| Agenda e eventos | `[cav_menu_membro]` `[cav_agenda]` |
 | Conteúdos | `[cav_conteudos]` |
 | Sorteios do clube | `[cav_sorteios]` |
 | Terminal | `[cav_terminal]` |
@@ -114,12 +130,14 @@ Gera dois zips em `dist/`: `clube-alliance.zip` e `clube-alliance-child.zip`. No
 - **Elementor Pro.** É pago e não dá para instalar pelo script. Instale com a sua licença se for usar o Theme Builder para o cabeçalho, o rodapé e a página individual do parceiro.
 - **Diretório por distância.** A lista de parceiros busca por nome e categoria. Busca por distância ou mapa pede o Voxel ou o GeoDirectory.
 - **Parceiro editar o próprio cadastro pelo site.** Hoje só pelo painel do WordPress.
-- **Telas de login.** Usa a tela padrão do WordPress. Depois de entrar, parceiro vai para `/terminal/`, aluno para `/minha-carteirinha/` e recepção para as aprovações. A escolha de acesso do protótipo (aluno ou parceiro) ainda não existe no plugin.
+- **Telas de login.** Usa a tela padrão do WordPress. Depois de entrar, parceiro vai para `/terminal/`, aluno para `/area-do-membro/` e recepção para as aprovações. A escolha de acesso do protótipo (aluno ou parceiro) ainda não existe no plugin.
 - **Sorteios.** Com o clube pago, a participação passa a ter contrapartida financeira. Vale a Alliance confirmar com o contador se precisa de autorização da SPA/Ministério da Fazenda antes do primeiro.
 
 ## Estado dos testes
 
 Confirmado no Codespaces: o setup, o WordPress, o plugin, o login por perfil e o terminal de consulta.
+
+Conferido num WordPress de verdade rodando no sandbox (WordPress Playground, sem o Elementor nem o tema): a área do aluno (painel, ofertas, agenda, menu), no computador e no celular, e os scripts que criam as páginas e os dados de teste, inclusive rodando duas vezes.
 
 Conferido só por simulação: o visual do cabeçalho, do rodapé e das páginas (num navegador, com uma imitação do HTML do Elementor, no computador e no celular), e a sintaxe de todos os arquivos PHP.
 
