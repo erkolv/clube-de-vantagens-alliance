@@ -21,6 +21,15 @@ set -a
 . ./.env
 set +a
 
+# No GitHub Codespaces o site não vive em localhost: a URL é a do porta encaminhada.
+MAIL_URL="http://localhost:${MAILPIT_PORT:-8025}"
+if [ -n "${CODESPACE_NAME:-}" ]; then
+	DOMINIO="${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN:-app.github.dev}"
+	SITE_URL="https://${CODESPACE_NAME}-${WP_PORT:-8080}.${DOMINIO}"
+	MAIL_URL="https://${CODESPACE_NAME}-${MAILPIT_PORT:-8025}.${DOMINIO}"
+	echo "Codespaces detectado. O site vai usar $SITE_URL"
+fi
+
 wp() {
 	docker compose run --rm -T wpcli wp "$@"
 }
@@ -129,6 +138,6 @@ Pronto.
 
   Site ............ $SITE_URL
   Painel .......... ${SITE_URL%/}/wp-admin   ($ADMIN_USER / $ADMIN_PASSWORD)
-  E-mails de teste  http://localhost:${MAILPIT_PORT:-8025}
+  E-mails de teste  $MAIL_URL
 
 FIM

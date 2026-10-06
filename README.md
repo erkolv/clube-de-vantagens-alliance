@@ -15,6 +15,24 @@ Site do clube de vantagens da Alliance Mogi das Cruzes: diretório de parceiros,
 
 O WordPress em si e o Elementor não ficam no repositório. São baixados quando você roda o setup.
 
+## Rodar no GitHub (Codespaces)
+
+Dá para editar e ver o site funcionando sem instalar nada no computador. O Codespaces é um computador na nuvem do GitHub, aberto direto no navegador, já com este repositório dentro.
+
+1. Na página do repositório: **Code → Codespaces → Create codespace on main**.
+2. Espere. Na primeira vez ele instala o WordPress sozinho (`scripts/setup.sh --demo`), o que leva alguns minutos. O terminal mostra o andamento.
+3. Quando terminar, abra a aba **Portas** (embaixo no editor):
+   - porta **8080**: o site (clique no ícone de globo). O painel é `/wp-admin`, com `admin` / `admin123`.
+   - porta **8025**: a caixa de e-mails de teste.
+4. Edite os arquivos de `wp-content/` no próprio editor e recarregue a página.
+
+Detalhes que valem saber:
+
+- As portas são privadas: só você, logado no GitHub, abre os links. Para mostrar a alguém, clique com o botão direito na porta e mude a visibilidade, sabendo que o site fica aberto a quem tiver o link.
+- O Codespaces desliga sozinho depois de um tempo parado. O site e o banco continuam lá quando você voltar; para religar, abra o codespace de novo.
+- O uso é limitado por uma cota mensal gratuita da conta. Confira o valor atual em github.com/settings/billing e apague os codespaces que não usa mais.
+- Isso é ambiente de trabalho, não o site no ar. Para o público, o site precisa de uma hospedagem (veja "Levar para a hospedagem"). O GitHub Pages só serve o `index.html`, o protótipo.
+
 ## Rodar no seu computador
 
 Precisa do Docker (Docker Desktop no Mac ou Windows).
@@ -96,4 +114,4 @@ Gera dois zips em `dist/`: `clube-alliance.zip` e `clube-alliance-child.zip`. No
 
 ## Estado dos testes
 
-Os arquivos PHP do plugin, do tema e dos scripts passam na checagem de sintaxe (`php -l`). O `docker-compose.yml`, o `setup.sh` e a aplicação da paleta no Elementor foram escritos sem poder rodar (quem escreveu não tinha Docker nem acesso ao wordpress.org). Na primeira execução pode aparecer um ajuste. Se aparecer, o erro do passo que falhou diz onde olhar.
+Os arquivos PHP do plugin, do tema e dos scripts passam na checagem de sintaxe (`php -l`). O `docker-compose.yml`, o `setup.sh`, a configuração do Codespaces e a aplicação da paleta no Elementor foram escritos sem poder rodar (quem escreveu não tinha Docker nem acesso ao wordpress.org). Na primeira execução pode aparecer um ajuste. Se aparecer, o erro do passo que falhou diz onde olhar.
