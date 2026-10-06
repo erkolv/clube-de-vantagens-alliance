@@ -201,6 +201,10 @@ class CAV_Conteudo {
 		update_post_meta( $sorteio_id, self::META_GANHADOR, $ganhador );
 		update_post_meta( $sorteio_id, self::META_APURADO, current_time( 'mysql' ) );
 
+		// Avisa o ganhador. Se o e-mail falhar, o resultado continua valendo e aparece na área dele.
+		CAV_Emails::sorteio_ganhador( $sorteio_id, $ganhador );
+		do_action( 'cav_sorteio_apurado', $sorteio_id, $ganhador );
+
 		wp_safe_redirect( get_edit_post_link( $sorteio_id, 'url' ) );
 		exit;
 	}

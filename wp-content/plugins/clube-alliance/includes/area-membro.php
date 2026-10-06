@@ -27,6 +27,7 @@ class CAV_Area {
 		add_shortcode( 'cav_ofertas', [ __CLASS__, 'ofertas' ] );
 		add_shortcode( 'cav_agenda', [ __CLASS__, 'agenda' ] );
 		add_shortcode( 'cav_proximos_eventos', [ __CLASS__, 'proximos_eventos' ] );
+		add_shortcode( 'cav_clube_agora', [ __CLASS__, 'clube_agora' ] );
 		add_action( 'wp_enqueue_scripts', [ __CLASS__, 'assets' ] );
 	}
 
@@ -128,6 +129,16 @@ class CAV_Area {
 				<?php echo CAV_Acesso::bloqueio( 'membros' ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 			<?php else : ?>
 
+				<?php foreach ( self::ganhos_recentes( $user->ID ) as $g ) :
+					$premio = get_post_meta( $g->ID, CAV_Conteudo::META_PREMIO, true ) ?: get_the_title( $g );
+					?>
+					<div class="cav-ganhou" role="status">
+						<strong>Parabéns, você ganhou!</strong>
+						<?php echo esc_html( $premio ); ?> &middot; <?php echo esc_html( get_the_title( $g ) ); ?>.
+						Fale com a recepção da academia para retirar o prêmio.
+					</div>
+				<?php endforeach; ?>
+
 				<div class="cav-numeros-membro">
 					<div><strong><?php echo esc_html( $usos_mes ); ?></strong><span>benefícios usados no mês</span></div>
 					<div><strong><?php echo esc_html( count( $usos ) ); ?></strong><span>no total</span></div>
@@ -138,6 +149,9 @@ class CAV_Area {
 				$eventos = CAV_Agenda::proximos( 3 );
 				$ofertas = CAV_Ofertas::listar( '', 3 );
 				$abertos = self::sorteios_abertos( 3 );
+				$resultados = array_slice( array_values( array_filter( CAV_Sorteio::apurados( 6 ), function ( $p ) {
+					return CAV_Acesso::pode_ver_post( $p->ID );
+				} ) ), 0, 2 );
 				?>
 
 				<?php if ( $eventos ) : ?>
@@ -185,6 +199,26 @@ class CAV_Area {
 					</section>
 				<?php endif; ?>
 
+				<?php if ( $resultados ) : ?>
+					<section class="cav-secao">
+						<div class="cav-secao__topo">
+							<h3>Últimos resultados</h3>
+							<?php echo self::ver_tudo( 'sorteios-do-clube', 'Ver todos' ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
+						</div>
+						<ul class="cav-lista-simples">
+							<?php foreach ( $resultados as $s ) :
+								$gid = (int) get_post_meta( $s->ID, CAV_Conteudo::META_GANHADOR, true );
+								?>
+								<li>
+									<strong><?php echo esc_html( get_the_title( $s ) ); ?></strong>
+									<span><?php echo $gid === (int) $user->ID ? 'Você ganhou' : 'Ganhador: ' . esc_html( CAV_Sorteio::nome_publico( $gid ) ); ?></span>
+									<em><?php echo esc_html( mysql2date( 'd/m', get_post_meta( $s->ID, CAV_Conteudo::META_APURADO, true ) ) ); ?></em>
+								</li>
+							<?php endforeach; ?>
+						</ul>
+					</section>
+				<?php endif; ?>
+
 				<?php if ( $usos ) : ?>
 					<section class="cav-secao">
 						<div class="cav-secao__topo">
@@ -203,7 +237,7 @@ class CAV_Area {
 					</section>
 				<?php endif; ?>
 
-				<?php if ( ! $eventos && ! $ofertas && ! $abertos && ! $usos ) : ?>
+				<?php if ( ! $eventos && ! $ofertas && ! $abertos && ! $resultados && ! $usos ) : ?>
 					<p class="cav-vazio">Por enquanto não há novidades. Quando a academia publicar eventos, ofertas e sorteios, eles aparecem aqui.</p>
 				<?php endif; ?>
 
@@ -211,6 +245,15 @@ class CAV_Area {
 		</div>
 		<?php
 		return ob_get_clean();
+	}
+
+	/** Sorteios que o usuário ganhou nos últimos 60 dias (depois disso o aviso sai do painel). */
+	private static function ganhos_recentes( $user_id ) {
+		$limite = wp_date( 'Y-m-d H:i:s', strtotime( '-60 days' ) );
+
+		return array_values( array_filter( CAV_Sorteio::ganhos_do_membro( $user_id, 3 ), function ( $p ) use ( $limite ) {
+			return (string) get_post_meta( $p->ID, CAV_Conteudo::META_APURADO, true ) >= $limite;
+		} ) );
 	}
 
 	/** Sorteios com inscrição aberta que o usuário pode ver. */
@@ -354,6 +397,56 @@ class CAV_Area {
 			echo CAV_Agenda::item( $e ); // phpcs:ignore WordPress.Security.EscapeOutput
 		}
 		echo '</div></div>';
+		return ob_get_clean();
+	}
+
+	/**
+	 * Vitrine pública para a home: o que está acontecendo no clube agora (sorteio aberto,
+	 * próximo seminário, descontos da academia). Só mostra títulos e datas, nada de área restrita.
+	 * [cav_clube_agora]
+	 */
+	public static function clube_agora() {
+		$itens = [];
+
+		foreach ( get_posts( [ 'post_type' => 'cav_sorteio', 'post_status' => 'publish', 'posts_per_page' => 20 ] ) as $s ) {
+			if ( CAV_Conteudo::inscricoes_abertas( $s->ID ) ) {
+				$premio = get_post_meta( $s->ID, CAV_Conteudo::META_PREMIO, true ) ?: get_the_title( $s );
+				$fim    = get_post_meta( $s->ID, CAV_Conteudo::META_FIM, true );
+				$itens[] = [ 'Sorteio aberto', $premio, $fim ? 'até ' . mysql2date( 'd/m', $fim . ' 00:00:00' ) : '' ];
+				break;
+			}
+		}
+
+		foreach ( CAV_Agenda::proximos( 30 ) as $e ) {
+			if ( 'seminario' === get_post_meta( $e->ID, CAV_Agenda::META_TIPO, true ) ) {
+				$data    = get_post_meta( $e->ID, CAV_Agenda::META_DATA, true );
+				$itens[] = [ 'Próximo seminário', get_the_title( $e ), $data ? mysql2date( 'd/m', $data . ' 00:00:00' ) : '' ];
+				break;
+			}
+		}
+
+		$descontos = count( CAV_Ofertas::listar( 'desconto', 50 ) );
+		if ( $descontos ) {
+			$itens[] = [ 'Descontos na academia', 1 === $descontos ? '1 condição exclusiva' : $descontos . ' condições exclusivas', 'no ar agora' ];
+		}
+
+		if ( ! $itens ) {
+			return '';
+		}
+
+		wp_enqueue_style( 'cav-membro' );
+
+		ob_start();
+		echo '<div class="cav-membro-raiz cav-agora"><p class="cav-agora__titulo">Acontecendo agora no clube</p><ul class="cav-agora__lista">';
+		foreach ( $itens as $i ) {
+			printf(
+				'<li><span class="cav-agora__rotulo">%s</span><strong>%s</strong>%s</li>',
+				esc_html( $i[0] ),
+				esc_html( $i[1] ),
+				$i[2] ? '<em>' . esc_html( $i[2] ) . '</em>' : ''
+			);
+		}
+		echo '</ul></div>';
 		return ob_get_clean();
 	}
 }

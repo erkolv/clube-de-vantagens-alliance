@@ -231,3 +231,12 @@
 	.cav-evento__data { width: auto; text-align: left; display: flex; align-items: baseline; gap: .5rem; }
 	.cav-ofertas-grade { grid-template-columns: 1fr; }
 }
+
+/* ---------- Vitrine da home: "acontecendo agora" ---------- */
+.cav-agora { margin: 2rem auto 0; }
+.cav-agora__titulo { margin: 0 0 .85rem; font-size: .75rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--cav-fraco); }
+.cav-agora__lista { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+.cav-agora__lista li { display: flex; flex-direction: column; gap: .3rem; padding: 1rem 1.15rem; border: 1px solid var(--cav-linha); border-left: 4px solid var(--cav-destaque); background: var(--cav-papel); }
+.cav-agora__rotulo { font-size: .68rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--cav-fraco); }
+.cav-agora__lista strong { font-size: 1.05rem; line-height: 1.3; }
+.cav-agora__lista em { font-style: normal; font-size: .85rem; color: var(--cav-fraco); }

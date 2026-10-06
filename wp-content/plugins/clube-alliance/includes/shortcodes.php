@@ -123,7 +123,7 @@ class CAV_Shortcodes {
 
 		$posts = get_posts( [
 			'post_type'      => 'cav_sorteio',
-			'posts_per_page' => absint( $atts['qtd'] ),
+			'posts_per_page' => max( 1, absint( $atts['qtd'] ) ),
 			'post_status'    => 'publish',
 			'meta_query'     => [ [ 'key' => CAV_Acesso::META_PUBLICO, 'value' => $publicos, 'compare' => 'IN' ] ],
 		] );
@@ -132,48 +132,110 @@ class CAV_Shortcodes {
 			return '<p class="cav-vazio">Nenhum sorteio aberto agora. Fique de olho, sempre tem coisa nova.</p>';
 		}
 
-		$meus = CAV_Sorteio::do_membro( get_current_user_id() );
+		$meus   = array_map( 'strval', CAV_Sorteio::do_membro( get_current_user_id() ) );
+		$eu     = get_current_user_id();
+		$abertos    = [];
+		$resultados = [];
+
+		foreach ( $posts as $p ) {
+			if ( (int) get_post_meta( $p->ID, CAV_Conteudo::META_GANHADOR, true ) ) {
+				$resultados[] = $p;
+			} else {
+				$abertos[] = $p;
+			}
+		}
+
+		// Resultado mais novo primeiro.
+		usort( $resultados, function ( $a, $b ) {
+			return strcmp(
+				(string) get_post_meta( $b->ID, CAV_Conteudo::META_APURADO, true ),
+				(string) get_post_meta( $a->ID, CAV_Conteudo::META_APURADO, true )
+			);
+		} );
+
+		$ganhos = array_filter( $resultados, function ( $p ) use ( $eu ) {
+			return $eu && (int) get_post_meta( $p->ID, CAV_Conteudo::META_GANHADOR, true ) === $eu;
+		} );
 
 		ob_start();
-		echo '<div class="cav-grade">';
-		foreach ( $posts as $p ) {
-			$premio   = get_post_meta( $p->ID, CAV_Conteudo::META_PREMIO, true );
-			$fim      = get_post_meta( $p->ID, CAV_Conteudo::META_FIM, true );
-			$ganhador = (int) get_post_meta( $p->ID, CAV_Conteudo::META_GANHADOR, true );
-			$aberto   = CAV_Conteudo::inscricoes_abertas( $p->ID );
-			$dentro   = in_array( (string) $p->ID, array_map( 'strval', $meus ), true );
-			?>
-			<div class="cav-item is-sorteio">
-				<?php if ( has_post_thumbnail( $p ) ) : ?>
-					<span class="cav-item-foto"><?php echo get_the_post_thumbnail( $p, 'medium' ); ?></span>
-				<?php endif; ?>
-				<div class="cav-item-corpo">
-					<span class="cav-item-titulo"><?php echo esc_html( get_the_title( $p ) ); ?></span>
-					<?php if ( $premio ) : ?>
-						<span class="cav-item-resumo"><?php echo esc_html( $premio ); ?></span>
-					<?php endif; ?>
-					<?php if ( $fim && $aberto ) : ?>
-						<span class="cav-item-prazo">Participe até <?php echo esc_html( mysql2date( 'd/m/Y', $fim . ' 00:00:00' ) ); ?></span>
-					<?php endif; ?>
+		echo '<div class="cav-sorteios">';
 
-					<?php if ( $ganhador ) :
-						$g = get_userdata( $ganhador ); ?>
-						<span class="cav-item-status">Ganhador: <?php echo esc_html( $g ? $g->display_name : 'apurado' ); ?></span>
-					<?php elseif ( $dentro ) : ?>
-						<span class="cav-item-status is-ok">Você está participando</span>
-					<?php elseif ( ! $aberto ) : ?>
-						<span class="cav-item-status">Inscrições encerradas</span>
-					<?php elseif ( ! CAV_Acesso::e_membro_ativo() ) : ?>
-						<span class="cav-item-status">Só para membros com matrícula ativa</span>
-					<?php else : ?>
-						<button type="button" class="cav-btn cav-participar" data-sorteio="<?php echo esc_attr( $p->ID ); ?>">Participar</button>
-					<?php endif; ?>
-				</div>
-			</div>
-			<?php
+		foreach ( $ganhos as $g ) {
+			$premio = get_post_meta( $g->ID, CAV_Conteudo::META_PREMIO, true ) ?: get_the_title( $g );
+			echo '<div class="cav-ganhou" role="status"><strong>Parabéns, você ganhou!</strong> ';
+			echo esc_html( $premio ) . ' &middot; ' . esc_html( get_the_title( $g ) ) . '. ';
+			echo 'Fale com a recepção da academia para retirar o prêmio.</div>';
 		}
+
+		if ( $abertos ) {
+			echo '<h3 class="cav-sorteios__titulo">Em andamento</h3><div class="cav-grade">';
+			foreach ( $abertos as $p ) {
+				self::cartao_sorteio( $p, $meus, $eu );
+			}
+			echo '</div>';
+		}
+
+		if ( $resultados ) {
+			echo '<h3 class="cav-sorteios__titulo">Resultados</h3><div class="cav-grade">';
+			foreach ( $resultados as $p ) {
+				self::cartao_sorteio( $p, $meus, $eu );
+			}
+			echo '</div>';
+		}
+
+		if ( ! $abertos ) {
+			echo '<p class="cav-vazio">Nenhum sorteio em andamento agora. Fique de olho, sempre tem coisa nova.</p>';
+		}
+
 		echo '</div>';
 		return ob_get_clean();
+	}
+
+	/** Cartão de um sorteio: aberto, participando, encerrado ou com resultado. */
+	private static function cartao_sorteio( $p, array $meus, $eu ) {
+		$premio   = get_post_meta( $p->ID, CAV_Conteudo::META_PREMIO, true );
+		$fim      = get_post_meta( $p->ID, CAV_Conteudo::META_FIM, true );
+		$ganhador = (int) get_post_meta( $p->ID, CAV_Conteudo::META_GANHADOR, true );
+		$aberto   = CAV_Conteudo::inscricoes_abertas( $p->ID );
+		$dentro   = in_array( (string) $p->ID, $meus, true );
+		$ganhei   = $ganhador && $ganhador === (int) $eu;
+		?>
+		<div class="cav-item is-sorteio<?php echo $ganhei ? ' is-ganhou' : ''; ?>">
+			<?php if ( has_post_thumbnail( $p ) ) : ?>
+				<span class="cav-item-foto"><?php echo get_the_post_thumbnail( $p, 'medium' ); ?></span>
+			<?php endif; ?>
+			<div class="cav-item-corpo">
+				<span class="cav-item-titulo"><?php echo esc_html( get_the_title( $p ) ); ?></span>
+				<?php if ( $premio ) : ?>
+					<span class="cav-item-resumo"><?php echo esc_html( $premio ); ?></span>
+				<?php endif; ?>
+				<?php if ( $fim && $aberto ) : ?>
+					<span class="cav-item-prazo">Participe até <?php echo esc_html( mysql2date( 'd/m/Y', $fim . ' 00:00:00' ) ); ?></span>
+				<?php endif; ?>
+
+				<?php if ( $ganhei ) : ?>
+					<span class="cav-item-status is-ganhou">Você ganhou. Retire na recepção.</span>
+					<?php $quando = CAV_Sorteio::data_apuracao( $p->ID ); ?>
+					<?php if ( $quando ) : ?><span class="cav-item-prazo">Sorteado em <?php echo esc_html( $quando ); ?></span><?php endif; ?>
+				<?php elseif ( $ganhador ) : ?>
+					<span class="cav-item-status">Ganhador: <?php echo esc_html( CAV_Sorteio::nome_publico( $ganhador ) ); ?></span>
+					<?php $quando = CAV_Sorteio::data_apuracao( $p->ID ); ?>
+					<span class="cav-item-prazo">
+						<?php echo $quando ? 'Sorteado em ' . esc_html( $quando ) : 'Sorteio apurado'; ?>
+						<?php echo $dentro ? ' &middot; você participou' : ''; ?>
+					</span>
+				<?php elseif ( $dentro ) : ?>
+					<span class="cav-item-status is-ok">Você está participando</span>
+				<?php elseif ( ! $aberto ) : ?>
+					<span class="cav-item-status">Inscrições encerradas, aguardando o sorteio</span>
+				<?php elseif ( ! CAV_Acesso::e_membro_ativo() ) : ?>
+					<span class="cav-item-status">Só para membros com matrícula ativa</span>
+				<?php else : ?>
+					<button type="button" class="cav-btn cav-participar" data-sorteio="<?php echo esc_attr( $p->ID ); ?>">Participar</button>
+				<?php endif; ?>
+			</div>
+		</div>
+		<?php
 	}
 
 	/** Públicos que este visitante consegue enxergar, filtrados pelo atributo. */

@@ -284,6 +284,44 @@ if ( class_exists( 'CAV_Ofertas' ) && class_exists( 'CAV_Agenda' ) ) {
 		update_post_meta( $sorteio_id, CAV_Conteudo::META_INICIO, wp_date( 'Y-m-d', strtotime( '-3 days' ) ) );
 		update_post_meta( $sorteio_id, CAV_Conteudo::META_FIM, wp_date( 'Y-m-d', strtotime( '+14 days' ) ) );
 	}
+
+	// Dois sorteios já apurados: um ganho pelo aluno.demo (aparece o aviso "você ganhou"),
+	// outro por outro aluno (aparece só o nome dele).
+	$apurado = static function ( $titulo, $premio, $ganhador, $dias_atras, $inscritos ) {
+		$ja = get_posts( [ 'post_type' => 'cav_sorteio', 'title' => $titulo, 'post_status' => 'any', 'numberposts' => 1 ] );
+
+		if ( $ja ) {
+			return;
+		}
+
+		global $wpdb;
+
+		$id = wp_insert_post( [
+			'post_type'    => 'cav_sorteio',
+			'post_status'  => 'publish',
+			'post_title'   => $titulo,
+			'post_content' => 'Sorteio já realizado.',
+		] );
+
+		update_post_meta( $id, CAV_Acesso::META_PUBLICO, 'membros' );
+		update_post_meta( $id, CAV_Conteudo::META_PREMIO, $premio );
+		update_post_meta( $id, CAV_Conteudo::META_INICIO, wp_date( 'Y-m-d', strtotime( '-' . ( $dias_atras + 15 ) . ' days' ) ) );
+		update_post_meta( $id, CAV_Conteudo::META_FIM, wp_date( 'Y-m-d', strtotime( '-' . ( $dias_atras + 1 ) . ' days' ) ) );
+		update_post_meta( $id, CAV_Conteudo::META_GANHADOR, $ganhador );
+		update_post_meta( $id, CAV_Conteudo::META_APURADO, wp_date( 'Y-m-d H:i:s', strtotime( '-' . $dias_atras . ' days' ) ) );
+
+		foreach ( $inscritos as $membro ) {
+			$wpdb->insert( CAV_Sorteio::tabela(), [
+				'sorteio_id' => $id,
+				'membro_id'  => $membro,
+				'criado_em'  => wp_date( 'Y-m-d H:i:s', strtotime( '-' . ( $dias_atras + 5 ) . ' days' ) ),
+				'ip'         => '',
+			] );
+		}
+	};
+
+	$apurado( 'Rashguard Alliance de brinde', 'Rashguard Alliance', $aluno, 4, [ $aluno, $vencido ] );
+	$apurado( 'Kit protetor bucal e faixa', 'Protetor bucal e faixa Alliance', $vencido, 27, [ $vencido ] );
 }
 
 WP_CLI::success( 'Dados de demonstração prontos.' );
@@ -291,5 +329,5 @@ WP_CLI::log( '  aluno.demo      CPF 111.444.777-35  (ativo)' );
 WP_CLI::log( '  aluno.vencido   CPF 529.982.247-25  (matrícula vencida)' );
 WP_CLI::log( '  parceiro.demo   opera a Barbearia Corte Reto' );
 WP_CLI::log( '  recepcao.demo   vê só a tela de aprovações' );
-WP_CLI::log( '  área do aluno   4 produtos, 3 descontos, 5 eventos e 1 sorteio de exemplo' );
+WP_CLI::log( '  área do aluno   4 produtos, 3 descontos, 5 eventos, 1 sorteio aberto e 2 com resultado (o aluno.demo ganhou um)' );
 WP_CLI::log( '  senha das contas de teste: a do .env (DEMO_PASSWORD)' );

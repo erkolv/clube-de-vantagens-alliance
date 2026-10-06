@@ -135,6 +135,36 @@ if ( ! function_exists( 'cav_pg_id' ) ) {
 				] ),
 			] ),
 
+			cav_pg_secao( 'clube-bloco', [
+				cav_pg_olho( 'Por dentro do clube' ),
+				cav_pg_titulo( 'Além do desconto, ' . $ouro( 'tem mais coisa lá dentro' ) ),
+				cav_pg_texto( '<p>Quem entra no clube ganha uma área só dos alunos, com benefícios da própria academia.</p>', 'clube-lead' ),
+				cav_pg_contem( 'clube-grade clube-grade-2', [
+					cav_pg_contem( 'clube-caixa', [
+						cav_pg_olho( 'Sorteios' ),
+						cav_pg_titulo( 'Prêmios só entre os alunos do clube', 'h3' ),
+						cav_pg_texto( '<p>A academia sorteia prêmios entre os membros. Você participa com um clique e vê o resultado na sua área, com o nome de quem ganhou.</p>' ),
+					] ),
+					cav_pg_contem( 'clube-caixa', [
+						cav_pg_olho( 'Seminários e eventos' ),
+						cav_pg_titulo( 'Entrada VIP nos seminários', 'h3' ),
+						cav_pg_texto( '<p>Quem é do clube entra nos seminários e eventos da Alliance com condição VIP. A agenda completa fica na sua área, com data, horário e local.</p>' ),
+					] ),
+					cav_pg_contem( 'clube-caixa', [
+						cav_pg_olho( 'Na academia' ),
+						cav_pg_titulo( 'Descontos exclusivos na Alliance', 'h3' ),
+						cav_pg_texto( '<p>Condições que só o aluno do clube tem dentro da própria academia, como aula particular, segunda modalidade e indicação de amigo.</p>' ),
+					] ),
+					cav_pg_contem( 'clube-caixa', [
+						cav_pg_olho( 'Produtos' ),
+						cav_pg_titulo( 'Preço de aluno nos produtos', 'h3' ),
+						cav_pg_texto( '<p>Kimono, faixa, rashguard e outros produtos com o preço normal e o preço do clube lado a lado, para você ver quanto economiza.</p>' ),
+					] ),
+				] ),
+				cav_pg_atalho( '[cav_clube_agora]' ),
+				cav_pg_contem( 'clube-linha-botoes', [ cav_pg_botao( 'Quero fazer parte', '/quero-fazer-parte/' ) ] ),
+			] ),
+
 			cav_pg_secao( 'clube-bloco clube-claro', [
 				cav_pg_olho( 'Como funciona' ),
 				cav_pg_titulo( 'Três passos, ' . $ouro( 'uma vez só' ) ),
@@ -203,9 +233,12 @@ if ( ! function_exists( 'cav_pg_id' ) ) {
 						cav_pg_olho( 'O que você tem acesso' ),
 						cav_pg_texto( cav_pg_tabela( [
 							[ 'Descontos nos parceiros', 'conforme cada parceiro' ],
+							[ 'Descontos exclusivos na academia', 'só membros' ],
+							[ 'Produtos com preço de aluno', 'só membros' ],
+							[ 'Entrada VIP em seminários e eventos', 'só membros' ],
+							[ 'Sorteios da academia', 'só membros' ],
 							[ 'Promoções por temporada', 'rotativo' ],
 							[ 'Conteúdo técnico gravado', 'só membros' ],
-							[ 'Sorteios da academia', 'só membros' ],
 							[ 'Custo', 'R$ 19,90/mês', true ],
 						] ) ),
 					] ),

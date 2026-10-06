@@ -139,7 +139,18 @@ echo "==> Área do parceiro"
 wp eval-file /scripts/area-parceiro.php || echo "   (não consegui montar a área do parceiro; veja a mensagem acima)"
 
 echo "==> Páginas no Elementor"
-wp eval-file /scripts/paginas-elementor.php ${REFAZER_PAGINAS:+refazer} || echo "   (não consegui montar as páginas; veja a mensagem acima)"
+# Versão do conteúdo das páginas. Quando sobe, só as páginas que mudaram são refeitas, uma vez.
+# 2 = home e "O que é o clube" ganharam a seção do que o clube oferece.
+PAGINAS_VERSAO=2
+PEDIDO_PAGINAS="${REFAZER_PAGINAS:+refazer}"
+if [ -z "$PEDIDO_PAGINAS" ] && [ "$(wp option get cav_paginas_versao 2>/dev/null || true)" != "$PAGINAS_VERSAO" ]; then
+	PEDIDO_PAGINAS="refazer:inicio,o-que-e"
+fi
+if wp eval-file /scripts/paginas-elementor.php $PEDIDO_PAGINAS; then
+	wp option update cav_paginas_versao "$PAGINAS_VERSAO" >/dev/null
+else
+	echo "   (não consegui montar as páginas; veja a mensagem acima)"
+fi
 
 echo "==> Paleta e fontes no Elementor"
 wp eval-file /scripts/elementor-kit.php || echo "   (não consegui aplicar a paleta; veja o README, seção Paleta)"

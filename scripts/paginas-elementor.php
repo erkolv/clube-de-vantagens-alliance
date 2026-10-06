@@ -4,6 +4,7 @@
  *
  *   wp eval-file /scripts/paginas-elementor.php          só páginas que ainda não foram montadas
  *   wp eval-file /scripts/paginas-elementor.php refazer  refaz todas (apaga o que você editou nelas)
+ *   wp eval-file /scripts/paginas-elementor.php refazer:inicio,o-que-e  refaz só essas
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -12,7 +13,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 require __DIR__ . '/lib/paginas.php';
 
-$refazer = isset( $args[0] ) && 'refazer' === $args[0];
+$pedido  = isset( $args[0] ) ? (string) $args[0] : '';
+$refazer = 'refazer' === $pedido;
+$so_estas = ( 0 === strpos( $pedido, 'refazer:' ) ) ? array_filter( explode( ',', substr( $pedido, 8 ) ) ) : [];
 $versao  = defined( 'ELEMENTOR_VERSION' ) ? ELEMENTOR_VERSION : '3.0.0';
 
 foreach ( cav_paginas_elementor() as $slug => $pagina ) {
@@ -23,7 +26,9 @@ foreach ( cav_paginas_elementor() as $slug => $pagina ) {
 		continue;
 	}
 
-	if ( ! $refazer && get_post_meta( $post->ID, '_elementor_data', true ) ) {
+	$refazer_esta = $refazer || in_array( $slug, $so_estas, true );
+
+	if ( ! $refazer_esta && get_post_meta( $post->ID, '_elementor_data', true ) ) {
 		WP_CLI::log( "   já montada, mantive: {$pagina['titulo']} (/$slug/)" );
 		continue;
 	}

@@ -433,6 +433,24 @@ a.cav-item:hover { border-color: var(--cav-marca); }
 }
 
 .cav-item-status.is-ok { color: var(--cav-sim); }
+.cav-item-status.is-ganhou { color: var(--cav-ouro-texto, #141414); background: var(--cav-destaque, #ffc629); padding: .35rem .6rem; align-self: flex-start; }
+.cav-item.is-ganhou { box-shadow: 0 0 0 2px var(--cav-destaque, #ffc629); }
+
+.cav-sorteios__titulo {
+	margin: 2rem 0 1rem;
+	font-family: var(--cav-fonte-titulo);
+	font-size: 1.15rem;
+}
+.cav-sorteios > .cav-ganhou + .cav-sorteios__titulo,
+.cav-sorteios > .cav-sorteios__titulo:first-child { margin-top: 0; }
+
+.cav-ganhou {
+	margin: 0 0 1.5rem;
+	padding: 1rem 1.25rem;
+	background: var(--cav-destaque, #ffc629);
+	color: #141414;
+	line-height: 1.5;
+}
 
 .cav-item-erro {
 	font-size: .85rem;

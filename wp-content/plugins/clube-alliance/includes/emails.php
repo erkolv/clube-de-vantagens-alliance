@@ -125,4 +125,30 @@ class CAV_Emails {
 			self::headers()
 		);
 	}
+
+	public static function sorteio_ganhador( $sorteio_id, $user_id ) {
+		$user = get_userdata( (int) $user_id );
+		if ( ! $user || ! is_email( $user->user_email ) ) {
+			return false;
+		}
+
+		$premio = get_post_meta( $sorteio_id, CAV_Conteudo::META_PREMIO, true ) ?: get_the_title( $sorteio_id );
+		$url    = class_exists( 'CAV_Area' ) ? CAV_Area::url( 'sorteios-do-clube' ) : '';
+
+		$corpo  = '<p>Olá, ' . esc_html( CAV_Membro::primeiro_nome( $user ) ) . '.</p>';
+		$corpo .= '<p>Você foi sorteado no <strong>' . esc_html( get_the_title( $sorteio_id ) ) . '</strong>. Parabéns!</p>';
+		$corpo .= '<p><strong>Prêmio:</strong> ' . esc_html( $premio ) . '</p>';
+		$corpo .= '<p>Para retirar, fale com a recepção da academia. Leve um documento com foto.</p>';
+
+		if ( $url ) {
+			$corpo .= self::botao( $url, 'Ver o resultado' );
+		}
+
+		return wp_mail(
+			$user->user_email,
+			'Você ganhou o sorteio do clube',
+			self::molde( 'Você ganhou!', $corpo ),
+			self::headers()
+		);
+	}
 }

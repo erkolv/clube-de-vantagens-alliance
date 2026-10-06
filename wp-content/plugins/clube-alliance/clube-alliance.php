@@ -52,7 +52,7 @@ add_action( 'plugins_loaded', function () {
 	CAV_Ofertas::init();
 	CAV_Agenda::init();
 	CAV_Area::init();
-CAV_AreaParceiro::init();
+	CAV_AreaParceiro::init();
 	CAV_Rest::init();
 	CAV_Shortcodes::init();
 	CAV_Admin::init();
