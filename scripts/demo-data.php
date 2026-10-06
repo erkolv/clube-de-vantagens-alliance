@@ -93,6 +93,18 @@ $beneficio = static function ( $titulo, $regra, $limite, $fim ) use ( $parceiro_
 $beneficio( 'Corte de cabelo — 30% off', 'Promoção, segunda a quinta, uma vez por semana', 'semana', wp_date( 'Y-m-d', strtotime( '+30 days' ) ) );
 $beneficio( 'Barba — 10% off', 'Permanente, sem limite de uso', 'nenhum', '' );
 
+// Dados do negócio, para a página do parceiro não ficar vazia.
+if ( class_exists( 'CAV_AreaParceiro' ) && ! get_post_meta( $parceiro_id, CAV_AreaParceiro::META_TELEFONE, true ) ) {
+	wp_update_post( [
+		'ID'           => $parceiro_id,
+		'post_excerpt' => 'Barbearia clássica no Centro, com hora marcada.',
+	] );
+	update_post_meta( $parceiro_id, CAV_AreaParceiro::META_TELEFONE, '(11) 98765-4321' );
+	update_post_meta( $parceiro_id, CAV_AreaParceiro::META_ENDERECO, 'Rua Barão de Jaceguai, 100, Centro, Mogi das Cruzes' );
+	update_post_meta( $parceiro_id, CAV_AreaParceiro::META_HORARIO, "Seg a sáb, 9h às 20h\nDomingo fechado" );
+	update_post_meta( $parceiro_id, CAV_AreaParceiro::META_INSTAGRAM, 'corteretodemo' );
+}
+
 /* ---- Contas ---------------------------------------------------------- */
 
 $parceiro_user = $criar_usuario( 'parceiro.demo', 'parceiro.demo@example.com', 'Corte Reto', 'cav_parceiro' );

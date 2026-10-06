@@ -87,6 +87,15 @@ Hoje só quem é administrador cadastra ofertas e eventos. A recepção ainda n�
 
 Para pôr um pedaço disso em outra página: `[cav_proximos_eventos qtd="3"]` e `[cav_ofertas tipo="produto" qtd="4"]` (`tipo` pode ser `produto` ou `desconto`).
 
+**Área do parceiro.** Quem opera um estabelecimento entra e cai no Terminal, com um menu no topo (Terminal, Painel, Promoções, Meu negócio e um atalho para a página pública dele). Tudo pelo site, sem o painel do WordPress.
+
+- **Promoções** (`/minhas-promocoes/`): o parceiro vê a lista com a situação de cada uma (no ar, pausada, agendada, encerrada, em análise), cadastra uma nova, edita, pausa, reativa ou apaga. Cada promoção tem nome, regra para o caixa, limite por aluno (sem limite, dia, semana, mês) e datas de início e fim opcionais. Salvou, vale na hora no terminal e na página pública. Apagar manda para a lixeira, então o histórico de usos continua legível.
+- **Meu negócio** (`/meu-negocio/`): foto do negócio, logo, resumo, descrição, WhatsApp, Instagram, endereço, horário e site. Aparecem na página do parceiro, em "Onde encontrar". A foto e o logo aceitam JPG, PNG e WebP até 4 MB. Nome e categoria só a Alliance muda.
+- Cada parceiro mexe só no que é dele. A promoção que a Alliance deixa em rascunho na aprovação do cadastro aparece para ele como "Em análise" e vai ao ar quando for publicada no painel.
+- Pelo painel do WordPress, o administrador edita os mesmos dados na tela do parceiro (caixa "Dados do negócio").
+
+Hoje o que o parceiro salva vai ao ar sem passar por aprovação. Se a Alliance preferir revisar antes, dá para mudar para "em análise" (é uma alteração pequena no plugin).
+
 **Páginas com shortcode.** O setup já cria cada uma com o shortcode certo:
 
 | Página | Shortcode |
@@ -100,8 +109,10 @@ Para pôr um pedaço disso em outra página: `[cav_proximos_eventos qtd="3"]` e 
 | Agenda e eventos | `[cav_menu_membro]` `[cav_agenda]` |
 | Conteúdos | `[cav_conteudos]` |
 | Sorteios do clube | `[cav_sorteios]` |
-| Terminal | `[cav_terminal]` |
-| Painel do parceiro | `[cav_painel_parceiro]` |
+| Terminal | `[cav_menu_parceiro]` `[cav_terminal]` |
+| Painel do parceiro | `[cav_menu_parceiro]` `[cav_painel_parceiro]` |
+| Minhas promoções (parceiro) | `[cav_menu_parceiro]` `[cav_minhas_promocoes]` |
+| Meu negócio (parceiro) | `[cav_menu_parceiro]` `[cav_meu_negocio]` |
 | Conteúdos do parceiro | `[cav_conteudos publico="parceiros"]` |
 
 Para encaixar um desses numa página montada no Elementor, use o widget Shortcode.
@@ -129,7 +140,6 @@ Gera dois zips em `dist/`: `clube-alliance.zip` e `clube-alliance-child.zip`. No
 - **E-mail em produção.** Localmente o Mailpit recebe tudo. No site de verdade o `wp_mail` sozinho costuma cair em spam ou nem sair, e os e-mails de aprovação dependem disso. Configure um SMTP (Brevo, Amazon SES ou Postmark) antes de abrir os formulários.
 - **Elementor Pro.** É pago e não dá para instalar pelo script. Instale com a sua licença se for usar o Theme Builder para o cabeçalho, o rodapé e a página individual do parceiro.
 - **Diretório por distância.** A lista de parceiros busca por nome e categoria. Busca por distância ou mapa pede o Voxel ou o GeoDirectory.
-- **Parceiro editar o próprio cadastro pelo site.** Hoje só pelo painel do WordPress.
 - **Telas de login.** Usa a tela padrão do WordPress. Depois de entrar, parceiro vai para `/terminal/`, aluno para `/area-do-membro/` e recepção para as aprovações. A escolha de acesso do protótipo (aluno ou parceiro) ainda não existe no plugin.
 - **Sorteios.** Com o clube pago, a participação passa a ter contrapartida financeira. Vale a Alliance confirmar com o contador se precisa de autorização da SPA/Ministério da Fazenda antes do primeiro.
 
@@ -137,7 +147,7 @@ Gera dois zips em `dist/`: `clube-alliance.zip` e `clube-alliance-child.zip`. No
 
 Confirmado no Codespaces: o setup, o WordPress, o plugin, o login por perfil e o terminal de consulta.
 
-Conferido num WordPress de verdade rodando no sandbox (WordPress Playground, sem o Elementor nem o tema): a área do aluno (painel, ofertas, agenda, menu), no computador e no celular, e os scripts que criam as páginas e os dados de teste, inclusive rodando duas vezes.
+Conferido num WordPress de verdade rodando no sandbox (WordPress Playground, sem o Elementor nem o tema): a área do aluno (painel, ofertas, agenda, menu) e a do parceiro (promoções, meu negócio, envio de foto e logo, página pública), no computador e no celular, e os scripts que criam as páginas e os dados de teste, inclusive rodando duas vezes.
 
 Conferido só por simulação: o visual do cabeçalho, do rodapé e das páginas (num navegador, com uma imitação do HTML do Elementor, no computador e no celular), e a sintaxe de todos os arquivos PHP.
 

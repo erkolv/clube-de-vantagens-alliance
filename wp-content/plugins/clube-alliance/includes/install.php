@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class CAV_Install {
 
-	const DB_VERSION = '3';
+	const DB_VERSION = '4';
 
 	public static function activate() {
 		self::criar_tabelas();
@@ -99,7 +99,14 @@ class CAV_Install {
 			'cav_registrar_uso'  => true,
 			'cav_ver_relatorio'  => true,
 			'upload_files'       => true,
+			'cav_editar_negocio' => true,
 		] );
+
+		// add_role não mexe num papel que já existe: garante a permissão nova em sites já instalados.
+		$papel_parceiro = get_role( 'cav_parceiro' );
+		if ( $papel_parceiro ) {
+			$papel_parceiro->add_cap( 'cav_editar_negocio' );
+		}
 
 		add_role( 'cav_recepcao', 'Recepção do Clube', [
 			'read'        => true,
@@ -113,6 +120,7 @@ class CAV_Install {
 			$admin->add_cap( 'cav_ver_relatorio' );
 			$admin->add_cap( 'cav_gerenciar' );
 			$admin->add_cap( 'cav_aprovar' );
+			$admin->add_cap( 'cav_editar_negocio' );
 		}
 	}
 }

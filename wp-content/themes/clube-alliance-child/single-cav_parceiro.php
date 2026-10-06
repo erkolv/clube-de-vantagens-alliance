@@ -15,6 +15,8 @@ while ( have_posts() ) :
 	$id         = get_the_ID();
 	$categorias = get_the_terms( $id, 'cav_categoria' );
 	$beneficios = class_exists( 'CAV_Parceiro' ) ? CAV_Parceiro::beneficios( $id ) : [];
+	$negocio    = class_exists( 'CAV_AreaParceiro' ) ? CAV_AreaParceiro::dados( $id ) : [];
+	$tem_contato = $negocio && ( $negocio['telefone'] || $negocio['endereco'] || $negocio['horario'] || $negocio['instagram'] || $negocio['site'] );
 	?>
 	<main id="content" class="clube-pagina">
 
@@ -23,6 +25,9 @@ while ( have_posts() ) :
 				<p class="clube-olho">
 					<a href="<?php echo esc_url( get_post_type_archive_link( 'cav_parceiro' ) ); ?>">&larr; Parceiros</a>
 				</p>
+				<?php if ( ! empty( $negocio['logo_id'] ) ) : ?>
+					<div class="clube-parceiro__logo"><?php echo wp_get_attachment_image( $negocio['logo_id'], 'thumbnail', false, [ 'alt' => '' ] ); ?></div>
+				<?php endif; ?>
 				<h1><?php the_title(); ?></h1>
 				<?php if ( $categorias && ! is_wp_error( $categorias ) ) : ?>
 					<p class="clube-tags">
@@ -64,6 +69,30 @@ while ( have_posts() ) :
 						</ul>
 					<?php else : ?>
 						<p class="clube-vazio">Este parceiro não tem benefício no ar agora.</p>
+					<?php endif; ?>
+
+					<?php if ( $tem_contato ) : ?>
+						<div class="clube-contato">
+							<p class="clube-olho">Onde encontrar</p>
+							<ul>
+								<?php if ( $negocio['endereco'] ) : ?>
+									<li><strong>Endereço</strong><span><?php echo esc_html( $negocio['endereco'] ); ?></span></li>
+								<?php endif; ?>
+								<?php if ( $negocio['horario'] ) : ?>
+									<li><strong>Horário</strong><span><?php echo nl2br( esc_html( $negocio['horario'] ) ); ?></span></li>
+								<?php endif; ?>
+								<?php if ( $negocio['telefone'] ) : ?>
+									<li><strong><?php echo $negocio['whatsapp'] ? 'WhatsApp' : 'Telefone'; ?></strong>
+										<span><?php if ( $negocio['whatsapp'] ) : ?><a href="<?php echo esc_url( $negocio['whatsapp'] ); ?>" target="_blank" rel="noopener"><?php echo esc_html( $negocio['telefone'] ); ?></a><?php else : echo esc_html( $negocio['telefone'] ); endif; ?></span></li>
+								<?php endif; ?>
+								<?php if ( $negocio['instagram'] ) : ?>
+									<li><strong>Instagram</strong><span><a href="<?php echo esc_url( $negocio['insta_url'] ); ?>" target="_blank" rel="noopener">@<?php echo esc_html( $negocio['instagram'] ); ?></a></span></li>
+								<?php endif; ?>
+								<?php if ( $negocio['site'] ) : ?>
+									<li><strong>Site</strong><span><a href="<?php echo esc_url( $negocio['site'] ); ?>" target="_blank" rel="noopener"><?php echo esc_html( preg_replace( '#^https?://(www\.)?#', '', untrailingslashit( $negocio['site'] ) ) ); ?></a></span></li>
+								<?php endif; ?>
+							</ul>
+						</div>
 					<?php endif; ?>
 
 					<div class="clube-como">

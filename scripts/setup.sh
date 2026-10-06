@@ -135,6 +135,9 @@ wp menu location assign Principal menu-1 >/dev/null 2>&1 || true
 echo "==> Área do aluno"
 wp eval-file /scripts/area-membro.php || echo "   (não consegui montar a área do aluno; veja a mensagem acima)"
 
+echo "==> Área do parceiro"
+wp eval-file /scripts/area-parceiro.php || echo "   (não consegui montar a área do parceiro; veja a mensagem acima)"
+
 echo "==> Páginas no Elementor"
 wp eval-file /scripts/paginas-elementor.php ${REFAZER_PAGINAS:+refazer} || echo "   (não consegui montar as páginas; veja a mensagem acima)"
 

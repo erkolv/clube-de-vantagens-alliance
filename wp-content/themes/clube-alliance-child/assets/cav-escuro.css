@@ -77,5 +77,6 @@
 	--cav-nao:      #ff7a74;
 	--cav-fonte-titulo: 'Poppins', system-ui, sans-serif;
 	--cav-fonte-texto:  'Poppins', system-ui, sans-serif;
+	color-scheme: dark;
 }
 .cav-membro-raiz .cav-oferta__foto { background: #252525; }
