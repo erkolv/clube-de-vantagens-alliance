@@ -114,6 +114,47 @@ if ( ! function_exists( 'cav_pg_id' ) ) {
 			return '<span class="clube-ouro">' . $t . '</span>';
 		};
 
+		/* Vantagens de ser parceiro: usada na Início e na Seja parceiro. */
+		$vantagens_parceiro = static function ( $titulo_h ) use ( $ouro ) {
+			return cav_pg_secao( 'clube-bloco', [
+				cav_pg_olho( 'Vantagens de ser parceiro' ),
+				cav_pg_titulo( $titulo_h ),
+				cav_pg_texto( '<p>O clube é de graça para o seu negócio e você manda no desconto. Estas são as vantagens de entrar.</p>', 'clube-lead' ),
+				cav_pg_contem( 'clube-grade clube-grade-3', [
+					cav_pg_contem( 'clube-caixa', [
+						cav_pg_olho( 'Cliente' ),
+						cav_pg_titulo( 'Alunos da Alliance chegam até você', 'h3' ),
+						cav_pg_texto( '<p>Quem está no clube paga para participar e entra no seu estabelecimento já querendo usar o desconto. É gente da região, que treina toda semana e volta.</p>' ),
+					] ),
+					cav_pg_contem( 'clube-caixa', [
+						cav_pg_olho( 'Custo' ),
+						cav_pg_titulo( 'Sem mensalidade e sem comissão', 'h3' ),
+						cav_pg_texto( '<p>Você não paga para entrar nem por venda. O único custo é o desconto que você mesmo escolhe dar.</p>' ),
+					] ),
+					cav_pg_contem( 'clube-caixa', [
+						cav_pg_olho( 'Controle' ),
+						cav_pg_titulo( 'Você cria e muda as promoções', 'h3' ),
+						cav_pg_texto( '<p>Cadastre, edite, pause ou encerre uma promoção quando quiser, com data de início e fim para campanhas de temporada. Salvou, já vale no caixa.</p>' ),
+					] ),
+					cav_pg_contem( 'clube-caixa', [
+						cav_pg_olho( 'Vitrine' ),
+						cav_pg_titulo( 'Página do seu negócio no site', 'h3' ),
+						cav_pg_texto( '<p>Seu negócio aparece na lista de parceiros com foto, logo, endereço, horário, WhatsApp e Instagram, além das promoções que estão valendo.</p>' ),
+					] ),
+					cav_pg_contem( 'clube-caixa', [
+						cav_pg_olho( 'Números' ),
+						cav_pg_titulo( 'Veja quantos alunos usaram', 'h3' ),
+						cav_pg_texto( '<p>O painel mostra quantas vezes o seu desconto foi usado e por quantos alunos, para você saber se está valendo a pena.</p>' ),
+					] ),
+					cav_pg_contem( 'clube-caixa', [
+						cav_pg_olho( 'No caixa' ),
+						cav_pg_titulo( 'Confere só com o CPF', 'h3' ),
+						cav_pg_texto( '<p>Sem máquina, sem cupom, sem app para instalar. Você digita o CPF no celular e vê na hora se o aluno tem direito. Dados pessoais dele não aparecem.</p>' ),
+					] ),
+				] ),
+			] );
+		};
+
 		/* ------------------------------ Início ------------------------------ */
 		$inicio = [
 			cav_pg_secao( 'clube-hero', [
@@ -206,10 +247,12 @@ if ( ! function_exists( 'cav_pg_id' ) ) {
 				cav_pg_texto( '<p>Valores de exemplo, para mostrar como a conta funciona. O seu resultado depende dos descontos vigentes e de quanto você usar.</p>', 'clube-nota' ),
 			] ),
 
+			$vantagens_parceiro( 'Por que vale ter o seu negócio ' . $ouro( 'no clube' ) ),
+
 			cav_pg_secao( 'clube-bloco clube-recruta', [
 				cav_pg_olho( 'Para estabelecimentos' ),
 				cav_pg_titulo( 'Coloque seu negócio na frente dos ' . $ouro( 'alunos da Alliance' ) ),
-				cav_pg_texto( '<p>Entrar no clube é gratuito para o seu negócio. Você define o desconto, cadastra em cinco minutos e recebe um painel com quantas pessoas usaram. Sem mensalidade, sem comissão. E como o aluno paga para participar, quem chega até você já veio decidido a usar.</p>', 'clube-lead' ),
+				cav_pg_texto( '<p>Cadastre em cinco minutos. A Alliance analisa o pedido e, aprovado, você recebe o acesso por e-mail.</p>', 'clube-lead' ),
 				cav_pg_contem( 'clube-linha-botoes', [ cav_pg_botao( 'Quero ser parceiro', '/seja-parceiro/' ) ] ),
 			] ),
 		];
@@ -283,6 +326,7 @@ if ( ! function_exists( 'cav_pg_id' ) ) {
 				'Seja parceiro',
 				'Entrar no clube é gratuito para o seu negócio. Você define o desconto e a Alliance analisa o cadastro. Aprovado, você recebe um e-mail com o acesso ao terminal.'
 			),
+			$vantagens_parceiro( 'O que o seu negócio ' . $ouro( 'ganha' ) ),
 			cav_pg_secao( 'clube-bloco clube-claro', [
 				cav_pg_contem( 'clube-grade clube-grade-3', [
 					cav_pg_passo( 'Passo 01', 'Cadastre o negócio', 'Nome, endereço, horário, fotos e telefone. Cinco minutos.' ),
