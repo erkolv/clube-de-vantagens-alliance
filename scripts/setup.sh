@@ -59,6 +59,10 @@ if ! wp core is-installed >/dev/null 2>&1; then
 		--skip-email
 fi
 
+# Garante o endereço certo mesmo quando o WordPress já estava instalado com outro.
+wp option update home "$SITE_URL" >/dev/null
+wp option update siteurl "$SITE_URL" >/dev/null
+
 echo "==> Idioma, fuso e formato de data"
 # O fuso importa: a validade do acesso do aluno vence à meia-noite do horário do site.
 wp language core install pt_BR --activate >/dev/null 2>&1 || echo "   (não consegui baixar o pt_BR, segue em inglês)"
