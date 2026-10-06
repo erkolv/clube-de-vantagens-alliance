@@ -109,7 +109,7 @@ Gera dois zips em `dist/`: `clube-alliance.zip` e `clube-alliance-child.zip`. No
 - **Diretório com busca e filtro.** O plugin ainda não tem. Hoje existe a listagem simples em `/parceiros/`. Busca por categoria e distância pede o Voxel ou o GeoDirectory, ou um shortcode próprio.
 - **Benefícios dentro da página do parceiro.** Ainda não há shortcode que os puxe para a página do estabelecimento.
 - **Parceiro editar o próprio cadastro pelo site.** Hoje só pelo painel do WordPress.
-- **Login do aluno e do parceiro.** Usa a tela padrão do WordPress. A escolha de acesso do protótipo ainda não existe no plugin.
+- **Telas de login.** Usa a tela padrão do WordPress. Depois de entrar, parceiro vai para `/terminal/`, aluno para `/minha-carteirinha/` e recepção para as aprovações. A escolha de acesso do protótipo (aluno ou parceiro) ainda não existe no plugin.
 - **Sorteios.** Com o clube pago, a participação passa a ter contrapartida financeira. Vale a Alliance confirmar com o contador se precisa de autorização da SPA/Ministério da Fazenda antes do primeiro.
 
 ## Estado dos testes

@@ -28,6 +28,7 @@ require_once CAV_PATH . 'includes/conteudo.php';
 require_once CAV_PATH . 'includes/emails.php';
 require_once CAV_PATH . 'includes/solicitacoes.php';
 require_once CAV_PATH . 'includes/aprovacoes.php';
+require_once CAV_PATH . 'includes/entrada.php';
 require_once CAV_PATH . 'includes/rest.php';
 require_once CAV_PATH . 'includes/shortcodes.php';
 require_once CAV_PATH . 'includes/admin.php';
@@ -43,6 +44,7 @@ add_action( 'plugins_loaded', function () {
 	CAV_Conteudo::init();
 	CAV_Solicitacoes::init();
 	CAV_Aprovacoes::init();
+	CAV_Entrada::init();
 	CAV_Rest::init();
 	CAV_Shortcodes::init();
 	CAV_Admin::init();
