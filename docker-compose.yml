@@ -1,0 +1,77 @@
+name: clube-alliance
+
+# Ambiente local: WordPress + MariaDB + Mailpit (caixa de e-mail de teste).
+# Tudo que muda no dia a dia fica em wp-content/ e é montado direto nos
+# containers: edite no seu editor e recarregue o navegador.
+
+x-wp-env: &wp-env
+  WORDPRESS_DB_HOST: db
+  WORDPRESS_DB_NAME: ${DB_NAME:-wordpress}
+  WORDPRESS_DB_USER: ${DB_USER:-wordpress}
+  WORDPRESS_DB_PASSWORD: ${DB_PASSWORD:-wordpress}
+  WORDPRESS_TABLE_PREFIX: wp_
+  WORDPRESS_DEBUG: "1"
+  WORDPRESS_CONFIG_EXTRA: |
+    define( 'WP_ENVIRONMENT_TYPE', 'local' );
+    define( 'WP_DEBUG_LOG', true );
+    define( 'WP_DEBUG_DISPLAY', false );
+  CAV_SMTP_HOST: mailpit
+  CAV_SMTP_PORT: "1025"
+
+x-wp-volumes: &wp-volumes
+  - wp_core:/var/www/html
+  - ./wp-content/plugins/clube-alliance:/var/www/html/wp-content/plugins/clube-alliance
+  - ./wp-content/themes/clube-alliance-child:/var/www/html/wp-content/themes/clube-alliance-child
+  - ./wp-content/mu-plugins:/var/www/html/wp-content/mu-plugins
+  - ./scripts:/scripts:ro
+
+services:
+  db:
+    image: mariadb:11
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: ${DB_NAME:-wordpress}
+      MARIADB_USER: ${DB_USER:-wordpress}
+      MARIADB_PASSWORD: ${DB_PASSWORD:-wordpress}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  wordpress:
+    image: wordpress:php8.3-apache
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${WP_PORT:-8080}:80"
+    environment: *wp-env
+    volumes: *wp-volumes
+
+  # Só roda quando chamado pelo scripts/setup.sh (profile "tools").
+  wpcli:
+    image: wordpress:cli-php8.3
+    user: "33:33"
+    profiles: ["tools"]
+    depends_on:
+      - wordpress
+    environment:
+      <<: *wp-env
+      HOME: /tmp
+    volumes: *wp-volumes
+
+  # Recebe todo e-mail que o WordPress enviar. Abra http://localhost:8025
+  mailpit:
+    image: axllent/mailpit
+    restart: unless-stopped
+    ports:
+      - "${MAILPIT_PORT:-8025}:8025"
+
+volumes:
+  db_data:
+  wp_core:

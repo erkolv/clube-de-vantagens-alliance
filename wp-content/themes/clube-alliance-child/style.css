@@ -1,0 +1,50 @@
+/*
+Theme Name:   Clube Alliance (filho do Hello Elementor)
+Theme URI:    https://github.com/erkolv/clube-de-vantagens-alliance
+Description:  Identidade do clube de vantagens: preto e amarelo da Alliance Mogi, Poppins.
+Author:       Erick
+Template:     hello-elementor
+Version:      0.1.0
+Text Domain:  clube-alliance-child
+*/
+
+:root {
+	--clube-preto:   #111111;
+	--clube-carvao:  #1a1a1a;
+	--clube-grafite: #252525;
+	--clube-ouro:    #ffc629;
+	--clube-ocre:    #c99a00; /* amarelo para fundo claro: o puro não passa em contraste */
+	--clube-cinza:   #9a9a9a;
+	--clube-linha:   rgba(255, 255, 255, .14);
+}
+
+body {
+	background: var(--clube-preto);
+	color: #fff;
+	font-family: 'Poppins', system-ui, sans-serif;
+	-webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; }
+
+/* Padrão de título do site da Alliance: linha de apoio em itálico, bem espaçada. */
+.clube-olho {
+	font-weight: 300;
+	font-style: italic;
+	text-transform: uppercase;
+	letter-spacing: .34em;
+	font-size: .8rem;
+	color: var(--clube-cinza);
+}
+
+/* Botão do Elementor no estilo do site: amarelo cheio, vazado no hover. */
+.elementor-button {
+	font-weight: 500;
+	text-transform: uppercase;
+	letter-spacing: .16em;
+	border: 1px solid var(--clube-ouro);
+}
+.elementor-button:hover {
+	background: transparent;
+	color: var(--clube-ouro);
+}

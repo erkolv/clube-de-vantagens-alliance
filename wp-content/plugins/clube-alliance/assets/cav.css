@@ -1,0 +1,528 @@
+/* Clube Alliance — os tokens leem as variáveis globais do Elementor.
+   Trocou a paleta ou a fonte no Kit do site? O plugin acompanha sozinho.
+   Os valores depois da vírgula são só o fallback de quem não tem Elementor. */
+.cav-terminal,
+.cav-painel,
+.cav-carteirinha,
+.cav-card,
+.cav-tabela {
+	--cav-tinta:   var(--e-global-color-text, #101010);
+	--cav-marca:   var(--e-global-color-primary, #101010);
+	--cav-destaque: var(--e-global-color-accent, var(--e-global-color-primary, #101010));
+	--cav-papel:   #ffffff;
+	--cav-linha:   rgba(0, 0, 0, .12);
+	--cav-fraco:   var(--e-global-color-secondary, #6b6b6b);
+	--cav-sim:     #0f7b3d;
+	--cav-nao:     #b0231f;
+	--cav-raio:    4px;
+
+	--cav-fonte-titulo: var(--e-global-typography-primary-font-family, inherit);
+	--cav-fonte-texto:  var(--e-global-typography-text-font-family, inherit);
+
+	font-family: var(--cav-fonte-texto);
+	color: var(--cav-tinta);
+	max-width: 520px;
+	margin-inline: auto;
+}
+
+.cav-painel,
+.cav-tabela { max-width: 860px; }
+
+/* ---------- comuns ---------- */
+
+.cav-eyebrow {
+	font-size: .75rem;
+	letter-spacing: .12em;
+	text-transform: uppercase;
+	color: var(--cav-fraco);
+	margin: 0 0 .5rem;
+}
+
+.cav-vazio {
+	color: var(--cav-fraco);
+	font-size: .95rem;
+	line-height: 1.5;
+	margin: 1rem 0;
+}
+
+.cav-card {
+	border: 1px solid var(--cav-linha);
+	border-radius: var(--cav-raio);
+	padding: 1.25rem;
+	line-height: 1.5;
+}
+
+.cav-aviso { color: var(--cav-fraco); }
+
+.cav-erro {
+	color: var(--cav-nao);
+	font-size: .9rem;
+	margin: .6rem 0 0;
+}
+
+/* ---------- terminal ---------- */
+
+.cav-label {
+	display: block;
+	font-size: .85rem;
+	font-weight: 600;
+	margin-bottom: .4rem;
+}
+
+.cav-input {
+	width: 100%;
+	box-sizing: border-box;
+	font-size: 2rem;
+	font-variant-numeric: tabular-nums;
+	letter-spacing: .04em;
+	text-align: center;
+	padding: .7rem .5rem;
+	border: 2px solid var(--cav-marca);
+	border-radius: var(--cav-raio);
+	background: var(--cav-papel);
+	color: var(--cav-tinta);
+	font-family: var(--cav-fonte-titulo);
+}
+
+.cav-input:focus-visible {
+	outline: 3px solid var(--cav-marca);
+	outline-offset: 2px;
+}
+
+.cav-btn {
+	width: 100%;
+	margin-top: .75rem;
+	padding: .9rem 1rem;
+	font-size: 1rem;
+	font-weight: 700;
+	letter-spacing: .06em;
+	text-transform: uppercase;
+	font-family: var(--cav-fonte-titulo);
+	border: 2px solid var(--cav-marca);
+	border-radius: var(--cav-raio);
+	background: var(--cav-marca);
+	color: var(--cav-papel);
+	cursor: pointer;
+}
+
+.cav-btn[disabled] { opacity: .55; cursor: default; }
+
+.cav-btn-ghost {
+	background: transparent;
+	color: var(--cav-tinta);
+	border-color: var(--cav-linha);
+}
+
+/* Bloco de resposta: precisa ser legível do outro lado do balcão. */
+.cav-resultado {
+	padding: 1.5rem 1.25rem;
+	border-radius: var(--cav-raio);
+	text-align: center;
+	color: #fff;
+}
+
+.cav-resultado.is-ok  { background: var(--cav-sim); }
+.cav-resultado.is-nao { background: var(--cav-nao); }
+
+.cav-res-titulo {
+	font-family: var(--cav-fonte-titulo);
+	margin: 0;
+	font-size: 1.75rem;
+	font-weight: 800;
+	line-height: 1.1;
+	text-transform: uppercase;
+	letter-spacing: .02em;
+}
+
+.cav-res-nome {
+	margin: .5rem 0 0;
+	font-size: 1.15rem;
+}
+
+.cav-res-detalhe {
+	margin: .4rem 0 0;
+	font-size: .95rem;
+	opacity: .9;
+}
+
+.cav-beneficios {
+	display: grid;
+	gap: .6rem;
+	margin-top: 1rem;
+}
+
+.cav-beneficio {
+	display: grid;
+	gap: .2rem;
+	width: 100%;
+	text-align: left;
+	padding: .9rem 1rem;
+	border: 1px solid var(--cav-linha);
+	border-left: 4px solid var(--cav-marca);
+	border-radius: var(--cav-raio);
+	background: var(--cav-papel);
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+
+.cav-beneficio:hover:not([disabled]) { border-color: var(--cav-marca); }
+
+.cav-beneficio.is-temporario { border-left-color: var(--cav-destaque); }
+
+.cav-ben-tag {
+	align-self: start;
+	font-family: var(--cav-fonte-titulo);
+	font-size: .68rem;
+	font-weight: 700;
+	letter-spacing: .1em;
+	text-transform: uppercase;
+	padding: .15rem .45rem;
+	margin-bottom: .15rem;
+	color: var(--cav-papel);
+	background: var(--cav-destaque);
+	border-radius: 2px;
+}
+
+.cav-beneficio.is-bloqueado,
+.cav-beneficio[disabled] {
+	cursor: default;
+	opacity: .5;
+	border-left-color: var(--cav-linha);
+}
+
+.cav-beneficio.is-feito {
+	opacity: 1;
+	border-left-color: var(--cav-sim);
+}
+
+.cav-beneficio.is-enviando { opacity: .6; }
+
+.cav-ben-titulo { font-weight: 700; }
+
+.cav-ben-regra {
+	font-size: .9rem;
+	color: var(--cav-fraco);
+	line-height: 1.35;
+}
+
+.cav-ben-acao {
+	font-size: .78rem;
+	font-weight: 700;
+	letter-spacing: .08em;
+	text-transform: uppercase;
+	margin-top: .25rem;
+}
+
+.cav-beneficio.is-feito .cav-ben-acao { color: var(--cav-sim); }
+
+.cav-ben-bloqueio {
+	font-size: .78rem;
+	letter-spacing: .06em;
+	text-transform: uppercase;
+	margin-top: .25rem;
+	color: var(--cav-fraco);
+}
+
+/* ---------- painel do parceiro ---------- */
+
+.cav-numeros {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: .6rem;
+	margin-bottom: 1.5rem;
+}
+
+.cav-numero {
+	border: 1px solid var(--cav-linha);
+	border-radius: var(--cav-raio);
+	padding: .9rem .6rem;
+	text-align: center;
+}
+
+.cav-numero strong {
+	font-family: var(--cav-fonte-titulo);
+	display: block;
+	font-size: 1.9rem;
+	line-height: 1;
+	font-variant-numeric: tabular-nums;
+}
+
+.cav-numero span {
+	display: block;
+	margin-top: .3rem;
+	font-size: .72rem;
+	letter-spacing: .1em;
+	text-transform: uppercase;
+	color: var(--cav-fraco);
+}
+
+/* ---------- tabelas ---------- */
+
+.cav-tabela {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: .95rem;
+}
+
+.cav-tabela th {
+	text-align: left;
+	font-size: .72rem;
+	letter-spacing: .1em;
+	text-transform: uppercase;
+	color: var(--cav-fraco);
+	padding: .5rem .6rem;
+	border-bottom: 2px solid var(--cav-marca);
+}
+
+.cav-tabela td {
+	padding: .65rem .6rem;
+	border-bottom: 1px solid var(--cav-linha);
+}
+
+/* ---------- carteirinha ---------- */
+
+.cav-carteirinha {
+	border: 2px solid var(--cav-marca);
+	border-radius: var(--cav-raio);
+	padding: 1.5rem;
+}
+
+.cav-carteirinha.is-inativa { border-color: var(--cav-linha); color: var(--cav-fraco); }
+
+.cav-nome {
+	font-family: var(--cav-fonte-titulo);
+	margin: 0;
+	font-size: 1.4rem;
+	font-weight: 800;
+	line-height: 1.15;
+}
+
+.cav-cpf {
+	margin: .3rem 0 0;
+	font-size: 1.1rem;
+	font-variant-numeric: tabular-nums;
+	letter-spacing: .05em;
+}
+
+.cav-situacao {
+	margin: .9rem 0 0;
+	font-size: .85rem;
+	font-weight: 700;
+	letter-spacing: .06em;
+	text-transform: uppercase;
+}
+
+.cav-carteirinha.is-ativa .cav-situacao { color: var(--cav-sim); }
+.cav-carteirinha.is-inativa .cav-situacao { color: var(--cav-nao); }
+
+.cav-situacao span {
+	font-weight: 400;
+	text-transform: none;
+	letter-spacing: 0;
+	color: var(--cav-fraco);
+}
+
+.cav-instrucao {
+	margin: .8rem 0 0;
+	font-size: .9rem;
+	line-height: 1.45;
+	color: var(--cav-fraco);
+}
+
+/* ---------- mobile ---------- */
+
+@media (max-width: 480px) {
+	.cav-numeros { grid-template-columns: repeat(2, 1fr); }
+	.cav-input   { font-size: 1.7rem; }
+	.cav-res-titulo { font-size: 1.5rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	* { transition: none !important; animation: none !important; }
+}
+
+/* ---------- áreas exclusivas: conteúdos e sorteios ---------- */
+
+.cav-grade {
+	--cav-tinta:   var(--e-global-color-text, #101010);
+	--cav-marca:   var(--e-global-color-primary, #101010);
+	--cav-destaque: var(--e-global-color-accent, var(--e-global-color-primary, #101010));
+	--cav-linha:   rgba(0, 0, 0, .12);
+	--cav-fraco:   var(--e-global-color-secondary, #6b6b6b);
+	--cav-sim:     #0f7b3d;
+	--cav-nao:     #b0231f;
+	--cav-raio:    4px;
+	--cav-fonte-titulo: var(--e-global-typography-primary-font-family, inherit);
+	--cav-fonte-texto:  var(--e-global-typography-text-font-family, inherit);
+
+	font-family: var(--cav-fonte-texto);
+	color: var(--cav-tinta);
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+	gap: 1rem;
+}
+
+.cav-item {
+	display: flex;
+	flex-direction: column;
+	border: 1px solid var(--cav-linha);
+	border-radius: var(--cav-raio);
+	overflow: hidden;
+	text-decoration: none;
+	color: inherit;
+	background: #fff;
+}
+
+a.cav-item:hover { border-color: var(--cav-marca); }
+
+.cav-item-foto img {
+	display: block;
+	width: 100%;
+	height: 160px;
+	object-fit: cover;
+}
+
+.cav-item-corpo {
+	display: flex;
+	flex-direction: column;
+	gap: .35rem;
+	padding: .9rem 1rem 1rem;
+}
+
+.cav-item-tag {
+	align-self: start;
+	font-family: var(--cav-fonte-titulo);
+	font-size: .68rem;
+	font-weight: 700;
+	letter-spacing: .1em;
+	text-transform: uppercase;
+	padding: .15rem .45rem;
+	color: #fff;
+	background: var(--cav-destaque);
+	border-radius: 2px;
+}
+
+.cav-item-titulo {
+	font-family: var(--cav-fonte-titulo);
+	font-size: 1.05rem;
+	font-weight: 700;
+	line-height: 1.25;
+}
+
+.cav-item-resumo {
+	font-size: .9rem;
+	line-height: 1.45;
+	color: var(--cav-fraco);
+}
+
+.cav-item-prazo {
+	font-size: .78rem;
+	letter-spacing: .06em;
+	text-transform: uppercase;
+	color: var(--cav-fraco);
+}
+
+.cav-item-status {
+	font-family: var(--cav-fonte-titulo);
+	font-size: .78rem;
+	font-weight: 700;
+	letter-spacing: .06em;
+	text-transform: uppercase;
+	margin-top: .25rem;
+}
+
+.cav-item-status.is-ok { color: var(--cav-sim); }
+
+.cav-item-erro {
+	font-size: .85rem;
+	color: var(--cav-nao);
+	margin-top: .35rem;
+}
+
+.cav-item .cav-btn { margin-top: .5rem; }
+
+.cav-cadeado::before {
+	content: "";
+	display: inline-block;
+	width: 12px;
+	height: 10px;
+	margin-right: .5rem;
+	border: 2px solid currentColor;
+	border-radius: 1px;
+	box-shadow: inset 0 3px 0 -1px currentColor;
+	vertical-align: -1px;
+}
+
+/* ---------- formulários públicos ---------- */
+
+.cav-form{
+	--cav-tinta:   var(--e-global-color-text, #101010);
+	--cav-marca:   var(--e-global-color-primary, #101010);
+	--cav-linha:   rgba(0, 0, 0, .18);
+	--cav-fraco:   var(--e-global-color-secondary, #6b6b6b);
+	--cav-nao:     #b0231f;
+	--cav-raio:    4px;
+	--cav-fonte-titulo: var(--e-global-typography-primary-font-family, inherit);
+	--cav-fonte-texto:  var(--e-global-typography-text-font-family, inherit);
+
+	font-family: var(--cav-fonte-texto);
+	color: var(--cav-tinta);
+	display: grid;
+	gap: .35rem;
+	max-width: 460px;
+}
+
+.cav-form label{
+	font-family: var(--cav-fonte-titulo);
+	font-size: .78rem;
+	font-weight: 700;
+	letter-spacing: .08em;
+	text-transform: uppercase;
+	margin-top: .8rem;
+}
+
+.cav-form input[type="text"],
+.cav-form input[type="email"]{
+	width: 100%;
+	box-sizing: border-box;
+	font: inherit;
+	font-size: 1rem;
+	padding: .8rem .9rem;
+	border: 1px solid var(--cav-linha);
+	border-radius: var(--cav-raio);
+	background: #fff;
+	color: var(--cav-tinta);
+}
+
+.cav-form input:focus-visible{
+	outline: 2px solid var(--cav-marca);
+	outline-offset: -1px;
+}
+
+.cav-consent{
+	display: flex;
+	gap: .6rem;
+	align-items: start;
+	margin-top: 1.1rem;
+	font-family: var(--cav-fonte-texto);
+	font-size: .85rem;
+	font-weight: 400;
+	line-height: 1.5;
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--cav-fraco);
+}
+
+.cav-consent input{ margin-top: .25rem; }
+
+.cav-form .cav-btn{ margin-top: 1.2rem; }
+
+.cav-erro-form{
+	margin: 0 0 .8rem;
+	padding: .7rem .9rem;
+	border-left: 3px solid var(--cav-nao);
+	background: rgba(176, 35, 31, .07);
+	color: var(--cav-nao);
+	font-size: .92rem;
+}

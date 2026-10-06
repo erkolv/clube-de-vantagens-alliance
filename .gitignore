@@ -1,0 +1,11 @@
+.env
+dist/
+.DS_Store
+*.log
+
+# Só o que é nosso entra no repositório: o WordPress em si, o Elementor
+# e os uploads são baixados/gerados no ambiente.
+wp-content/uploads/
+wp-content/upgrade/
+wp-content/cache/
+wp-content/debug.log
