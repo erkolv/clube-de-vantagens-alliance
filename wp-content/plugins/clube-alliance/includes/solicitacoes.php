@@ -12,6 +12,7 @@ class CAV_Solicitacoes {
 	const META_WHATSAPP = 'cav_whatsapp';
 	const META_TURMA    = 'cav_turma';
 	const META_PEDIDO   = 'cav_pedido_em';
+	const META_ACEITE   = 'cav_aceite_mensalidade'; // array: valor, texto, em, ip
 
 	// Candidatura de estabelecimento
 	const CAND_EMAIL    = '_cav_cand_email';
@@ -92,10 +93,25 @@ class CAV_Solicitacoes {
 				<span>Autorizo que estabelecimentos parceiros consultem meu CPF para verificar se tenho direito ao benefício.</span>
 			</label>
 
+			<?php $valor = CAV_Config::valor(); ?>
+			<input type="hidden" name="aceite_valor" value="<?php echo esc_attr( number_format( $valor, 2, '.', '' ) ); ?>">
+			<label class="cav-consent cav-consent--valor">
+				<input type="checkbox" name="aceite_mensalidade" value="1" required>
+				<span><?php echo esc_html( self::texto_aceite( $valor ) ); ?></span>
+			</label>
+
 			<button type="submit" class="cav-btn">Enviar pedido</button>
 		</form>
 		<?php
 		return ob_get_clean();
+	}
+
+	/** O texto que o aluno aceita. É guardado junto com o pedido, exatamente como foi mostrado. */
+	public static function texto_aceite( $valor ) {
+		return sprintf(
+			'Estou ciente de que o clube custa %1$s por mês e concordo que esse valor seja somado à minha mensalidade da academia enquanto eu estiver no clube. Posso cancelar quando quiser avisando a recepção, e o adicional sai do boleto seguinte.',
+			CAV_Config::formatar( $valor )
+		);
 	}
 
 	private static function mensagem_erro( $codigo ) {
@@ -105,6 +121,8 @@ class CAV_Solicitacoes {
 			'email_usado' => 'Este e-mail já está cadastrado. Tente entrar com ele.',
 			'campos'      => 'Preencha todos os campos obrigatórios.',
 			'consent'     => 'É preciso autorizar a consulta do CPF para continuar.',
+			'aceite'      => 'Para entrar no clube é preciso concordar com o valor na mensalidade.',
+			'valor_mudou' => 'O valor do clube mudou enquanto você preenchia. Leia o valor de novo e confirme.',
 			'falha'       => 'Não foi possível registrar seu pedido. Tente de novo.',
 		];
 		return $mapa[ $codigo ] ?? 'Não foi possível concluir.';
@@ -129,6 +147,16 @@ class CAV_Solicitacoes {
 		if ( empty( $_POST['consentimento'] ) ) {
 			self::voltar( 'consent' );
 		}
+		if ( empty( $_POST['aceite_mensalidade'] ) ) {
+			self::voltar( 'aceite' );
+		}
+
+		// O aceite vale para o valor que a pessoa viu. Se mudou no meio do caminho, mostra de novo.
+		$valor_visto = isset( $_POST['aceite_valor'] ) ? CAV_Ofertas::ler_preco( sanitize_text_field( wp_unslash( $_POST['aceite_valor'] ) ) ) : null;
+		if ( null === $valor_visto || abs( $valor_visto - CAV_Config::valor() ) > 0.001 ) {
+			self::voltar( 'valor_mudou' );
+		}
+
 		if ( ! CAV_CPF::valido( $cpf ) ) {
 			self::voltar( 'cpf' );
 		}
@@ -156,6 +184,12 @@ class CAV_Solicitacoes {
 		update_user_meta( $user_id, 'cav_status', self::STATUS_PENDENTE );
 		update_user_meta( $user_id, CAV_Membro::META_CONSENTE, current_time( 'mysql' ) );
 		update_user_meta( $user_id, self::META_PEDIDO, current_time( 'mysql' ) );
+		update_user_meta( $user_id, self::META_ACEITE, [
+			'valor' => number_format( $valor_visto, 2, '.', '' ),
+			'texto' => self::texto_aceite( $valor_visto ),
+			'em'    => current_time( 'mysql' ),
+			'ip'    => CAV_Usos::ip(),
+		] );
 
 		if ( ! empty( $_POST['whatsapp'] ) ) {
 			update_user_meta( $user_id, self::META_WHATSAPP, sanitize_text_field( wp_unslash( $_POST['whatsapp'] ) ) );

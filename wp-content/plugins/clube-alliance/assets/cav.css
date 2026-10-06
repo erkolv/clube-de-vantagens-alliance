@@ -501,7 +501,8 @@ a.cav-item:hover { border-color: var(--cav-marca); }
 }
 
 .cav-form input[type="text"],
-.cav-form input[type="email"]{
+.cav-form input[type="email"],
+.cav-form input[type="password"]{
 	width: 100%;
 	box-sizing: border-box;
 	font: inherit;
@@ -518,7 +519,8 @@ a.cav-item:hover { border-color: var(--cav-marca); }
 	outline-offset: -1px;
 }
 
-.cav-consent{
+.cav-consent,
+.cav-form label.cav-consent{
 	display: flex;
 	gap: .6rem;
 	align-items: start;

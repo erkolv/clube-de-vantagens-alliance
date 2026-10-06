@@ -141,10 +141,11 @@ wp eval-file /scripts/area-parceiro.php || echo "   (não consegui montar a áre
 echo "==> Páginas no Elementor"
 # Versão do conteúdo das páginas. Quando sobe, só as páginas que mudaram são refeitas, uma vez.
 # 2 = home e "O que é o clube" ganharam a seção do que o clube oferece.
-PAGINAS_VERSAO=2
+# 3 = o valor do clube vira marca {{valor_clube}}, "Entrar" vira a página de login e o pedido ganha o aceite do valor.
+PAGINAS_VERSAO=3
 PEDIDO_PAGINAS="${REFAZER_PAGINAS:+refazer}"
 if [ -z "$PEDIDO_PAGINAS" ] && [ "$(wp option get cav_paginas_versao 2>/dev/null || true)" != "$PAGINAS_VERSAO" ]; then
-	PEDIDO_PAGINAS="refazer:inicio,o-que-e"
+	PEDIDO_PAGINAS="refazer:inicio,o-que-e,entrar,quero-fazer-parte"
 fi
 if wp eval-file /scripts/paginas-elementor.php $PEDIDO_PAGINAS; then
 	wp option update cav_paginas_versao "$PAGINAS_VERSAO" >/dev/null

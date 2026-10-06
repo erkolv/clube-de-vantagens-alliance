@@ -132,3 +132,36 @@ add_shortcode( 'clube_parceiros', function ( $atts ) {
 	}
 	return ob_get_clean();
 } );
+
+
+/**
+ * Telas do WordPress que continuam existindo (esqueci a senha, definir a senha) com a cara do clube.
+ * A tela de entrar em si é a página /entrar/, do plugin.
+ */
+add_action( 'login_enqueue_scripts', function () {
+	wp_enqueue_style(
+		'clube-poppins',
+		'https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap',
+		[],
+		null
+	);
+
+	$arquivo = get_stylesheet_directory() . '/assets/login.css';
+	wp_enqueue_style(
+		'clube-login',
+		get_stylesheet_directory_uri() . '/assets/login.css',
+		[ 'login', 'clube-poppins' ],
+		is_readable( $arquivo ) ? filemtime( $arquivo ) : CLUBE_CHILD_VERSION
+	);
+} );
+
+add_filter( 'login_headerurl', function () {
+	return home_url( '/' );
+} );
+
+add_filter( 'login_headertext', function () {
+	return 'Alliance';
+} );
+
+// A tela de "esqueci a senha" tem "Voltar para o site" e "Entrar": o segundo vai para a página nova.
+add_filter( 'login_site_html_link', '__return_empty_string' );

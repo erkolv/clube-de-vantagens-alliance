@@ -106,11 +106,20 @@ class CAV_Aprovacoes {
 						$cpf   = get_user_meta( $u->ID, CAV_Membro::META_CPF, true );
 						$zap   = get_user_meta( $u->ID, CAV_Solicitacoes::META_WHATSAPP, true );
 						$turma = get_user_meta( $u->ID, CAV_Solicitacoes::META_TURMA, true );
+						$aceite = get_user_meta( $u->ID, CAV_Solicitacoes::META_ACEITE, true );
 						?>
 						<tr>
 							<td>
 								<strong><?php echo esc_html( $u->display_name ); ?></strong>
 								<?php if ( $turma ) : ?><br><span class="description"><?php echo esc_html( $turma ); ?></span><?php endif; ?>
+								<?php if ( is_array( $aceite ) && ! empty( $aceite['valor'] ) ) : ?>
+									<br><span class="description" style="color:#1a7f37">
+										Aceitou <?php echo esc_html( CAV_Config::formatar( $aceite['valor'] ) ); ?>/mês na mensalidade
+										em <?php echo esc_html( mysql2date( 'd/m/Y H:i', $aceite['em'] ) ); ?>
+									</span>
+								<?php else : ?>
+									<br><span class="description" style="color:#b32d2e">Sem aceite do valor registrado (pedido antigo)</span>
+								<?php endif; ?>
 							</td>
 							<td><?php echo esc_html( CAV_CPF::formatar( $cpf ) ); ?></td>
 							<td>

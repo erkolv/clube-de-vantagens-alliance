@@ -36,7 +36,8 @@
 }
 
 .cav-form input[type="text"],
-.cav-form input[type="email"] {
+.cav-form input[type="email"],
+.cav-form input[type="password"] {
 	background: #252525;
 	color: #ffffff;
 	border-color: rgba(255, 255, 255, .16);

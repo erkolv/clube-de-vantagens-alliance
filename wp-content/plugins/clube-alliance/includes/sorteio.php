@@ -92,7 +92,7 @@ class CAV_Sorteio {
 			return 'Aluno';
 		}
 
-		$partes = preg_split( '/\s+/', trim( $user->first_name ? trim( $user->first_name . ' ' . $user->last_name ) : $user->display_name ) );
+		$partes = preg_split( '/\s+/', trim( $user->display_name ) );
 		$nome   = $partes ? $partes[0] : 'Aluno';
 
 		if ( count( $partes ) > 1 ) {

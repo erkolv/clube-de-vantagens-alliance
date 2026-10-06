@@ -68,9 +68,17 @@ Para derrubar tudo: `docker compose down`. Para apagar também o banco: `docker 
 
 ## Onde editar
 
-**Páginas do site** (Início, O que é o clube, Entrar, Quero fazer parte, Seja parceiro): o setup já grava o conteúdo no Elementor. É só abrir a página e **Editar com Elementor** para mudar texto, botão ou ordem das seções. O setup não mexe numa página que já foi montada, então o que você editar fica.
+**Páginas do site** (Início, O que é o clube, Entrar, Quero fazer parte, Seja parceiro): o setup já grava o conteúdo no Elementor. É só abrir a página e **Editar com Elementor** para mudar texto, botão ou ordem das seções. O setup não mexe numa página que já foi montada, então o que você editar fica. Uma exceção: nesta versão (a das páginas de login, valor e aceite) o setup refaz **uma vez** as páginas Início, O que é o clube, Entrar e Quero fazer parte para trocar o valor fixo pelas marcas de valor e pôr a entrada nova. Se você já editou alguma delas no Elementor, anote antes de rodar o setup ou refaça a edição depois.
 
-Para voltar uma página ao modelo original: `REFAZER_PAGINAS=1 ./scripts/setup.sh` (apaga as edições feitas nas cinco páginas acima). O conteúdo de cada uma está em `scripts/lib/paginas.php`.
+Para voltar uma página ao modelo original: `REFAZER_PAGINAS=1 ./scripts/setup.sh` (apaga as edições feitas nas cinco páginas acima; também aceita `refazer:inicio,entrar` para refazer só algumas). O conteúdo de cada uma está em `scripts/lib/paginas.php`.
+
+**Valor do clube.** Fica num lugar só: **Clube → Configurações → Valor por mês**. Ao salvar, o novo valor aparece na página inicial, em "O que é o clube", em "Quero fazer parte" e no texto de aceite do aluno. O valor de 12 meses é calculado sozinho (valor × 12). Hoje o valor é provisório, R$ 19,90. Nos textos das páginas do Elementor, escreva `{{valor_clube}}` (mensal) ou `{{valor_clube_ano}}` (anual) em vez do número, e o site troca na hora de mostrar. Em qualquer outro lugar dá para usar os shortcodes `[cav_valor]` e `[cav_valor_ano]`. O protótipo `index.html` da raiz é só um desenho e continua com R$ 19,90 escrito à mão.
+
+**Aceite da mensalidade.** O formulário "Quero fazer parte" tem uma caixa obrigatória: "Estou ciente de que o clube custa R$ X por mês e concordo que esse valor seja somado à minha mensalidade…". O texto, o valor, a data e o IP ficam gravados no cadastro do aluno, e a recepção vê "Aceitou R$ X/mês na mensalidade em [data]" na tela de aprovações, antes de aprovar. Se a Alliance mudar o valor enquanto a pessoa preenche, o pedido não passa e ela precisa ler o novo valor e confirmar de novo. Quem já tinha pedido antes continua com o aceite do valor da época; pedidos antigos, sem aceite, aparecem na fila com um aviso em vermelho. O texto do aceite está em `texto_aceite()`, em `includes/solicitacoes.php`. Vale a Alliance e o jurídico lerem a frase antes de abrir.
+
+**Página de entrar.** `/entrar/` é uma página do site (e-mail ou usuário, senha, "esqueci minha senha"), no lugar da tela azul do WordPress. Quem tenta abrir `/wp-login.php` é levado para ela, e as telas de "esqueci a senha" e "nova senha", que continuam sendo do WordPress, ganham as cores do site. Cada perfil cai onde sempre caiu (aluno na área do membro, parceiro no terminal, recepção nas aprovações). **Se algo der errado com a página nova, o acesso de emergência do administrador é `/wp-login.php?cav_wp=1`**, que abre a tela original do WordPress.
+
+**Entrar com Google.** Só aparece depois de colar o ID do cliente Google em **Clube → Configurações → Entrar com Google** (a própria tela explica o passo a passo no Google Cloud, uns 10 minutos, uma vez só; é preciso cadastrar o endereço do site em "Origens JavaScript autorizadas", e o endereço do Codespaces é diferente do de produção). O Google **não cria cadastro**: a pessoa só entra se o e-mail da conta Google já for o e-mail dela no clube e o pedido estiver aprovado. Administradores entram só por senha. O servidor confere a assinatura do token do Google, quem emitiu, para qual site, validade e e-mail verificado antes de abrir a sessão.
 
 **Cabeçalho e rodapé** ficam no tema filho (`template-parts/header.php` e `footer.php`), sem precisar do Elementor Pro. O menu é o "Principal" (Aparência → Menus). Os botões Entrar, Quero fazer parte e, depois do login, "Meu terminal" ou "Minha carteirinha" são fixos no cabeçalho.
 
@@ -85,7 +93,7 @@ Para voltar uma página ao modelo original: `REFAZER_PAGINAS=1 ./scripts/setup.s
 
 Hoje só quem é administrador cadastra ofertas e eventos. A recepção ainda não tem essa permissão.
 
-**Home para quem ainda não é do clube.** A página inicial ganhou a seção *Por dentro do clube*: sorteios, entrada VIP nos seminários, descontos exclusivos na academia e produtos com preço de aluno, mais uma faixa ao vivo (`[cav_clube_agora]`) com o sorteio aberto, o próximo seminário e quantos descontos estão no ar. A faixa só mostra título e data, nada da área restrita. Quando o setup roda e a versão das páginas mudou, ele refaz só a Início e a "O que é o clube" uma vez (as outras páginas não são tocadas). O texto da seção está em `scripts/lib/paginas.php`. A frase sobre "condição VIP" é genérica: ajuste para a regra real da academia.
+**Home para quem ainda não é do clube.** A página inicial ganhou a seção *Por dentro do clube*: sorteios, entrada VIP nos seminários, descontos exclusivos na academia e produtos com preço de aluno, mais uma faixa ao vivo (`[cav_clube_agora]`) com o sorteio aberto, o próximo seminário e quantos descontos estão no ar. A faixa só mostra título e data, nada da área restrita. Quando o setup roda e a versão das páginas mudou, ele refaz só as páginas que mudaram de conteúdo, uma vez. O texto da seção está em `scripts/lib/paginas.php`. A frase sobre "condição VIP" é genérica: ajuste para a regra real da academia.
 
 Para pôr um pedaço disso em outra página: `[cav_proximos_eventos qtd="3"]` e `[cav_ofertas tipo="produto" qtd="4"]`, `[cav_clube_agora]` (`tipo` pode ser `produto` ou `desconto`).
 
@@ -142,7 +150,7 @@ Gera dois zips em `dist/`: `clube-alliance.zip` e `clube-alliance-child.zip`. No
 - **E-mail em produção.** Localmente o Mailpit recebe tudo. No site de verdade o `wp_mail` sozinho costuma cair em spam ou nem sair, e os e-mails de aprovação dependem disso. Configure um SMTP (Brevo, Amazon SES ou Postmark) antes de abrir os formulários.
 - **Elementor Pro.** É pago e não dá para instalar pelo script. Instale com a sua licença se for usar o Theme Builder para o cabeçalho, o rodapé e a página individual do parceiro.
 - **Diretório por distância.** A lista de parceiros busca por nome e categoria. Busca por distância ou mapa pede o Voxel ou o GeoDirectory.
-- **Telas de login.** Usa a tela padrão do WordPress. Depois de entrar, parceiro vai para `/terminal/`, aluno para `/area-do-membro/` e recepção para as aprovações. A escolha de acesso do protótipo (aluno ou parceiro) ainda não existe no plugin.
+- **Login com Google.** Está pronto, mas só funciona depois que a Alliance cria o ID do cliente no Google Cloud e cola em Clube → Configurações. Foi testado só com uma chave de mentira, não com o Google de verdade. A escolha de acesso do protótipo (aluno ou parceiro) ainda não existe: a mesma página serve todo mundo.
 - **Sorteios.** Com o clube pago, a participação passa a ter contrapartida financeira. Vale a Alliance confirmar com o contador se precisa de autorização da SPA/Ministério da Fazenda antes do primeiro.
 
 ## Estado dos testes
@@ -153,4 +161,6 @@ Conferido num WordPress de verdade rodando no sandbox (WordPress Playground, sem
 
 Conferido só por simulação: o visual do cabeçalho, do rodapé e das páginas (num navegador, com uma imitação do HTML do Elementor, no computador e no celular), e a sintaxe de todos os arquivos PHP.
 
-Ainda sem confirmação: a gravação das páginas no Elementor de verdade (`scripts/paginas-elementor.php`) e a aplicação da paleta (`scripts/elementor-kit.php`). Se uma página abrir como texto simples em vez do layout, o Elementor recusou a estrutura; o texto está lá como reserva e o erro ajuda a corrigir.
+A página de entrar, o aceite, o valor configurável e a tela de Configurações foram conferidos nesse mesmo WordPress de teste (entrar por perfil, mensagens de erro, sair, redirecionamentos, valor novo aparecendo em todas as páginas, aceite gravado e visível para a recepção). O login com Google foi conferido com uma chave de teste: token válido entra; token adulterado, vencido, de outro site ou de e-mail não cadastrado é recusado.
+
+Ainda sem confirmação: o login com o Google real, a gravação das páginas no Elementor de verdade (`scripts/paginas-elementor.php`) e a aplicação da paleta (`scripts/elementor-kit.php`). Se uma página abrir como texto simples em vez do layout, o Elementor recusou a estrutura; o texto está lá como reserva e o erro ajuda a corrigir.
