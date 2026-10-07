@@ -142,7 +142,7 @@ echo "==> Páginas no Elementor"
 # Versão do conteúdo das páginas. Quando sobe, só as páginas que mudaram são refeitas, uma vez.
 # 2 = home e "O que é o clube" ganharam a seção do que o clube oferece.
 # 3 = o valor do clube vira marca {{valor_clube}}, "Entrar" vira a página de login e o pedido ganha o aceite do valor.
-PAGINAS_VERSAO=4
+PAGINAS_VERSAO=5
 PEDIDO_PAGINAS="${REFAZER_PAGINAS:+refazer}"
 if [ -z "$PEDIDO_PAGINAS" ] && [ "$(wp option get cav_paginas_versao 2>/dev/null || true)" != "$PAGINAS_VERSAO" ]; then
 	PEDIDO_PAGINAS="refazer:inicio,o-que-e,entrar,quero-fazer-parte,seja-parceiro"

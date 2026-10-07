@@ -17,7 +17,11 @@ class CAV_Emails {
 	}
 
 	/** Casca simples, legível em qualquer cliente de e-mail. */
-	private static function molde( $titulo, $corpo ) {
+	private static function molde( $titulo, $corpo, $rodape = '' ) {
+		if ( '' === $rodape ) {
+			$rodape = 'Você recebeu este e-mail porque solicitou acesso ao clube de vantagens. Em caso de dúvida, responda esta mensagem.';
+		}
+
 		$marca = get_bloginfo( 'name' );
 
 		return '<div style="font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#141414;max-width:560px;margin:0 auto;padding:24px">'
@@ -25,7 +29,7 @@ class CAV_Emails {
 			. '<h1 style="font-size:22px;line-height:1.25;margin:0 0 18px">' . esc_html( $titulo ) . '</h1>'
 			. $corpo
 			. '<p style="margin-top:32px;padding-top:18px;border-top:1px solid #E4E4E4;font-size:13px;color:#8A8A8A">'
-			. 'Você recebeu este e-mail porque solicitou acesso ao clube de vantagens. Em caso de dúvida, responda esta mensagem.'
+			. esc_html( $rodape )
 			. '</p></div>';
 	}
 
@@ -89,7 +93,7 @@ class CAV_Emails {
 
 	public static function parceiro_aprovado( WP_User $user, $nome_estab, $url_terminal = '' ) {
 		$corpo  = '<p>A candidatura de <strong>' . esc_html( $nome_estab ) . '</strong> foi aprovada. Seu estabelecimento já faz parte do clube.</p>';
-		$corpo .= '<p>Primeiro passo: definir sua senha. O link abaixo vale por 24 horas.</p>';
+		$corpo .= '<p>Primeiro passo: criar a sua senha. O link abaixo vale por 7 dias.</p>';
 		$corpo .= self::botao( self::link_senha( $user ), 'Definir minha senha' );
 
 		if ( $url_terminal ) {
@@ -104,6 +108,46 @@ class CAV_Emails {
 			$user->user_email,
 			'Sua candidatura foi aprovada — dados de acesso',
 			self::molde( 'Bem-vindo ao clube', $corpo ),
+			self::headers()
+		);
+	}
+
+	/** Aluno que a academia cadastrou pela planilha: ele só precisa criar a senha. */
+	public static function aluno_importado( WP_User $user, $validade ) {
+		$corpo  = '<p>Olá, ' . esc_html( CAV_Membro::primeiro_nome( $user ) ) . '.</p>';
+		$corpo .= '<p>A Alliance liberou o seu acesso ao clube de vantagens. No caixa dos parceiros é só falar o seu CPF, sem carteirinha nem cupom.</p>';
+		$corpo .= '<p>Para entrar na sua área, crie a sua senha. O link abaixo vale por 7 dias:</p>';
+		$corpo .= self::botao( self::link_senha( $user ), 'Criar minha senha' );
+		$corpo .= '<p><strong>Seu login é:</strong> ' . esc_html( $user->user_email ) . '</p>';
+		$corpo .= '<p>Se o link vencer, abra a página de entrar e use "Esqueci minha senha".</p>';
+
+		return wp_mail(
+			$user->user_email,
+			'Seu acesso ao clube de vantagens da Alliance',
+			self::molde( 'Seu acesso ao clube', $corpo, 'Você recebeu este e-mail porque a Alliance Mogi das Cruzes cadastrou você no clube de vantagens. Em caso de dúvida, responda esta mensagem.' ),
+			self::headers()
+		);
+	}
+
+	/** Parceiro que a academia cadastrou pela planilha. */
+	public static function parceiro_importado( WP_User $user, $nome_estab, $url_terminal = '' ) {
+		$corpo  = '<p>Olá, ' . esc_html( $user->display_name ) . '.</p>';
+		$corpo .= '<p><strong>' . esc_html( $nome_estab ) . '</strong> já está cadastrado como parceiro no clube de vantagens da Alliance.</p>';
+		$corpo .= '<p>Para entrar, crie a sua senha. O link abaixo vale por 7 dias:</p>';
+		$corpo .= self::botao( self::link_senha( $user ), 'Criar minha senha' );
+
+		if ( $url_terminal ) {
+			$corpo .= '<p>O terminal do caixa fica neste endereço. Vale salvar na tela inicial do celular do balcão:</p>';
+			$corpo .= '<p><a href="' . esc_url( $url_terminal ) . '">' . esc_html( $url_terminal ) . '</a></p>';
+		}
+
+		$corpo .= '<p><strong>Seu login é:</strong> ' . esc_html( $user->user_email ) . '</p>';
+		$corpo .= '<p>Na sua área você consulta o CPF do aluno, registra o uso do desconto, cria e muda as promoções e edita os dados do seu negócio. Se o link vencer, use "Esqueci minha senha" na página de entrar.</p>';
+
+		return wp_mail(
+			$user->user_email,
+			'Seu negócio no clube de vantagens da Alliance',
+			self::molde( 'Bem-vindo ao clube', $corpo, 'Você recebeu este e-mail porque a Alliance Mogi das Cruzes cadastrou você no clube de vantagens. Em caso de dúvida, responda esta mensagem.' ),
 			self::headers()
 		);
 	}

@@ -105,13 +105,15 @@ class CAV_Aprovacoes {
 					<?php foreach ( $membros as $u ) :
 						$cpf   = get_user_meta( $u->ID, CAV_Membro::META_CPF, true );
 						$zap   = get_user_meta( $u->ID, CAV_Solicitacoes::META_WHATSAPP, true );
-						$turma = get_user_meta( $u->ID, CAV_Solicitacoes::META_TURMA, true );
+						$plano = CAV_Solicitacoes::rotulo_plano( get_user_meta( $u->ID, CAV_Solicitacoes::META_PLANO, true ) );
+						$turma = get_user_meta( $u->ID, CAV_Solicitacoes::META_TURMA, true ); // pedidos antigos
 						$aceite = get_user_meta( $u->ID, CAV_Solicitacoes::META_ACEITE, true );
 						?>
 						<tr>
 							<td>
 								<strong><?php echo esc_html( $u->display_name ); ?></strong>
-								<?php if ( $turma ) : ?><br><span class="description"><?php echo esc_html( $turma ); ?></span><?php endif; ?>
+								<?php if ( $plano ) : ?><br><span class="description">Plano: <?php echo esc_html( $plano ); ?></span><?php endif; ?>
+								<?php if ( $turma ) : ?><br><span class="description">Turma: <?php echo esc_html( $turma ); ?></span><?php endif; ?>
 								<?php if ( is_array( $aceite ) && ! empty( $aceite['valor'] ) ) : ?>
 									<br><span class="description" style="color:#1a7f37">
 										Aceitou <?php echo esc_html( CAV_Config::formatar( $aceite['valor'] ) ); ?>/mês na mensalidade

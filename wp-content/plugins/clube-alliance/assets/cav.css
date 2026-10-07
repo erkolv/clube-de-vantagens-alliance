@@ -502,7 +502,8 @@ a.cav-item:hover { border-color: var(--cav-marca); }
 
 .cav-form input[type="text"],
 .cav-form input[type="email"],
-.cav-form input[type="password"]{
+.cav-form input[type="password"],
+.cav-form select{
 	width: 100%;
 	box-sizing: border-box;
 	font: inherit;
@@ -514,7 +515,8 @@ a.cav-item:hover { border-color: var(--cav-marca); }
 	color: var(--cav-tinta);
 }
 
-.cav-form input:focus-visible{
+.cav-form input:focus-visible,
+.cav-form select:focus-visible{
 	outline: 2px solid var(--cav-marca);
 	outline-offset: -1px;
 }

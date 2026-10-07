@@ -18,7 +18,9 @@ class CAV_Config {
 
 	const OPT_VALOR  = 'cav_valor_mensal';
 	const OPT_GOOGLE = 'cav_google_client_id';
+	const OPT_TOLER  = 'cav_tolerancia_dias';
 	const PADRAO     = 19.90;
+	const TOLER_PADRAO = 5;
 
 	public static function init() {
 		add_action( 'admin_menu', [ __CLASS__, 'menu' ], 20 );
@@ -26,6 +28,11 @@ class CAV_Config {
 
 		add_shortcode( 'cav_valor', [ __CLASS__, 'sc_valor' ] );
 		add_shortcode( 'cav_valor_ano', [ __CLASS__, 'sc_valor_ano' ] );
+
+		// O link do e-mail de acesso vale 7 dias (o padrão do WordPress é 1 dia).
+		add_filter( 'password_reset_expiration', static function () {
+			return 7 * DAY_IN_SECONDS;
+		} );
 
 		add_filter( 'the_content', [ __CLASS__, 'trocar_marcas' ], 99 );
 		add_filter( 'widget_text', [ __CLASS__, 'trocar_marcas' ], 99 );
@@ -38,6 +45,18 @@ class CAV_Config {
 	public static function valor() {
 		$v = get_option( self::OPT_VALOR, '' );
 		return ( '' !== $v && is_numeric( $v ) && (float) $v > 0 ) ? (float) $v : self::PADRAO;
+	}
+
+	/** O valor só vale como definido depois que alguém salvou em Configurações. */
+	public static function valor_definido() {
+		$v = get_option( self::OPT_VALOR, '' );
+		return '' !== $v && is_numeric( $v ) && (float) $v > 0;
+	}
+
+	/** Dias que o aluno ainda usa o clube depois do vencimento da mensalidade. */
+	public static function tolerancia() {
+		$v = get_option( self::OPT_TOLER, '' );
+		return ( '' !== $v && is_numeric( $v ) && (int) $v >= 0 && (int) $v <= 60 ) ? (int) $v : self::TOLER_PADRAO;
 	}
 
 	public static function formatar( $valor ) {
@@ -111,7 +130,15 @@ class CAV_Config {
 				<div class="notice notice-success is-dismissible"><p>Configurações salvas. O novo valor já aparece em todo o site.</p></div>
 			<?php endif; ?>
 			<?php if ( $erro ) : ?>
-				<div class="notice notice-error"><p><?php echo 2 === (int) $erro_n ? 'Esse ID do cliente Google não parece certo. Ele termina com .apps.googleusercontent.com. Nada foi salvo.' : 'O valor precisa ser um número maior que zero, por exemplo 19,90.'; ?></p></div>
+				<div class="notice notice-error"><p><?php
+					if ( 2 === (int) $erro_n ) {
+						echo 'Esse ID do cliente Google não parece certo. Ele termina com .apps.googleusercontent.com. Nada foi salvo.';
+					} elseif ( 3 === (int) $erro_n ) {
+						echo 'Os dias de tolerância precisam ser um número de 0 a 60. Nada foi salvo.';
+					} else {
+						echo 'O valor precisa ser um número maior que zero, por exemplo 19,90.';
+					}
+					?></p></div>
 			<?php endif; ?>
 
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
@@ -133,6 +160,20 @@ class CAV_Config {
 								Ao salvar, o valor muda na página inicial, em "O que é o clube", em "Quero fazer parte" e no aceite
 								que o aluno confirma ao pedir acesso. Quem já pediu antes continua com o aceite do valor da época
 								registrado.
+							</p>
+						</td>
+					</tr>
+				</table>
+
+				<h2>Mensalidade em dia</h2>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><label for="cav_toler">Dias de tolerância</label></th>
+						<td>
+							<input type="number" id="cav_toler" name="cav_toler" value="<?php echo esc_attr( self::tolerancia() ); ?>" class="small-text" min="0" max="60" required> dias
+							<p class="description">
+								Depois que a mensalidade vence, o aluno ainda usa o clube por esses dias. Vale na importação e
+								na atualização mensal de quem está em dia (Clube → Importar).
 							</p>
 						</td>
 					</tr>
@@ -184,6 +225,12 @@ class CAV_Config {
 			exit;
 		}
 
+		$toler = isset( $_POST['cav_toler'] ) ? (int) $_POST['cav_toler'] : -1;
+		if ( $toler < 0 || $toler > 60 ) {
+			wp_safe_redirect( add_query_arg( 'erro', 3, $volta ) );
+			exit;
+		}
+
 		$google = isset( $_POST['cav_google'] ) ? trim( sanitize_text_field( wp_unslash( $_POST['cav_google'] ) ) ) : '';
 
 		// O ID do cliente tem sempre o formato "numeros-texto.apps.googleusercontent.com".
@@ -194,6 +241,7 @@ class CAV_Config {
 
 		update_option( self::OPT_VALOR, number_format( $valor, 2, '.', '' ) );
 		update_option( self::OPT_GOOGLE, $google );
+		update_option( self::OPT_TOLER, $toler );
 
 		wp_safe_redirect( add_query_arg( 'salvo', 1, $volta ) );
 		exit;
