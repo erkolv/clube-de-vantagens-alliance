@@ -57,6 +57,9 @@ class CAV_Importar {
 				'cpf'         => [ 'CPF', true, [] ],
 				'email'       => [ 'E-mail', true, [ 'email' ] ],
 				'whatsapp'    => [ 'WhatsApp', false, [ 'telefone', 'celular' ] ],
+				'nascimento'  => [ 'Data de nascimento', true, [ 'nascimento', 'nasc' ] ],
+				'resp_nome'   => [ 'Responsável (menores de 18)', false, [ 'responsavel', 'nome do responsavel', 'responsavel se menor de 18' ] ],
+				'resp_cpf'    => [ 'CPF do responsável (menores de 18)', false, [ 'cpf do responsavel', 'cpf responsavel', 'cpf do responsavel se menor de 18' ] ],
 				'vence'       => [ 'Data do pagamento', true, [ 'pago em', 'data pagamento', 'data da contratacao', 'contratacao', 'data do pagamento do clube' ] ],
 				'aceite_em'   => [ 'Data do aceite', true, [ 'aceite em', 'data aceite' ] ],
 				'aceite_como' => [ 'Como aceitou', true, [ 'como ele aceitou', 'forma do aceite' ] ],
@@ -312,6 +315,7 @@ class CAV_Importar {
 		}
 
 		self::validar_pagamento( $d, $erros );
+		self::validar_nascimento( $d, $erros );
 
 		$aceite = self::data( $d['aceite_em'] );
 		if ( null === $aceite ) {
@@ -455,6 +459,34 @@ class CAV_Importar {
 		}
 	}
 
+	/** Idade mínima de 12 anos; de 12 a 17, exige nome e CPF do responsável. */
+	private static function validar_nascimento( array &$d, array &$erros ) {
+		$nasc  = self::data( $d['nascimento'] );
+		$idade = null === $nasc ? null : CAV_Solicitacoes::idade( $nasc );
+		$d['nascimento_data'] = $nasc;
+		$d['resp']            = null;
+
+		if ( null === $idade ) {
+			$erros[] = 'Data de nascimento inválida. Use dia/mês/ano.';
+			return;
+		}
+		if ( $idade < CAV_Solicitacoes::IDADE_MINIMA ) {
+			$erros[] = 'O clube é para alunos a partir de ' . CAV_Solicitacoes::IDADE_MINIMA . ' anos.';
+			return;
+		}
+		if ( $idade >= 18 ) {
+			return;
+		}
+
+		$resp_cpf  = self::cpf_da_planilha( $d['resp_cpf'] );
+		$resp_nome = trim( (string) $d['resp_nome'] );
+		if ( '' === $resp_nome || ! CAV_CPF::valido( $resp_cpf ) ) {
+			$erros[] = 'Aluno com menos de 18 anos: informe o nome e um CPF válido do responsável.';
+			return;
+		}
+		$d['resp'] = [ 'nome' => sanitize_text_field( $resp_nome ), 'cpf' => $resp_cpf ];
+	}
+
 	/** Confere a data do pagamento: data válida, não futura, e que ainda dá acesso hoje. */
 	private static function validar_pagamento( array &$d, array &$erros ) {
 		$pago = self::data( $d['vence'] );
@@ -499,6 +531,14 @@ class CAV_Importar {
 		update_user_meta( $user_id, 'cav_status', CAV_Solicitacoes::STATUS_ATIVO );
 		CAV_Membro::set_validade( $user_id, self::validade_do_pagamento( $d['vence_data'] ) );
 		update_user_meta( $user_id, CAV_Membro::META_CONSENTE, $aceite_em );
+		update_user_meta( $user_id, CAV_Solicitacoes::META_NASC, $d['nascimento_data'] );
+		if ( ! empty( $d['resp'] ) ) {
+			update_user_meta( $user_id, CAV_Solicitacoes::META_RESP, [
+				'nome' => $d['resp']['nome'],
+				'cpf'  => $d['resp']['cpf'],
+				'em'   => $aceite_em,
+			] );
+		}
 		update_user_meta( $user_id, CAV_Solicitacoes::META_ACEITE, [
 			'valor'  => number_format( CAV_Config::valor(), 2, '.', '' ),
 			'texto'  => 'Aceite registrado pela academia (' . $d['aceite_como'] . ').',
@@ -1071,7 +1111,13 @@ class CAV_Importar {
 				Na fila: <strong><?php echo (int) $alunos; ?></strong> aluno(s) e <strong><?php echo (int) $parceiros; ?></strong> parceiro(s).
 				Já enviados: <strong><?php echo (int) $enviados; ?></strong>.
 			</p>
-			<p class="description">Antes de enviar, o site precisa ter um serviço de envio de e-mails configurado (SMTP, como Brevo ou Amazon SES). Sem isso, muitos e-mails não chegam.</p>
+			<p class="description">
+				<?php if ( CAV_SMTP::ativo() ) : ?>
+					Envio por SMTP ligado (<a href="<?php echo esc_url( admin_url( 'admin.php?page=cav-emails' ) ); ?>">Clube → E-mails</a>).
+				<?php else : ?>
+					<strong style="color:#b32d2e">Antes de enviar,</strong> configure o serviço de envio em <a href="<?php echo esc_url( admin_url( 'admin.php?page=cav-emails' ) ); ?>">Clube → E-mails</a> (Brevo, Amazon SES ou outro). Sem isso, muitos e-mails não chegam.
+				<?php endif; ?>
+			</p>
 
 			<?php if ( $total ) : ?>
 				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin:12px 0">

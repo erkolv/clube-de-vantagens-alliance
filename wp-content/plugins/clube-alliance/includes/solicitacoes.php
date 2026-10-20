@@ -13,6 +13,9 @@ class CAV_Solicitacoes {
 	const META_TURMA    = 'cav_turma';  // só em pedidos antigos
 	const META_PLANO    = 'cav_plano';  // só em cadastros antigos (o clube não depende mais do plano)
 	const META_PEDIDO   = 'cav_pedido_em';
+	const META_NASC     = 'cav_nascimento';   // Y-m-d
+	const META_RESP     = 'cav_responsavel';  // array: nome, cpf, em (só para menores de 18)
+	const IDADE_MINIMA  = 12;
 	const META_ACEITE   = 'cav_aceite_mensalidade'; // array: valor, texto, em, ip
 
 	// Candidatura de estabelecimento
@@ -36,6 +39,23 @@ class CAV_Solicitacoes {
 			return 'Outro plano';
 		}
 		return self::PLANOS[ $chave ] ?? '';
+	}
+
+	/** Idade em anos completos numa data Y-m-d, ou null se a data não vale. */
+	public static function idade( $nascimento ) {
+		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', (string) $nascimento ) ) {
+			return null;
+		}
+		try {
+			$n    = new DateTimeImmutable( $nascimento );
+			$hoje = new DateTimeImmutable( current_time( 'Y-m-d' ) );
+		} catch ( Exception $e ) {
+			return null;
+		}
+		if ( $n > $hoje || $n->format( 'Y-m-d' ) !== $nascimento ) {
+			return null;
+		}
+		return (int) $n->diff( $hoje )->y;
 	}
 
 	public static function init() {
@@ -100,6 +120,25 @@ class CAV_Solicitacoes {
 			<label for="cav-zap">WhatsApp</label>
 			<input id="cav-zap" name="whatsapp" type="text">
 
+			<label for="cav-nasc">Data de nascimento</label>
+			<input id="cav-nasc" name="nascimento" type="date" required>
+
+			<fieldset class="cav-responsavel">
+				<legend>Aluno com menos de 18 anos</legend>
+				<p class="cav-ajuda">O clube é para alunos a partir de <?php echo (int) self::IDADE_MINIMA; ?> anos. Quem tem menos de 18 precisa da autorização de um responsável. Os alunos maiores de idade podem pular esta parte.</p>
+
+				<label for="cav-resp-nome">Nome do responsável</label>
+				<input id="cav-resp-nome" name="resp_nome" type="text">
+
+				<label for="cav-resp-cpf">CPF do responsável</label>
+				<input id="cav-resp-cpf" name="resp_cpf" type="text" inputmode="numeric" maxlength="14">
+
+				<label class="cav-consent">
+					<input type="checkbox" name="resp_autoriza" value="1">
+					<span>Sou o responsável pelo aluno e autorizo a participação dele no clube.</span>
+				</label>
+			</fieldset>
+
 			<label class="cav-consent">
 				<input type="checkbox" name="consentimento" value="1" required>
 				<span>Autorizo que estabelecimentos parceiros consultem meu CPF para verificar se tenho direito ao benefício.</span>
@@ -121,7 +160,7 @@ class CAV_Solicitacoes {
 	/** O texto que o aluno aceita. É guardado junto com o pedido, exatamente como foi mostrado. */
 	public static function texto_aceite( $valor ) {
 		return sprintf(
-			'Estou ciente de que o clube custa %1$s por %2$s, pagos à parte da mensalidade, na recepção da Alliance, e de que o meu acesso só é liberado depois do pagamento.',
+			'Estou ciente de que o clube custa %1$s por %2$s, pagos à parte da mensalidade, na recepção da Alliance (no cartão de crédito, em até 12x), e de que o meu acesso só é liberado depois do pagamento.',
 			CAV_Config::formatar( $valor ),
 			CAV_Config::prazo_formatado()
 		);
@@ -133,6 +172,9 @@ class CAV_Solicitacoes {
 			'cpf_usado'   => 'Este CPF já tem um pedido ou cadastro no clube.',
 			'email_usado' => 'Este e-mail já está cadastrado. Tente entrar com ele.',
 			'campos'      => 'Preencha todos os campos obrigatórios.',
+			'nascimento'  => 'Informe a data de nascimento do aluno.',
+			'idade'       => 'O clube é para alunos a partir de ' . self::IDADE_MINIMA . ' anos.',
+			'responsavel' => 'Para alunos com menos de 18 anos, informe o nome e o CPF do responsável e marque a autorização.',
 			'consent'     => 'É preciso autorizar a consulta do CPF para continuar.',
 			'aceite'      => 'Para entrar no clube é preciso concordar com o valor e com a forma de pagamento.',
 			'valor_mudou' => 'O valor do clube mudou enquanto você preenchia. Leia o valor de novo e confirme.',
@@ -157,6 +199,25 @@ class CAV_Solicitacoes {
 		if ( ! $nome || ! is_email( $email ) || ! $cpf ) {
 			self::voltar( 'campos' );
 		}
+		$nasc  = isset( $_POST['nascimento'] ) ? sanitize_text_field( wp_unslash( $_POST['nascimento'] ) ) : '';
+		$idade = self::idade( $nasc );
+		if ( null === $idade ) {
+			self::voltar( 'nascimento' );
+		}
+		if ( $idade < self::IDADE_MINIMA ) {
+			self::voltar( 'idade' );
+		}
+
+		$resp = null;
+		if ( $idade < 18 ) {
+			$resp_nome = isset( $_POST['resp_nome'] ) ? sanitize_text_field( wp_unslash( $_POST['resp_nome'] ) ) : '';
+			$resp_cpf  = isset( $_POST['resp_cpf'] ) ? CAV_CPF::normalizar( wp_unslash( $_POST['resp_cpf'] ) ) : '';
+			if ( '' === $resp_nome || ! $resp_cpf || ! CAV_CPF::valido( $resp_cpf ) || empty( $_POST['resp_autoriza'] ) ) {
+				self::voltar( 'responsavel' );
+			}
+			$resp = [ 'nome' => $resp_nome, 'cpf' => $resp_cpf, 'em' => current_time( 'mysql' ) ];
+		}
+
 		if ( empty( $_POST['consentimento'] ) ) {
 			self::voltar( 'consent' );
 		}
@@ -197,6 +258,10 @@ class CAV_Solicitacoes {
 		update_user_meta( $user_id, 'cav_status', self::STATUS_PENDENTE );
 		update_user_meta( $user_id, CAV_Membro::META_CONSENTE, current_time( 'mysql' ) );
 		update_user_meta( $user_id, self::META_PEDIDO, current_time( 'mysql' ) );
+		update_user_meta( $user_id, self::META_NASC, $nasc );
+		if ( $resp ) {
+			update_user_meta( $user_id, self::META_RESP, $resp );
+		}
 		update_user_meta( $user_id, self::META_ACEITE, [
 			'valor' => number_format( $valor_visto, 2, '.', '' ),
 			'texto' => self::texto_aceite( $valor_visto ),

@@ -503,6 +503,7 @@ a.cav-item:hover { border-color: var(--cav-marca); }
 .cav-form input[type="text"],
 .cav-form input[type="email"],
 .cav-form input[type="password"],
+.cav-form input[type="date"],
 .cav-form select{
 	width: 100%;
 	box-sizing: border-box;
@@ -547,4 +548,20 @@ a.cav-item:hover { border-color: var(--cav-marca); }
 	background: rgba(176, 35, 31, .07);
 	color: var(--cav-nao);
 	font-size: .92rem;
+}
+
+/* Responsável, para aluno menor de 18 anos */
+.cav-form .cav-responsavel{
+	margin: 1.4rem 0 0;
+	padding: 1rem 1.1rem 1.2rem;
+	border: 1px solid var(--cav-linha);
+}
+.cav-form .cav-responsavel legend{
+	padding: 0 .4rem;
+	font-weight: 600;
+}
+.cav-form .cav-ajuda{
+	margin: 0 0 .6rem;
+	font-size: .9rem;
+	color: var(--cav-fraco);
 }
