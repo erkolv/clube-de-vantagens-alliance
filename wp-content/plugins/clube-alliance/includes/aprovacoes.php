@@ -86,13 +86,17 @@ class CAV_Aprovacoes {
 
 		$membros = CAV_Solicitacoes::pendentes_membros();
 		$cands   = CAV_Solicitacoes::pendentes_candidaturas();
-		$padrao  = wp_date( 'Y-m-d', strtotime( '+40 days' ) );
+		$padrao  = CAV_Config::somar_prazo( wp_date( 'Y-m-d' ) );
 		?>
 		<div class="wrap">
 			<h1>Aprovações do clube</h1>
 			<?php self::aviso(); ?>
 
 			<h2>Alunos aguardando <span class="count">(<?php echo count( $membros ); ?>)</span></h2>
+			<p class="description">
+				Aprove só depois de receber o pagamento na recepção (<?php echo esc_html( CAV_Config::valor_formatado() ); ?> por <?php echo esc_html( CAV_Config::prazo_formatado() ); ?>).
+				A validade já vem com <?php echo esc_html( CAV_Config::prazo_formatado() ); ?> a partir de hoje; mude a data se o pagamento foi em outro dia.
+			</p>
 
 			<?php if ( ! $membros ) : ?>
 				<p>Nenhum pedido na fila.</p>
@@ -116,7 +120,7 @@ class CAV_Aprovacoes {
 								<?php if ( $turma ) : ?><br><span class="description">Turma: <?php echo esc_html( $turma ); ?></span><?php endif; ?>
 								<?php if ( is_array( $aceite ) && ! empty( $aceite['valor'] ) ) : ?>
 									<br><span class="description" style="color:#1a7f37">
-										Aceitou <?php echo esc_html( CAV_Config::formatar( $aceite['valor'] ) ); ?>/mês na mensalidade
+										Aceitou <?php echo esc_html( CAV_Config::formatar( $aceite['valor'] ) ); ?>
 										em <?php echo esc_html( mysql2date( 'd/m/Y H:i', $aceite['em'] ) ); ?>
 									</span>
 								<?php else : ?>

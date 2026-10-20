@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  *  - alunos:     cadastra os alunos que já toparam entrar no clube;
  *  - parceiros:  cadastra os estabelecimentos, o responsável e o benefício;
- *  - em dia:     todo mês, estende a validade de quem pagou a mensalidade.
+ *  - renovação:  quando um aluno paga de novo, estende a validade dele.
  *
  * Toda planilha passa primeiro por uma prévia, que mostra as linhas com erro. Só depois
  * de confirmar é que o sistema grava. Nada sai por e-mail na importação: os acessos
@@ -57,8 +57,7 @@ class CAV_Importar {
 				'cpf'         => [ 'CPF', true, [] ],
 				'email'       => [ 'E-mail', true, [ 'email' ] ],
 				'whatsapp'    => [ 'WhatsApp', false, [ 'telefone', 'celular' ] ],
-				'plano'       => [ 'Plano', true, [] ],
-				'vence'       => [ 'Matrícula paga até', true, [ 'proximo vencimento', 'vencimento', 'paga ate' ] ],
+				'vence'       => [ 'Data do pagamento', true, [ 'pago em', 'data pagamento', 'data da contratacao', 'contratacao', 'data do pagamento do clube' ] ],
 				'aceite_em'   => [ 'Data do aceite', true, [ 'aceite em', 'data aceite' ] ],
 				'aceite_como' => [ 'Como aceitou', true, [ 'como ele aceitou', 'forma do aceite' ] ],
 			];
@@ -87,16 +86,16 @@ class CAV_Importar {
 		return [
 			'cpf'    => [ 'CPF', false, [] ],
 			'email'  => [ 'E-mail', false, [ 'email' ] ],
-			'vence'  => [ 'Próximo vencimento', true, [ 'vencimento', 'matricula paga ate', 'paga ate' ] ],
+			'vence'  => [ 'Data do pagamento', true, [ 'pago em', 'data pagamento', 'data da renovacao', 'renovacao' ] ],
 		];
 	}
 
 	public static function titulo_tipo( $tipo ) {
-		return [ 'alunos' => 'Alunos', 'parceiros' => 'Parceiros', 'em_dia' => 'Mensalidade em dia' ][ $tipo ] ?? '';
+		return [ 'alunos' => 'Alunos', 'parceiros' => 'Parceiros', 'renovacao' => 'Renovação' ][ $tipo ] ?? '';
 	}
 
 	private static function tipo_valido( $tipo ) {
-		return in_array( $tipo, [ 'alunos', 'parceiros', 'em_dia' ], true );
+		return in_array( $tipo, [ 'alunos', 'parceiros', 'renovacao' ], true );
 	}
 
 	/* ------------------------------------------------------------------ */
@@ -245,31 +244,15 @@ class CAV_Importar {
 		return $d;
 	}
 
-	private static function plano_da_planilha( $texto ) {
-		$k = self::chave( $texto );
-
-		foreach ( CAV_Solicitacoes::PLANOS as $chave => $rotulo ) {
-			if ( $k === self::chave( $rotulo ) || $k === self::chave( $chave ) ) {
-				return $chave;
-			}
-		}
-
-		return '';
-	}
-
-	/** Dia de vencimento + dias de tolerância, em Y-m-d. */
-	public static function validade_do_vencimento( $vence ) {
-		try {
-			return ( new DateTimeImmutable( $vence ) )->modify( '+' . CAV_Config::tolerancia() . ' days' )->format( 'Y-m-d' );
-		} catch ( Exception $e ) {
-			return $vence;
-		}
+	/** Data do pagamento + a duração do clube (12 meses), em Y-m-d: o último dia de acesso. */
+	public static function validade_do_pagamento( $pago ) {
+		return CAV_Config::somar_prazo( $pago );
 	}
 
 	/**
 	 * Confere todas as linhas. Cada resultado: n, dados, erros[], ok.
 	 *
-	 * @param string $tipo   alunos | parceiros | em_dia
+	 * @param string $tipo   alunos | parceiros | renovacao
 	 * @param array  $linhas Linhas lidas por ler_csv()
 	 * @return array[]
 	 */
@@ -286,7 +269,7 @@ class CAV_Importar {
 			} elseif ( 'parceiros' === $tipo ) {
 				self::validar_parceiro( $d, $erros, $vistos );
 			} else {
-				self::validar_em_dia( $d, $erros, $vistos );
+				self::validar_renovacao( $d, $erros, $vistos );
 			}
 
 			$saida[] = [ 'n' => $l['_n'], 'dados' => $d, 'erros' => $erros, 'ok' => ! $erros ];
@@ -328,19 +311,7 @@ class CAV_Importar {
 			$vistos['email'][ $d['email'] ] = $vistos['email'][ $d['email'] ] ?? $d['_n'];
 		}
 
-		$plano = self::plano_da_planilha( $d['plano'] );
-		if ( '' === $plano ) {
-			$erros[] = 'Plano "' . $d['plano'] . '" não entra no clube. Use Recorrente, Recorrente + personal ou Mensal.';
-		}
-		$d['plano_chave'] = $plano;
-
-		$vence = self::data( $d['vence'] );
-		if ( null === $vence ) {
-			$erros[] = 'Data da matrícula paga até inválida. Use dia/mês/ano, por exemplo 05/11/2026.';
-		} elseif ( $vence < current_time( 'Y-m-d' ) ) {
-			$erros[] = 'A matrícula já venceu em ' . mysql2date( 'd/m/Y', $vence ) . '.';
-		}
-		$d['vence_data'] = $vence;
+		self::validar_pagamento( $d, $erros );
 
 		$aceite = self::data( $d['aceite_em'] );
 		if ( null === $aceite ) {
@@ -438,7 +409,7 @@ class CAV_Importar {
 		}
 	}
 
-	private static function validar_em_dia( array &$d, array &$erros, array &$vistos ) {
+	private static function validar_renovacao( array &$d, array &$erros, array &$vistos ) {
 		$d['usuario'] = null;
 		$cpf          = self::cpf_da_planilha( $d['cpf'] );
 		$email        = sanitize_email( $d['email'] );
@@ -473,13 +444,30 @@ class CAV_Importar {
 			}
 		}
 
-		$vence = self::data( $d['vence'] );
-		if ( null === $vence ) {
-			$erros[] = 'Data de vencimento inválida. Use dia/mês/ano.';
-		} elseif ( $vence < current_time( 'Y-m-d' ) ) {
-			$erros[] = 'O vencimento já passou (' . mysql2date( 'd/m/Y', $vence ) . ').';
+		self::validar_pagamento( $d, $erros );
+
+		// Renovar não pode encurtar o acesso que o aluno já tem.
+		if ( $d['usuario'] && ! empty( $d['vence_data'] ) ) {
+			$atual = CAV_Membro::validade( (int) $d['usuario'] );
+			if ( $atual && self::validade_do_pagamento( $d['vence_data'] ) <= $atual ) {
+				$erros[] = 'Este pagamento não estende o acesso, que já vale até ' . mysql2date( 'd/m/Y', $atual ) . '.';
+			}
 		}
-		$d['vence_data'] = $vence;
+	}
+
+	/** Confere a data do pagamento: data válida, não futura, e que ainda dá acesso hoje. */
+	private static function validar_pagamento( array &$d, array &$erros ) {
+		$pago = self::data( $d['vence'] );
+
+		if ( null === $pago ) {
+			$erros[] = 'Data do pagamento inválida. Use dia/mês/ano, por exemplo 05/11/2026.';
+		} elseif ( $pago > current_time( 'Y-m-d' ) ) {
+			$erros[] = 'A data do pagamento está no futuro.';
+		} elseif ( self::validade_do_pagamento( $pago ) < current_time( 'Y-m-d' ) ) {
+			$erros[] = 'O acesso deste pagamento já acabou em ' . mysql2date( 'd/m/Y', self::validade_do_pagamento( $pago ) ) . '.';
+		}
+
+		$d['vence_data'] = $pago;
 	}
 
 	/* ------------------------------------------------------------------ */
@@ -509,9 +497,8 @@ class CAV_Importar {
 		$aceite_em = $d['aceite_data'] . ' 00:00:00';
 
 		update_user_meta( $user_id, 'cav_status', CAV_Solicitacoes::STATUS_ATIVO );
-		CAV_Membro::set_validade( $user_id, self::validade_do_vencimento( $d['vence_data'] ) );
+		CAV_Membro::set_validade( $user_id, self::validade_do_pagamento( $d['vence_data'] ) );
 		update_user_meta( $user_id, CAV_Membro::META_CONSENTE, $aceite_em );
-		update_user_meta( $user_id, CAV_Solicitacoes::META_PLANO, $d['plano_chave'] );
 		update_user_meta( $user_id, CAV_Solicitacoes::META_ACEITE, [
 			'valor'  => number_format( CAV_Config::valor(), 2, '.', '' ),
 			'texto'  => 'Aceite registrado pela academia (' . $d['aceite_como'] . ').',
@@ -589,8 +576,8 @@ class CAV_Importar {
 		return $parceiro_id;
 	}
 
-	private static function gravar_em_dia( array $d ) {
-		return CAV_Membro::set_validade( (int) $d['usuario'], self::validade_do_vencimento( $d['vence_data'] ) )
+	private static function gravar_renovacao( array $d ) {
+		return CAV_Membro::set_validade( (int) $d['usuario'], self::validade_do_pagamento( $d['vence_data'] ) )
 			? true
 			: new WP_Error( 'cav_validade', 'Não foi possível gravar a validade.' );
 	}
@@ -658,10 +645,6 @@ class CAV_Importar {
 
 		$tipo = $dados['tipo'];
 
-		if ( 'alunos' === $tipo && ! CAV_Config::valor_definido() ) {
-			self::volta( [ 'aviso' => 'sem_valor' ] );
-		}
-
 		$publicar = ! empty( $_POST['publicar'] );
 		$criados  = 0;
 		$pulados  = [];
@@ -678,7 +661,7 @@ class CAV_Importar {
 			} elseif ( 'parceiros' === $tipo ) {
 				$res = self::gravar_parceiro( $r['dados'], $publicar );
 			} else {
-				$res = self::gravar_em_dia( $r['dados'] );
+				$res = self::gravar_renovacao( $r['dados'] );
 			}
 
 			if ( is_wp_error( $res ) ) {
@@ -849,7 +832,7 @@ class CAV_Importar {
 			$rel = get_transient( 'cav_imp_rel_' . $uid );
 
 			if ( is_array( $rel ) ) {
-				$rotulos = [ 'alunos' => 'aluno(s) cadastrado(s)', 'parceiros' => 'parceiro(s) cadastrado(s)', 'em_dia' => 'aluno(s) com a validade atualizada' ];
+				$rotulos = [ 'alunos' => 'aluno(s) cadastrado(s)', 'parceiros' => 'parceiro(s) cadastrado(s)', 'renovacao' => 'aluno(s) com a validade atualizada' ];
 				echo '<div class="notice notice-success"><p><strong>' . (int) $rel['criados'] . '</strong> ' . esc_html( $rotulos[ $rel['tipo'] ] ?? '' ) . '.';
 				if ( in_array( $rel['tipo'], [ 'alunos', 'parceiros' ], true ) && $rel['criados'] ) {
 					echo ' Os e-mails de acesso ainda <strong>não</strong> foram enviados: eles ficam na fila da seção "Enviar os acessos", mais abaixo.';
@@ -886,7 +869,6 @@ class CAV_Importar {
 			'grande'      => 'O arquivo é grande demais (o limite é 2 MB).',
 			'formato'     => 'O arquivo precisa ser CSV. No Excel: Arquivo → Salvar como → CSV UTF-8. No Google Planilhas: Arquivo → Fazer download → CSV.',
 			'expirou'     => 'A prévia expirou. Envie a planilha de novo.',
-			'sem_valor'   => 'Defina o valor do clube em Clube → Configurações antes de cadastrar alunos. O valor fica registrado no aceite de cada um.',
 			'envio_salvo' => 'Configuração do envio salva.',
 		];
 
@@ -951,8 +933,7 @@ class CAV_Importar {
 			self::bloco_envio_planilha(
 				'alunos',
 				'1. Alunos',
-				'Cadastra os alunos que já toparam entrar no clube, com plano, vencimento e aceite. Nenhum e-mail sai agora.',
-				CAV_Config::valor_definido() ? '' : 'Defina o valor do clube em Clube → Configurações antes de cadastrar alunos.'
+				'Cadastra os alunos que já pagaram o clube na recepção, com a data do pagamento e o aceite. O acesso vale <strong>' . esc_html( CAV_Config::prazo_formatado() ) . '</strong> a partir do pagamento. Nenhum e-mail sai agora.'
 			);
 			self::bloco_envio_planilha(
 				'parceiros',
@@ -960,9 +941,9 @@ class CAV_Importar {
 				'Cadastra o estabelecimento, o responsável (que vira o login) e o benefício. Nenhum e-mail sai agora.'
 			);
 			self::bloco_envio_planilha(
-				'em_dia',
-				'3. Mensalidade em dia (todo mês)',
-				'Lista de quem pagou, tirada do sistema de cobrança: CPF ou e-mail e o próximo vencimento. Cada aluno da lista fica liberado até o vencimento mais <strong>' . (int) CAV_Config::tolerancia() . ' dias</strong> de tolerância. Quem não estiver na lista perde o acesso sozinho quando a validade acabar.'
+				'renovacao',
+				'3. Renovação',
+				'Para quem pagou o clube de novo: CPF ou e-mail e a data do pagamento. O acesso passa a valer <strong>' . esc_html( CAV_Config::prazo_formatado() ) . '</strong> a partir dessa data. Quem não renovar perde o acesso sozinho quando a validade acabar.'
 			);
 
 			self::tela_envio();
@@ -987,7 +968,6 @@ class CAV_Importar {
 		$com_erro   = array_values( array_filter( $resultados, static function ( $r ) {
 			return ! $r['ok'];
 		} ) );
-		$sem_valor  = 'alunos' === $tipo && ! CAV_Config::valor_definido();
 		?>
 		<h2>Conferência: <?php echo esc_html( self::titulo_tipo( $tipo ) ); ?></h2>
 		<p>
@@ -996,20 +976,16 @@ class CAV_Importar {
 			<strong style="color:#b32d2e"><?php echo count( $com_erro ); ?> com erro</strong>.
 		</p>
 
-		<?php if ( $sem_valor ) : ?>
-			<div class="notice notice-error inline"><p>Defina o valor do clube em Clube → Configurações antes de cadastrar alunos. O valor fica registrado no aceite de cada um.</p></div>
-		<?php endif; ?>
-
 		<?php if ( $com_erro ) : ?>
 			<h3>Linhas com erro (não entram)</h3>
 			<p class="description">A linha é o número dela na planilha, contando o cabeçalho como linha 1. Corrija na planilha e envie de novo, ou importe só as certas e depois cadastre estas à mão.</p>
 			<table class="widefat striped" style="max-width:1000px">
-				<thead><tr><th style="width:60px">Linha</th><th style="width:240px"><?php echo 'em_dia' === $tipo ? 'CPF ou e-mail' : 'Nome'; ?></th><th>O que está errado</th></tr></thead>
+				<thead><tr><th style="width:60px">Linha</th><th style="width:240px"><?php echo 'renovacao' === $tipo ? 'CPF ou e-mail' : 'Nome'; ?></th><th>O que está errado</th></tr></thead>
 				<tbody>
 				<?php foreach ( array_slice( $com_erro, 0, 300 ) as $r ) : ?>
 					<tr>
 						<td><?php echo (int) $r['n']; ?></td>
-						<td><?php echo esc_html( 'em_dia' === $tipo ? ( $r['dados']['cpf'] ?: $r['dados']['email'] ) : $r['dados']['nome'] ); ?></td>
+						<td><?php echo esc_html( 'renovacao' === $tipo ? ( $r['dados']['cpf'] ?: $r['dados']['email'] ) : $r['dados']['nome'] ); ?></td>
 						<td><?php echo esc_html( implode( ' ', $r['erros'] ) ); ?></td>
 					</tr>
 				<?php endforeach; ?>
@@ -1025,7 +1001,7 @@ class CAV_Importar {
 			<table class="widefat striped" style="max-width:1000px">
 				<thead><tr>
 					<?php if ( 'alunos' === $tipo ) : ?>
-						<th>Aluno</th><th>CPF</th><th>Plano</th><th>Liberado até</th>
+						<th>Aluno</th><th>CPF</th><th>Pagou em</th><th>Liberado até</th>
 					<?php elseif ( 'parceiros' === $tipo ) : ?>
 						<th>Estabelecimento</th><th>Responsável</th><th>Benefício</th>
 					<?php else : ?>
@@ -1038,8 +1014,8 @@ class CAV_Importar {
 					<?php if ( 'alunos' === $tipo ) : ?>
 						<td><?php echo esc_html( $d['nome'] ); ?></td>
 						<td><?php echo esc_html( CAV_CPF::mascarar( $d['cpf'] ) ); ?></td>
-						<td><?php echo esc_html( CAV_Solicitacoes::rotulo_plano( $d['plano_chave'] ) ); ?></td>
-						<td><?php echo esc_html( mysql2date( 'd/m/Y', self::validade_do_vencimento( $d['vence_data'] ) ) ); ?></td>
+						<td><?php echo esc_html( mysql2date( 'd/m/Y', $d['vence_data'] ) ); ?></td>
+						<td><?php echo esc_html( mysql2date( 'd/m/Y', self::validade_do_pagamento( $d['vence_data'] ) ) ); ?></td>
 					<?php elseif ( 'parceiros' === $tipo ) : ?>
 						<td><?php echo esc_html( $d['nome'] ); ?></td>
 						<td><?php echo esc_html( $d['responsavel'] . ' (' . $d['email'] . ')' ); ?></td>
@@ -1050,7 +1026,7 @@ class CAV_Importar {
 						?>
 						<td><?php echo esc_html( $u ? $u->display_name : '' ); ?></td>
 						<td><?php echo esc_html( $atual ? mysql2date( 'd/m/Y', $atual ) : 'sem validade' ); ?></td>
-						<td><?php echo esc_html( mysql2date( 'd/m/Y', self::validade_do_vencimento( $d['vence_data'] ) ) ); ?></td>
+						<td><?php echo esc_html( mysql2date( 'd/m/Y', self::validade_do_pagamento( $d['vence_data'] ) ) ); ?></td>
 					<?php endif; ?>
 					</tr>
 				<?php endforeach; ?>
@@ -1058,16 +1034,6 @@ class CAV_Importar {
 			</table>
 			<?php if ( count( $ok ) > 50 ) : ?>
 				<p class="description">Mostrando 50 de <?php echo count( $ok ); ?>.</p>
-			<?php endif; ?>
-
-			<?php if ( 'em_dia' === $tipo ) :
-				$ativos  = get_users( [ 'role' => 'cav_membro', 'meta_key' => 'cav_status', 'meta_value' => 'ativo', 'fields' => 'ID', 'number' => -1 ] );
-				$na_lista = array_filter( array_map( static function ( $r ) {
-					return (int) $r['dados']['usuario'];
-				}, $ok ) );
-				$fora = count( array_diff( array_map( 'intval', $ativos ), $na_lista ) );
-				?>
-				<p class="description"><?php echo (int) $fora; ?> aluno(s) ativo(s) não estão nesta lista. Eles não são alterados: perdem o acesso quando a validade que já têm acabar.</p>
 			<?php endif; ?>
 
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-top:16px">
@@ -1079,7 +1045,7 @@ class CAV_Importar {
 					<p><label><input type="checkbox" name="publicar" value="1" checked> Publicar os parceiros e os benefícios já (aparecem no site e valem no terminal). Desmarque para entrarem como rascunho.</label></p>
 				<?php endif; ?>
 
-				<button type="submit" class="button button-primary" <?php disabled( $sem_valor ); ?>>Importar as <?php echo count( $ok ); ?> linhas certas</button>
+				<button type="submit" class="button button-primary">Importar as <?php echo count( $ok ); ?> linhas certas</button>
 				<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=cav-importar' ) ); ?>">Cancelar</a>
 			</form>
 		<?php else : ?>

@@ -6,28 +6,34 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Configurações do clube, em Clube → Configurações.
  *
- * O valor mensal fica num lugar só. Os textos do site usam as marcas abaixo e o
+ * O clube é um serviço pago à parte, de uma vez, por um prazo (hoje R$ 300,00 por
+ * 12 meses). O pagamento é feito na recepção e o acesso é liberado depois. O valor
+ * e o prazo ficam num lugar só. Os textos do site usam as marcas abaixo e o
  * WordPress troca pelo valor atual na hora de mostrar a página:
  *
- *   {{valor_clube}}      R$ 19,90
- *   {{valor_clube_ano}}  R$ 238,80   (o valor de 12 meses)
+ *   {{valor_clube}}      R$ 300,00  (o valor do contrato inteiro)
+ *   {{valor_clube_mes}}  R$ 25,00   (o valor dividido pelos meses do prazo)
+ *   {{prazo_clube}}      12 meses
  *
- * Também funcionam os shortcodes [cav_valor] e [cav_valor_ano], para quem prefere.
+ * {{valor_clube_ano}} continua funcionando e é igual a {{valor_clube}}.
+ * Também funcionam os shortcodes [cav_valor], [cav_valor_mes] e [cav_prazo].
  */
 class CAV_Config {
 
-	const OPT_VALOR  = 'cav_valor_mensal';
+	const OPT_VALOR  = 'cav_valor_clube';
 	const OPT_GOOGLE = 'cav_google_client_id';
-	const OPT_TOLER  = 'cav_tolerancia_dias';
-	const PADRAO     = 19.90;
-	const TOLER_PADRAO = 5;
+	const OPT_PRAZO  = 'cav_prazo_meses';
+	const PADRAO     = 300.00;
+	const PRAZO_PADRAO = 12;
 
 	public static function init() {
 		add_action( 'admin_menu', [ __CLASS__, 'menu' ], 20 );
 		add_action( 'admin_post_cav_salvar_config', [ __CLASS__, 'salvar' ] );
 
 		add_shortcode( 'cav_valor', [ __CLASS__, 'sc_valor' ] );
-		add_shortcode( 'cav_valor_ano', [ __CLASS__, 'sc_valor_ano' ] );
+		add_shortcode( 'cav_valor_ano', [ __CLASS__, 'sc_valor' ] );
+		add_shortcode( 'cav_valor_mes', [ __CLASS__, 'sc_valor_mes' ] );
+		add_shortcode( 'cav_prazo', [ __CLASS__, 'sc_prazo' ] );
 
 		// O link do e-mail de acesso vale 7 dias (o padrão do WordPress é 1 dia).
 		add_filter( 'password_reset_expiration', static function () {
@@ -41,22 +47,25 @@ class CAV_Config {
 
 	/* ------------------------------- Valores ------------------------------- */
 
-	/** Valor mensal do clube, em reais (float). */
+	/** Valor do clube pelo prazo inteiro (hoje 12 meses), em reais (float). */
 	public static function valor() {
 		$v = get_option( self::OPT_VALOR, '' );
 		return ( '' !== $v && is_numeric( $v ) && (float) $v > 0 ) ? (float) $v : self::PADRAO;
 	}
 
-	/** O valor só vale como definido depois que alguém salvou em Configurações. */
-	public static function valor_definido() {
-		$v = get_option( self::OPT_VALOR, '' );
-		return '' !== $v && is_numeric( $v ) && (float) $v > 0;
+	/** Meses de acesso que o valor paga. */
+	public static function prazo() {
+		$v = get_option( self::OPT_PRAZO, '' );
+		return ( '' !== $v && is_numeric( $v ) && (int) $v >= 1 && (int) $v <= 60 ) ? (int) $v : self::PRAZO_PADRAO;
 	}
 
-	/** Dias que o aluno ainda usa o clube depois do vencimento da mensalidade. */
-	public static function tolerancia() {
-		$v = get_option( self::OPT_TOLER, '' );
-		return ( '' !== $v && is_numeric( $v ) && (int) $v >= 0 && (int) $v <= 60 ) ? (int) $v : self::TOLER_PADRAO;
+	/** Soma o prazo a uma data Y-m-d e devolve Y-m-d (a validade do acesso). */
+	public static function somar_prazo( $data ) {
+		try {
+			return ( new DateTimeImmutable( $data ) )->modify( '+' . self::prazo() . ' months' )->format( 'Y-m-d' );
+		} catch ( Exception $e ) {
+			return '';
+		}
 	}
 
 	public static function formatar( $valor ) {
@@ -67,23 +76,28 @@ class CAV_Config {
 		return self::formatar( self::valor() );
 	}
 
-	public static function valor_ano_formatado() {
-		return self::formatar( round( self::valor() * 12, 2 ) );
+	public static function valor_mes_formatado() {
+		return self::formatar( round( self::valor() / self::prazo(), 2 ) );
+	}
+
+	public static function prazo_formatado() {
+		$n = self::prazo();
+		return 1 === $n ? '1 mês' : $n . ' meses';
 	}
 
 	public static function google_client_id() {
 		return trim( (string) get_option( self::OPT_GOOGLE, '' ) );
 	}
 
-	/** Troca as marcas {{valor_clube}} e {{valor_clube_ano}} pelo valor atual. */
+	/** Troca as marcas {{valor_clube}}, {{valor_clube_mes}} e {{prazo_clube}} pelos valores atuais. */
 	public static function trocar_marcas( $texto ) {
-		if ( ! is_string( $texto ) || false === strpos( $texto, '{{valor_clube' ) ) {
+		if ( ! is_string( $texto ) || ( false === strpos( $texto, '{{valor_clube' ) && false === strpos( $texto, '{{prazo_clube' ) ) ) {
 			return $texto;
 		}
 
 		return str_replace(
-			[ '{{valor_clube_ano}}', '{{valor_clube}}' ],
-			[ self::valor_ano_formatado(), self::valor_formatado() ],
+			[ '{{valor_clube_mes}}', '{{valor_clube_ano}}', '{{valor_clube}}', '{{prazo_clube}}' ],
+			[ self::valor_mes_formatado(), self::valor_formatado(), self::valor_formatado(), self::prazo_formatado() ],
 			$texto
 		);
 	}
@@ -92,8 +106,12 @@ class CAV_Config {
 		return esc_html( self::valor_formatado() );
 	}
 
-	public static function sc_valor_ano() {
-		return esc_html( self::valor_ano_formatado() );
+	public static function sc_valor_mes() {
+		return esc_html( self::valor_mes_formatado() );
+	}
+
+	public static function sc_prazo() {
+		return esc_html( self::prazo_formatado() );
 	}
 
 	/* -------------------------------- Admin -------------------------------- */
@@ -134,9 +152,9 @@ class CAV_Config {
 					if ( 2 === (int) $erro_n ) {
 						echo 'Esse ID do cliente Google não parece certo. Ele termina com .apps.googleusercontent.com. Nada foi salvo.';
 					} elseif ( 3 === (int) $erro_n ) {
-						echo 'Os dias de tolerância precisam ser um número de 0 a 60. Nada foi salvo.';
+						echo 'A duração precisa ser um número de meses entre 1 e 60. Nada foi salvo.';
 					} else {
-						echo 'O valor precisa ser um número maior que zero, por exemplo 19,90.';
+						echo 'O valor precisa ser um número maior que zero, por exemplo 300,00.';
 					}
 					?></p></div>
 			<?php endif; ?>
@@ -145,16 +163,16 @@ class CAV_Config {
 				<input type="hidden" name="action" value="cav_salvar_config">
 				<?php wp_nonce_field( 'cav_salvar_config', 'cav_nonce' ); ?>
 
-				<h2>Valor do clube</h2>
+				<h2>Valor e duração do clube</h2>
 				<table class="form-table" role="presentation">
 					<tr>
-						<th scope="row"><label for="cav_valor">Valor por mês</label></th>
+						<th scope="row"><label for="cav_valor">Valor do clube</label></th>
 						<td>
 							R$ <input type="text" id="cav_valor" name="cav_valor" value="<?php echo esc_attr( $valor_campo ); ?>" class="small-text" inputmode="decimal" required>
 							<p class="description">
-								É o adicional que a Alliance cobra do aluno na mensalidade. Hoje o site mostra
-								<strong><?php echo esc_html( self::valor_formatado() ); ?> por mês</strong> e
-								<strong><?php echo esc_html( self::valor_ano_formatado() ); ?> por ano</strong>.
+								É o que o aluno paga uma vez só, na recepção da academia, pelo prazo abaixo. Hoje o site mostra
+								<strong><?php echo esc_html( self::valor_formatado() ); ?> por <?php echo esc_html( self::prazo_formatado() ); ?></strong>
+								(<?php echo esc_html( self::valor_mes_formatado() ); ?> por mês, nos textos que falam em valor mensal).
 							</p>
 							<p class="description">
 								Ao salvar, o valor muda na página inicial, em "O que é o clube", em "Quero fazer parte" e no aceite
@@ -163,17 +181,13 @@ class CAV_Config {
 							</p>
 						</td>
 					</tr>
-				</table>
-
-				<h2>Mensalidade em dia</h2>
-				<table class="form-table" role="presentation">
 					<tr>
-						<th scope="row"><label for="cav_toler">Dias de tolerância</label></th>
+						<th scope="row"><label for="cav_prazo">Duração do acesso</label></th>
 						<td>
-							<input type="number" id="cav_toler" name="cav_toler" value="<?php echo esc_attr( self::tolerancia() ); ?>" class="small-text" min="0" max="60" required> dias
+							<input type="number" id="cav_prazo" name="cav_prazo" value="<?php echo esc_attr( self::prazo() ); ?>" class="small-text" min="1" max="60" required> meses
 							<p class="description">
-								Depois que a mensalidade vence, o aluno ainda usa o clube por esses dias. Vale na importação e
-								na atualização mensal de quem está em dia (Clube → Importar).
+								O acesso vale este tanto de meses a partir da data do pagamento. Na aprovação e na importação,
+								a validade já vem calculada.
 							</p>
 						</td>
 					</tr>
@@ -225,8 +239,8 @@ class CAV_Config {
 			exit;
 		}
 
-		$toler = isset( $_POST['cav_toler'] ) ? (int) $_POST['cav_toler'] : -1;
-		if ( $toler < 0 || $toler > 60 ) {
+		$prazo = isset( $_POST['cav_prazo'] ) ? (int) $_POST['cav_prazo'] : 0;
+		if ( $prazo < 1 || $prazo > 60 ) {
 			wp_safe_redirect( add_query_arg( 'erro', 3, $volta ) );
 			exit;
 		}
@@ -241,7 +255,7 @@ class CAV_Config {
 
 		update_option( self::OPT_VALOR, number_format( $valor, 2, '.', '' ) );
 		update_option( self::OPT_GOOGLE, $google );
-		update_option( self::OPT_TOLER, $toler );
+		update_option( self::OPT_PRAZO, $prazo );
 
 		wp_safe_redirect( add_query_arg( 'salvo', 1, $volta ) );
 		exit;

@@ -158,10 +158,10 @@ if ( ! function_exists( 'cav_pg_id' ) ) {
 		/* ------------------------------ Início ------------------------------ */
 		$inicio = [
 			cav_pg_secao( 'clube-hero', [
-				cav_pg_olho( 'Adicional ao seu plano' ),
+				cav_pg_olho( 'Serviço à parte da mensalidade' ),
 				cav_pg_titulo( $ouro( 'Bem-vindo ao Clube de Vantagens' ) . '<br>Alliance Mogi das Cruzes', 'h1' ),
 				cav_pg_texto(
-					'<p>Seu kimono abre porta fora do tatame. A Alliance fechou parceria com comércios da cidade: você chega, informa o CPF e o desconto sai na hora. Sem cupom, sem app, sem carteirinha impressa. Adicione ao seu plano por <strong class="clube-ouro">{{valor_clube}} por mês</strong> na recepção.</p>',
+					'<p>Seu kimono abre porta fora do tatame. A Alliance fechou parceria com comércios da cidade: você chega, informa o CPF e o desconto sai na hora. Sem cupom, sem app, sem carteirinha impressa. Entre por <strong class="clube-ouro">{{valor_clube}} por {{prazo_clube}}</strong>, pagos na recepção da Alliance.</p>',
 					'clube-lead'
 				),
 				cav_pg_contem( 'clube-linha-botoes', [
@@ -170,16 +170,16 @@ if ( ! function_exists( 'cav_pg_id' ) ) {
 					cav_pg_botao( 'Ver os parceiros', '/parceiros/', true ),
 				] ),
 				cav_pg_contem( 'clube-grade clube-selos', [
-					cav_pg_contem( 'clube-selo', [ cav_pg_titulo( '{{valor_clube}}', 'div', 'clube-selo-v' ), cav_pg_texto( '<p>por mês, na sua mensalidade</p>' ) ] ),
+					cav_pg_contem( 'clube-selo', [ cav_pg_titulo( '{{valor_clube}}', 'div', 'clube-selo-v' ), cav_pg_texto( '<p>por {{prazo_clube}}, pagos na recepção</p>' ) ] ),
 					cav_pg_contem( 'clube-selo', [ cav_pg_titulo( 'CPF', 'div', 'clube-selo-v' ), cav_pg_texto( '<p>é tudo que você informa no caixa</p>' ) ] ),
-					cav_pg_contem( 'clube-selo', [ cav_pg_titulo( 'Sem fidelidade', 'div', 'clube-selo-v' ), cav_pg_texto( '<p>cancele quando quiser</p>' ) ] ),
+					cav_pg_contem( 'clube-selo', [ cav_pg_titulo( '{{prazo_clube}}', 'div', 'clube-selo-v' ), cav_pg_texto( '<p>de acesso, a partir do pagamento</p>' ) ] ),
 				] ),
 			] ),
 
 			cav_pg_secao( 'clube-bloco', [
 				cav_pg_olho( 'Por dentro do clube' ),
 				cav_pg_titulo( 'Além do desconto, ' . $ouro( 'tem mais coisa lá dentro' ) ),
-				cav_pg_texto( '<p>Quem entra no clube ganha uma área só dos alunos, com benefícios da própria academia.</p>', 'clube-lead' ),
+				cav_pg_texto( '<p>Quem entra no clube ganha uma área só dos alunos, com sorteios e a agenda de eventos da academia.</p>', 'clube-lead' ),
 				cav_pg_contem( 'clube-grade clube-grade-2', [
 					cav_pg_contem( 'clube-caixa', [
 						cav_pg_olho( 'Sorteios' ),
@@ -191,16 +191,6 @@ if ( ! function_exists( 'cav_pg_id' ) ) {
 						cav_pg_titulo( 'Entrada VIP nos seminários', 'h3' ),
 						cav_pg_texto( '<p>Quem é do clube entra nos seminários e eventos da Alliance com condição VIP. A agenda completa fica na sua área, com data, horário e local.</p>' ),
 					] ),
-					cav_pg_contem( 'clube-caixa', [
-						cav_pg_olho( 'Na academia' ),
-						cav_pg_titulo( 'Descontos exclusivos na Alliance', 'h3' ),
-						cav_pg_texto( '<p>Condições que só o aluno do clube tem dentro da própria academia, como aula particular, segunda modalidade e indicação de amigo.</p>' ),
-					] ),
-					cav_pg_contem( 'clube-caixa', [
-						cav_pg_olho( 'Produtos' ),
-						cav_pg_titulo( 'Preço de aluno nos produtos', 'h3' ),
-						cav_pg_texto( '<p>Kimono, faixa, rashguard e outros produtos com o preço normal e o preço do clube lado a lado, para você ver quanto economiza.</p>' ),
-					] ),
 				] ),
 				cav_pg_atalho( '[cav_clube_agora]' ),
 				cav_pg_contem( 'clube-linha-botoes', [ cav_pg_botao( 'Quero fazer parte', '/quero-fazer-parte/' ) ] ),
@@ -208,12 +198,12 @@ if ( ! function_exists( 'cav_pg_id' ) ) {
 
 			cav_pg_secao( 'clube-bloco clube-claro', [
 				cav_pg_olho( 'Como funciona' ),
-				cav_pg_titulo( 'Três passos, ' . $ouro( 'uma vez só' ) ),
+				cav_pg_titulo( 'Três passos, ' . $ouro( 'bem simples' ) ),
 				cav_pg_contem( 'clube-grade clube-grade-3', [
 					cav_pg_passo( 'Passo 01', 'Peça para entrar', 'Preencha nome, CPF e WhatsApp. Um minuto, sem compromisso.' ),
-					cav_pg_passo( 'Passo 02', 'A recepção adiciona ao plano', 'Os {{valor_clube}} entram na sua próxima cobrança e o acesso é liberado. Sem taxa de adesão.' ),
+					cav_pg_passo( 'Passo 02', 'Pague na recepção', 'Pague os {{valor_clube}} na recepção da Alliance, no cartão de crédito. Quando a recepção conferir o pagamento, o acesso é liberado.' ),
 					cav_pg_passo( 'Passo 03', 'Informe o CPF no caixa', 'O parceiro confere na hora e aplica o desconto. Não precisa mostrar nada.' ),
-					cav_pg_passo( 'Importante', 'Cancele quando quiser', 'Avise a recepção e o adicional sai da cobrança seguinte. Sem multa, sem fidelidade, sem conversa de retenção.', true ),
+					cav_pg_passo( 'Importante', 'Vale por {{prazo_clube}}', 'O acesso dura {{prazo_clube}} a partir da data do pagamento. A validade aparece na sua área.', true ),
 				] ),
 			] ),
 
@@ -227,12 +217,12 @@ if ( ! function_exists( 'cav_pg_id' ) ) {
 			cav_pg_secao( 'clube-bloco clube-claro', [
 				cav_pg_olho( 'A conta' ),
 				cav_pg_titulo( 'Vale a pena ' . $ouro( 'para você?' ) ),
-				cav_pg_texto( '<p>Depende de quanto você usa. Se for um corte de cabelo por mês, já se paga. Se você não usar nada, não vale, e nesse caso é melhor não assinar.</p>', 'clube-lead' ),
+				cav_pg_texto( '<p>Depende de quanto você usa. Dividido pelo prazo, o clube sai por {{valor_clube_mes}} por mês. Se você não for usar os descontos, ele não compensa.</p>', 'clube-lead' ),
 				cav_pg_contem( 'clube-grade clube-grade-2', [
 					cav_pg_contem( 'clube-caixa', [
 						cav_pg_olho( 'Custo' ),
 						cav_pg_titulo( '{{valor_clube}}', 'h3' ),
-						cav_pg_texto( '<p>por mês, somado à sua mensalidade da academia. {{valor_clube_ano}} por ano.</p>' ),
+						cav_pg_texto( '<p>por {{prazo_clube}}, pagos na recepção, à parte da mensalidade. Dá {{valor_clube_mes}} por mês.</p>' ),
 					] ),
 					cav_pg_contem( 'clube-caixa clube-caixa--ouro', [
 						cav_pg_olho( 'Retorno em um mês típico' ),
@@ -262,27 +252,25 @@ if ( ! function_exists( 'cav_pg_id' ) ) {
 			cav_pg_topo(
 				'Clube de vantagens',
 				'O que é o clube',
-				'Uma rede de comércios de Mogi das Cruzes que dá desconto para quem treina na Alliance. Adicional opcional de {{valor_clube}} por mês no seu plano.'
+				'Uma rede de comércios de Mogi das Cruzes que dá desconto para quem treina na Alliance. {{valor_clube}} por {{prazo_clube}}, à parte da mensalidade.'
 			),
 
 			cav_pg_secao( 'clube-bloco', [
 				cav_pg_contem( 'clube-grade clube-grade-2', [
 					cav_pg_contem( '', [
 						cav_pg_olho( 'A ideia' ),
-						cav_pg_titulo( 'Um adicional ' . $ouro( 'que se paga sozinho' ) ),
-						cav_pg_texto( '<p>A Alliance procurou negócios da cidade e negociou condição para os alunos. O comércio ganha clientes recorrentes, você ganha desconto, e a academia cobra um adicional para manter a operação de pé: captar parceiro, negociar condição e sustentar a plataforma.</p><p>Não é programa de pontos. Não acumula, não expira saldo, não tem nível. É desconto direto, na hora de pagar.</p>' ),
+						cav_pg_titulo( 'Um clube ' . $ouro( 'que se paga sozinho' ) ),
+						cav_pg_texto( '<p>A Alliance procurou negócios da cidade e negociou condição para os alunos. O comércio ganha clientes recorrentes, você ganha desconto, e a academia cobra o clube para manter a operação de pé: captar parceiro, negociar condição e sustentar a plataforma.</p><p>Não é programa de pontos. Não acumula, não expira saldo, não tem nível. É desconto direto, na hora de pagar.</p>' ),
 					] ),
 					cav_pg_contem( '', [
 						cav_pg_olho( 'O que você tem acesso' ),
 						cav_pg_texto( cav_pg_tabela( [
 							[ 'Descontos nos parceiros', 'conforme cada parceiro' ],
-							[ 'Descontos exclusivos na academia', 'só membros' ],
-							[ 'Produtos com preço de aluno', 'só membros' ],
 							[ 'Entrada VIP em seminários e eventos', 'só membros' ],
 							[ 'Sorteios da academia', 'só membros' ],
 							[ 'Promoções por temporada', 'rotativo' ],
 							[ 'Conteúdo técnico gravado', 'só membros' ],
-							[ 'Custo', '{{valor_clube}}/mês', true ],
+							[ 'Custo', '{{valor_clube}} por {{prazo_clube}}', true ],
 						] ) ),
 					] ),
 				] ),
@@ -292,11 +280,11 @@ if ( ! function_exists( 'cav_pg_id' ) ) {
 				cav_pg_olho( 'Perguntas que sempre aparecem' ),
 				cav_pg_titulo( 'Antes de perguntar ' . $ouro( 'na recepção' ) ),
 				cav_pg_contem( 'clube-grade clube-grade-faq', [
-					cav_pg_pergunta( 'Quanto custa?', '{{valor_clube}} por mês, somados à sua mensalidade da academia. Não tem taxa de adesão nem cobrança separada.' ),
-					cav_pg_pergunta( 'Por que preciso de aprovação?', 'Porque o clube é só para aluno matriculado e o valor entra na sua mensalidade. A recepção confirma as duas coisas antes de liberar.' ),
+					cav_pg_pergunta( 'Quanto custa?', '{{valor_clube}} por {{prazo_clube}} ({{valor_clube_mes}} por mês na conta), pagos na recepção da Alliance, no cartão de crédito. O clube é um serviço à parte da mensalidade.' ),
+					cav_pg_pergunta( 'Por que o acesso não é na hora?', 'Porque o clube é pago na recepção. Quando a recepção confere o pagamento, libera o acesso e avisa você por e-mail.' ),
 					cav_pg_pergunta( 'Preciso mostrar carteirinha?', 'Não. Você fala o CPF no caixa e o parceiro confere na hora pelo celular dele.' ),
 					cav_pg_pergunta( 'Meus dados ficam expostos?', 'O parceiro vê apenas se você tem direito e seu primeiro nome. Nada de telefone, e-mail, endereço ou plano.' ),
-					cav_pg_pergunta( 'Como eu cancelo?', 'Avisa a recepção e o adicional sai da cobrança seguinte. Sem multa e sem prazo mínimo. Se trancar a matrícula, o clube pausa junto.' ),
+					cav_pg_pergunta( 'E depois dos {{prazo_clube}}?', 'O acesso vale até a data de validade que aparece na sua área. Para continuar depois dela, fale com a recepção.' ),
 					cav_pg_pergunta( 'Posso emprestar para alguém?', 'Não. O CPF é seu e o uso fica registrado. Uso indevido tira você do clube.' ),
 				] ),
 				cav_pg_contem( 'clube-linha-botoes', [ cav_pg_botao( 'Quero fazer parte', '/quero-fazer-parte/' ) ] ),
@@ -314,7 +302,7 @@ if ( ! function_exists( 'cav_pg_id' ) ) {
 			cav_pg_topo(
 				'Clube de vantagens',
 				'Quero fazer parte',
-				'Preencha o pedido. A recepção da Alliance confere a sua matrícula, libera o acesso e avisa por e-mail. O adicional de {{valor_clube}} por mês entra na sua mensalidade da academia.'
+				'Preencha o pedido e pague o clube na recepção da Alliance ({{valor_clube}} por {{prazo_clube}}, no cartão de crédito). Quando a recepção conferir o pagamento, libera o acesso e avisa por e-mail.'
 			),
 			cav_pg_contem( 'clube-forma', [ cav_pg_atalho( '[cav_solicitar]' ) ], false ),
 		];

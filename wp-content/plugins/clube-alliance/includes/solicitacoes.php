@@ -11,7 +11,7 @@ class CAV_Solicitacoes {
 
 	const META_WHATSAPP = 'cav_whatsapp';
 	const META_TURMA    = 'cav_turma';  // só em pedidos antigos
-	const META_PLANO    = 'cav_plano';  // chave de self::PLANOS, ou 'outro'
+	const META_PLANO    = 'cav_plano';  // só em cadastros antigos (o clube não depende mais do plano)
 	const META_PEDIDO   = 'cav_pedido_em';
 	const META_ACEITE   = 'cav_aceite_mensalidade'; // array: valor, texto, em, ip
 
@@ -24,7 +24,7 @@ class CAV_Solicitacoes {
 	const CAND_BEN      = '_cav_cand_beneficio';
 	const CAND_STATUS   = '_cav_cand_status';
 
-	/** Planos da academia que podem entrar no clube (os outros ficam de fora por enquanto). */
+	/** Rótulos dos planos em cadastros antigos. */
 	const PLANOS = [
 		'recorrente'          => 'Recorrente',
 		'recorrente_personal' => 'Recorrente + personal',
@@ -33,7 +33,7 @@ class CAV_Solicitacoes {
 
 	public static function rotulo_plano( $chave ) {
 		if ( 'outro' === $chave ) {
-			return 'Outro plano (a recepção confere)';
+			return 'Outro plano';
 		}
 		return self::PLANOS[ $chave ] ?? '';
 	}
@@ -74,8 +74,8 @@ class CAV_Solicitacoes {
 		$msg = isset( $_GET['cav'] ) ? sanitize_text_field( wp_unslash( $_GET['cav'] ) ) : '';
 
 		if ( 'enviado' === $msg ) {
-			return '<div class="cav-card"><strong>Pedido enviado.</strong><br>A recepção vai conferir sua matrícula e liberar o acesso. '
-				. 'Você recebe um e-mail assim que estiver pronto.</div>';
+			return '<div class="cav-card"><strong>Pedido enviado.</strong><br>Pague o clube na recepção da Alliance. Assim que o pagamento for conferido, '
+				. 'o acesso é liberado e você recebe um e-mail.</div>';
 		}
 
 		ob_start();
@@ -100,15 +100,6 @@ class CAV_Solicitacoes {
 			<label for="cav-zap">WhatsApp</label>
 			<input id="cav-zap" name="whatsapp" type="text">
 
-			<label for="cav-plano">Qual é o seu plano na Alliance?</label>
-			<select id="cav-plano" name="plano" required>
-				<option value="">Escolha</option>
-				<?php foreach ( self::PLANOS as $chave => $rotulo ) : ?>
-					<option value="<?php echo esc_attr( $chave ); ?>"><?php echo esc_html( $rotulo ); ?></option>
-				<?php endforeach; ?>
-				<option value="outro">Outro ou não sei</option>
-			</select>
-
 			<label class="cav-consent">
 				<input type="checkbox" name="consentimento" value="1" required>
 				<span>Autorizo que estabelecimentos parceiros consultem meu CPF para verificar se tenho direito ao benefício.</span>
@@ -130,8 +121,9 @@ class CAV_Solicitacoes {
 	/** O texto que o aluno aceita. É guardado junto com o pedido, exatamente como foi mostrado. */
 	public static function texto_aceite( $valor ) {
 		return sprintf(
-			'Estou ciente de que o clube custa %1$s por mês e concordo que esse valor seja somado à minha mensalidade da academia enquanto eu estiver no clube. Posso cancelar quando quiser avisando a recepção, e o adicional sai da cobrança seguinte.',
-			CAV_Config::formatar( $valor )
+			'Estou ciente de que o clube custa %1$s por %2$s, pagos à parte da mensalidade, na recepção da Alliance, e de que o meu acesso só é liberado depois do pagamento.',
+			CAV_Config::formatar( $valor ),
+			CAV_Config::prazo_formatado()
 		);
 	}
 
@@ -141,9 +133,8 @@ class CAV_Solicitacoes {
 			'cpf_usado'   => 'Este CPF já tem um pedido ou cadastro no clube.',
 			'email_usado' => 'Este e-mail já está cadastrado. Tente entrar com ele.',
 			'campos'      => 'Preencha todos os campos obrigatórios.',
-			'plano'       => 'Escolha o seu plano.',
 			'consent'     => 'É preciso autorizar a consulta do CPF para continuar.',
-			'aceite'      => 'Para entrar no clube é preciso concordar com o valor na mensalidade.',
+			'aceite'      => 'Para entrar no clube é preciso concordar com o valor e com a forma de pagamento.',
 			'valor_mudou' => 'O valor do clube mudou enquanto você preenchia. Leia o valor de novo e confirme.',
 			'falha'       => 'Não foi possível registrar seu pedido. Tente de novo.',
 		];
@@ -165,10 +156,6 @@ class CAV_Solicitacoes {
 
 		if ( ! $nome || ! is_email( $email ) || ! $cpf ) {
 			self::voltar( 'campos' );
-		}
-		$plano = isset( $_POST['plano'] ) ? sanitize_key( wp_unslash( $_POST['plano'] ) ) : '';
-		if ( ! isset( self::PLANOS[ $plano ] ) && 'outro' !== $plano ) {
-			self::voltar( 'plano' );
 		}
 		if ( empty( $_POST['consentimento'] ) ) {
 			self::voltar( 'consent' );
@@ -220,7 +207,6 @@ class CAV_Solicitacoes {
 		if ( ! empty( $_POST['whatsapp'] ) ) {
 			update_user_meta( $user_id, self::META_WHATSAPP, sanitize_text_field( wp_unslash( $_POST['whatsapp'] ) ) );
 		}
-		update_user_meta( $user_id, self::META_PLANO, $plano );
 
 		do_action( 'cav_solicitacao_recebida', $user_id );
 		self::voltar( 'enviado' );
