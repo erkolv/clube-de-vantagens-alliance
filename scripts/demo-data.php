@@ -185,42 +185,8 @@ if ( class_exists( 'CAV_Ofertas' ) && class_exists( 'CAV_Agenda' ) ) {
 		}
 	};
 
-	$oferta( 'Kimono Alliance Pro', [
-		'tipo' => 'produto', 'de' => '389.90', 'por' => '329.90', 'cor' => [ 255, 198, 41 ],
-		'texto' => 'Kimono trançado, preto, com o bordado oficial da Alliance. Tamanhos A1 a A4.',
-		'como' => 'Retire na recepção',
-	] );
-	$oferta( 'Faixa Alliance', [
-		'tipo' => 'produto', 'de' => '79.90', 'por' => '59.90', 'cor' => [ 230, 230, 230 ],
-		'texto' => 'Faixa oficial para todas as graduações.',
-		'como' => 'Retire na recepção',
-	] );
-	$oferta( 'Rashguard Alliance', [
-		'tipo' => 'produto', 'de' => '149.90', 'por' => '119.90', 'cor' => [ 255, 198, 41 ],
-		'texto' => 'Rashguard de compressão, manga longa, secagem rápida.',
-		'como' => 'Retire na recepção',
-		'fim' => wp_date( 'Y-m-d', strtotime( '+20 days' ) ),
-	] );
-	$oferta( 'Protetor bucal', [
-		'tipo' => 'produto', 'de' => '49.90', 'por' => '39.90', 'cor' => [ 90, 170, 255 ],
-		'texto' => 'Protetor bucal moldável, com estojo.',
-		'como' => 'Retire na recepção',
-	] );
-	$oferta( '20% off em aulas particulares', [
-		'tipo' => 'desconto', 'selo' => '20% OFF',
-		'texto' => 'Aulas particulares com os professores da casa, em qualquer horário livre.',
-		'como' => 'Agende na recepção',
-	] );
-	$oferta( 'Segunda modalidade com desconto', [
-		'tipo' => 'desconto', 'selo' => '30% OFF',
-		'texto' => 'Aluno do clube que faz uma segunda modalidade (Muay Thai ou Boxe) paga menos na segunda mensalidade.',
-		'como' => 'Fale com a recepção',
-	] );
-	$oferta( 'Matrícula grátis para quem você indicar', [
-		'tipo' => 'desconto', 'selo' => 'GRÁTIS',
-		'texto' => 'Indique um amigo: ele não paga matrícula.',
-		'como' => 'Passe o nome dele na recepção',
-	] );
+	// A Alliance não dá desconto em serviços nem vende produto com preço de aluno (decisão do Rodolfo),
+	// então os dados de teste não criam ofertas. O recurso continua no plugin, caso isso mude.
 
 	$evento = static function ( $titulo, $dados ) {
 		$ja = get_posts( [ 'post_type' => CAV_Agenda::CPT, 'title' => $titulo, 'post_status' => 'any', 'numberposts' => 1 ] );

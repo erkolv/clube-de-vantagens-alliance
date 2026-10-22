@@ -68,7 +68,13 @@ class CAV_Area {
 
 		ob_start();
 		echo '<div class="cav-membro-raiz"><nav class="cav-menu-membro" aria-label="Área do aluno"><ul>';
+		$tem_ofertas = (bool) CAV_Ofertas::listar( '', 1 );
+
 		foreach ( self::PAGINAS as $slug => $rotulo ) {
+			// Sem oferta publicada, o item "Ofertas" não aparece no menu.
+			if ( 'ofertas' === $slug && ! $tem_ofertas ) {
+				continue;
+			}
 			$p = get_page_by_path( $slug );
 			if ( ! $p ) {
 				continue;

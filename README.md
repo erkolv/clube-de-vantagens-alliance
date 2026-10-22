@@ -51,7 +51,7 @@ Quando terminar:
 - Painel: http://localhost:8080/wp-admin (`admin` / `admin123`)
 - E-mails que o site enviar: http://localhost:8025
 
-Com o `--demo` entram também 4 produtos com foto e preço, 3 descontos exclusivos, 5 eventos (as datas são sempre a partir do dia em que você rodou) e 3 sorteios de exemplo (1 aberto e 2 com resultado, um deles ganho pelo `aluno.demo`).
+Com o `--demo` entram também 5 eventos (as datas são sempre a partir do dia em que você rodou) e 3 sorteios de exemplo (1 aberto e 2 com resultado, um deles ganho pelo `aluno.demo`).
 
 Contas de teste (senha `demo123`):
 
@@ -101,7 +101,7 @@ Para voltar uma página ao modelo original: `REFAZER_PAGINAS=1 ./scripts/setup.s
 **Área do aluno.** Quem entra como aluno cai em `/area-do-membro/`, com um menu (Painel, Carteirinha, Benefícios, Ofertas, Agenda, Sorteios, Conteúdos) no topo de todas essas páginas. O setup cria as páginas novas e coloca o menu nas que já existiam.
 
 - **Painel**: saudação e validade, números de uso, próximos eventos, ofertas em destaque e sorteios abertos.
-- **Ofertas** (`/ofertas/`): *Descontos exclusivos na academia* e *Produtos com desconto*, cada produto com foto, preço cheio riscado e preço do clube. No painel do WordPress: **Ofertas da academia → Adicionar**. A foto é a *Imagem destacada*; o texto vira a descrição; o selo ("-20%") sai do cálculo dos dois preços, ou digite o seu ("GRÁTIS"). Dá para marcar uma data final, e a oferta some sozinha depois dela.
+- **Ofertas** (`/ofertas/`): *Descontos exclusivos na academia* e *Produtos com desconto*, cada produto com foto, preço cheio riscado e preço do clube. No painel do WordPress: **Ofertas da academia → Adicionar**. A foto é a *Imagem destacada*; o texto vira a descrição; o selo ("-20%") sai do cálculo dos dois preços, ou digite o seu ("GRÁTIS"). Dá para marcar uma data final, e a oferta some sozinha depois dela. A Alliance decidiu não dar desconto em serviço nem vender produto com preço de aluno, então por enquanto não há ofertas: sem nenhuma publicada, o item "Ofertas" some do menu do aluno e o painel não mostra a seção. O recurso continua no plugin, e o item volta sozinho quando alguém publicar uma oferta.
 - **Agenda** (`/agenda/`): calendário do mês com setas para os outros meses, mais a lista de eventos do mês. No painel: **Agenda → Adicionar**, com tipo (seminário, campeonato, graduação, treino aberto, evento), data (e data final para eventos de vários dias), horário, local e um link opcional.
 - **Sorteios** (`/sorteios-do-clube/`): dois blocos, *Em andamento* e *Resultados*. Depois que a recepção apura (botão no painel do WordPress, na tela do sorteio), o resultado aparece para todos os alunos com o nome e a inicial do sobrenome do ganhador ("Camila L."). Quem ganhou vê um aviso amarelo "Parabéns, você ganhou" no topo do painel e da página de sorteios por 60 dias, e recebe um e-mail para retirar o prêmio na recepção. O painel também mostra os dois últimos resultados.
 
