@@ -188,6 +188,18 @@ if ( class_exists( 'CAV_Ofertas' ) && class_exists( 'CAV_Agenda' ) ) {
 	// A Alliance não dá desconto em serviços nem vende produto com preço de aluno (decisão do Rodolfo),
 	// então os dados de teste não criam ofertas. O recurso continua no plugin, caso isso mude.
 
+	// Manda para a lixeira as ofertas de teste criadas por versões antigas deste script.
+	$antigas = [ 'Kimono Alliance Pro', 'Faixa Alliance', 'Rashguard Alliance', 'Protetor bucal', '20% off em aulas particulares', 'Segunda modalidade com desconto', 'Matrícula grátis para quem você indicar' ];
+	$tiradas = 0;
+	foreach ( get_posts( [ 'post_type' => CAV_Ofertas::CPT, 'post_status' => 'any', 'numberposts' => -1 ] ) as $o ) {
+		if ( in_array( $o->post_title, $antigas, true ) && wp_trash_post( $o->ID ) ) {
+			$tiradas++;
+		}
+	}
+	if ( $tiradas ) {
+		WP_CLI::log( "  ofertas de teste antigas mandadas para a lixeira: $tiradas" );
+	}
+
 	$evento = static function ( $titulo, $dados ) {
 		$ja = get_posts( [ 'post_type' => CAV_Agenda::CPT, 'title' => $titulo, 'post_status' => 'any', 'numberposts' => 1 ] );
 
