@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class CAV_Install {
 
-	const DB_VERSION = '4';
+	const DB_VERSION = '5';
 
 	public static function activate() {
 		self::criar_tabelas();
@@ -15,6 +15,7 @@ class CAV_Install {
 	}
 
 	public static function deactivate() {
+		wp_clear_scheduled_hook( 'cav_limpeza_diaria' );
 		flush_rewrite_rules();
 	}
 

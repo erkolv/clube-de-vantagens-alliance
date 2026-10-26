@@ -357,7 +357,7 @@ class CAV_Shortcodes {
 		wp_enqueue_style( 'cav' );
 
 		$user  = wp_get_current_user();
-		$cpf   = get_user_meta( $user->ID, CAV_Membro::META_CPF, true );
+		$cpf   = CAV_Membro::cpf_do_usuario( $user->ID );
 		$check = CAV_Membro::checar( $user );
 		$val   = CAV_Membro::validade( $user->ID );
 

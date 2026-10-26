@@ -5,7 +5,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class CAV_Membro {
 
-	const META_CPF       = 'cav_cpf';
+	const META_CPF       = 'cav_cpf';      // CPF embaralhado (veja CAV_Cripto)
+	const META_CPF_IDX   = 'cav_cpf_idx';  // impressão digital do CPF, para achar o aluno
 	const META_VALIDADE  = 'cav_validade';
 	const META_BLOQUEADO = 'cav_bloqueado';
 	const META_CONSENTE  = 'cav_consentimento';
@@ -92,12 +93,18 @@ class CAV_Membro {
 		return true;
 	}
 
+	/** CPF do aluno, só números (ou ''). O banco guarda embaralhado; aqui ele volta ao normal. */
+	public static function cpf_do_usuario( $user_id ) {
+		return CAV_CPF::normalizar( CAV_Cripto::decifrar( get_user_meta( $user_id, self::META_CPF, true ) ) );
+	}
+
 	/** Grava o CPF garantindo que não exista em outro usuário. */
 	public static function set_cpf( $user_id, $cpf ) {
 		$cpf = CAV_CPF::normalizar( $cpf );
 
 		if ( '' === $cpf ) {
 			delete_user_meta( $user_id, self::META_CPF );
+			delete_user_meta( $user_id, self::META_CPF_IDX );
 			return true;
 		}
 
@@ -110,7 +117,8 @@ class CAV_Membro {
 			return new WP_Error( 'cpf_duplicado', 'Este CPF já está vinculado a outro cadastro.' );
 		}
 
-		update_user_meta( $user_id, self::META_CPF, $cpf );
+		update_user_meta( $user_id, self::META_CPF, CAV_Cripto::cifrar( $cpf ) );
+		update_user_meta( $user_id, self::META_CPF_IDX, CAV_Cripto::indice( $cpf ) );
 		return true;
 	}
 
@@ -118,7 +126,7 @@ class CAV_Membro {
 		if ( ! current_user_can( 'edit_user', $user->ID ) ) {
 			return;
 		}
-		$cpf       = get_user_meta( $user->ID, self::META_CPF, true );
+		$cpf       = self::cpf_do_usuario( $user->ID );
 		$validade  = get_user_meta( $user->ID, self::META_VALIDADE, true );
 		$bloqueado = get_user_meta( $user->ID, self::META_BLOQUEADO, true );
 		$check     = self::checar( $user );

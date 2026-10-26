@@ -76,6 +76,19 @@ wp plugin install elementor --activate
 wp theme install hello-elementor
 wp theme activate clube-alliance-child
 
+echo "==> Chave que protege os CPFs no banco"
+# A chave mora no wp-config.php, fora do banco. Sem ela os CPFs gravados não voltam: em produção, guarde uma cópia.
+if wp config has CAV_CHAVE_DADOS >/dev/null 2>&1; then
+	echo "   já existe"
+else
+	CHAVE=$(openssl rand -hex 32 2>/dev/null || LC_ALL=C tr -dc 'a-f0-9' </dev/urandom | head -c 64)
+	if wp config set CAV_CHAVE_DADOS "$CHAVE" >/dev/null 2>&1; then
+		echo "   criada no wp-config.php"
+	else
+		echo "   (não consegui gravar no wp-config.php; o plugin usa uma chave de reserva e o painel avisa)"
+	fi
+fi
+
 echo "==> Plugin do clube"
 wp plugin activate clube-alliance
 wp option update cav_url_terminal "${SITE_URL%/}/terminal/" >/dev/null

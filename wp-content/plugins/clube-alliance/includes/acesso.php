@@ -98,6 +98,33 @@ class CAV_Acesso {
 		add_filter( 'the_content', [ __CLASS__, 'filtrar_conteudo' ], 20 );
 		add_action( 'pre_get_posts', [ __CLASS__, 'esconder_das_listagens' ] );
 		add_shortcode( 'cav_restrito', [ __CLASS__, 'sc_restrito' ] );
+
+		// Conteúdo de membro não vaza por outros caminhos: mapa do site, oEmbed e a versão "embed" da página.
+		add_filter( 'wp_sitemaps_post_types', [ __CLASS__, 'tirar_do_mapa_do_site' ] );
+		add_filter( 'oembed_request_post_id', [ __CLASS__, 'oembed_so_publico' ] );
+		add_action( 'template_redirect', [ __CLASS__, 'embed_so_publico' ], 1 );
+	}
+
+	public static function tirar_do_mapa_do_site( $tipos ) {
+		foreach ( self::tipos_restritos() as $t ) {
+			unset( $tipos[ $t ] );
+		}
+		return $tipos;
+	}
+
+	public static function oembed_so_publico( $post_id ) {
+		return ( $post_id && in_array( get_post_type( $post_id ), self::tipos_restritos(), true ) ) ? 0 : $post_id;
+	}
+
+	public static function embed_so_publico() {
+		if ( is_embed() && is_singular( self::tipos_restritos() ) ) {
+			global $wp_query;
+			$wp_query->set_404();
+			status_header( 404 );
+			nocache_headers();
+			include get_query_template( '404' );
+			exit;
+		}
 	}
 
 	/** Bloqueia o corpo do post quando o visitante não tem acesso. */

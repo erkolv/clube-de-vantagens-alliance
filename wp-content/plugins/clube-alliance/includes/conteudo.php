@@ -29,6 +29,8 @@ class CAV_Conteudo {
 			],
 			'public'      => true,
 			'has_archive' => true,
+			// Conteúdo de membro não aparece na busca do site nem no mapa do site.
+			'exclude_from_search' => true,
 			'menu_icon'   => 'dashicons-lock',
 			'supports'    => [ 'title', 'editor', 'thumbnail', 'excerpt' ],
 			'rewrite'     => [ 'slug' => 'exclusivo' ],
@@ -43,6 +45,7 @@ class CAV_Conteudo {
 			],
 			'public'      => true,
 			'has_archive' => true,
+			'exclude_from_search' => true,
 			'menu_icon'   => 'dashicons-tickets-alt',
 			'supports'    => [ 'title', 'editor', 'thumbnail', 'excerpt' ],
 			'rewrite'     => [ 'slug' => 'sorteios' ],

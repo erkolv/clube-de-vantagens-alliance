@@ -145,6 +145,33 @@ Para encaixar um desses numa página montada no Elementor, use o widget Shortcod
 
 Se o setup avisar que não conseguiu aplicar a paleta, abra qualquer página no editor do Elementor uma vez (isso cria o Kit) e rode `./scripts/setup.sh` de novo.
 
+## Segurança
+
+O que o plugin já faz sozinho (código em `includes/seguranca.php` e `includes/cripto.php`):
+
+- **CPF não fica legível no banco.** O CPF do aluno, o CPF do responsável e a senha do e-mail (Clube → E-mails) são gravados embaralhados (libsodium). A busca por CPF usa uma "impressão digital" do número. Quem copiar o banco vê só texto sem sentido. A chave **não** fica no banco: vem da constante `CAV_CHAVE_DADOS` do `wp-config.php`. O `setup.sh` cria essa linha sozinho; em produção gere uma (`openssl rand -hex 32`), coloque no `wp-config.php` **e guarde uma cópia fora do backup do banco**. Sem a chave os CPFs gravados não voltam. Se ela sumir ou ainda não existir, o painel avisa. Cadastros antigos, em texto puro, são protegidos sozinhos na primeira carga.
+- **Login com limite.** 5 erros na mesma conta, vindos do mesmo endereço, e a conta espera 15 minutos (vale para `/entrar/` e para o `wp-login.php`; outras contas não são afetadas). "Esqueci a senha" responde sempre a mesma coisa, exista a conta ou não, e tem limite de 5 por hora por endereço. Senha nova precisa de 10 caracteres ou mais.
+- **Formulários públicos** (pedido do aluno e candidatura do parceiro): campo-armadilha para robô, tempo mínimo de preenchimento e limite por endereço (15 pedidos por hora, 5 candidaturas). A mensagem de "já cadastrado" é a mesma para CPF e e-mail, então o formulário não confirma quem faz parte do clube.
+- **Terminal do parceiro.** 60 consultas de CPF por hora e 300 por dia por operador. As consultas guardam só a impressão digital do CPF e somem em 90 dias; o endereço IP dos usos e das inscrições é apagado depois de 12 meses (limpeza diária).
+- **A lista de quem tem conta não vaza**: a API `/wp-json/wp/v2/users`, `?author=1`, a página de autor, o mapa do site e o oEmbed ficam fechados para visitantes. O XML-RPC e as senhas de aplicativo estão desligados e o editor de arquivos do painel também.
+- **Conteúdo de membro** (exclusivos e sorteios) não aparece na busca do site, no mapa do site, no oEmbed nem na versão "embed" da página.
+- **Parceiro e aluno não entram no painel** do WordPress; só nas áreas deles.
+- **Cabeçalhos** `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy` e, com https, `Strict-Transport-Security`. Páginas do clube e qualquer página vista por alguém logado saem sem cache.
+- **Planilhas importadas** não ficam gravadas no servidor. A prévia fica embaralhada no banco por 20 minutos e some.
+
+Atrás de Cloudflare ou outro proxy, o endereço do visitante chega num cabeçalho. Para os limites enxergarem o endereço certo, coloque no `wp-config.php`: `define( 'CAV_PROXY_CONFIAVEL', true );` (só faça isso se o site realmente estiver atrás desse proxy).
+
+**Antes de abrir o site ao público** (o painel mostra um aviso para cada item que faltar):
+
+1. https ligado e o certificado válido.
+2. `CAV_CHAVE_DADOS` no `wp-config.php`, com cópia guardada em outro lugar.
+3. Nenhuma conta de teste (`aluno.demo`, `parceiro.demo`, `recepcao.demo`, `aluno.vencido`) e nenhum usuário chamado `admin`. Crie um administrador com outro nome e senha longa.
+4. Ative a verificação em dois passos nos administradores e na recepção (plugin oficial **Two Factor**).
+5. Atualizações automáticas ligadas no WordPress, no Elementor e nos plugins.
+6. Backup diário do banco **e** dos arquivos, guardado fora da hospedagem, com acesso restrito. O backup do banco com os CPFs embaralhados é inútil sem a chave; guarde a chave em outro lugar.
+7. Na hospedagem: usuário do banco só com acesso a este banco, phpMyAdmin fechado ao público, `WP_DEBUG_DISPLAY` falso, permissões 644 para arquivos e 755 para pastas, `wp-config.php` com 600 ou 640.
+8. Quem recebe os dados: os CPFs são dados pessoais (LGPD). Peça à Alliance para registrar quem tem acesso à fila de aprovações e à lista de alunos, e use o contrato do clube para dizer para que o CPF é usado e por quanto tempo.
+
 ## Levar para a hospedagem
 
 ```bash
@@ -158,6 +185,7 @@ Gera dois zips em `dist/`: `clube-alliance.zip` e `clube-alliance-child.zip`. No
 3. Aparência → Temas → Adicionar → Enviar tema → `clube-alliance-child.zip` → ativar.
 4. Configurações → Geral: fuso `America/Sao_Paulo`. A validade do acesso do aluno vence à meia-noite desse fuso.
 5. Crie as páginas da tabela acima e salve a URL do terminal: `update_option( 'cav_url_terminal', 'https://clube.alliancemogi.com.br/terminal/' );`
+6. Faça a lista da seção **Segurança** acima antes de divulgar. O principal: a chave `CAV_CHAVE_DADOS` no `wp-config.php` **antes** de importar o primeiro aluno.
 
 ## O que ainda não está resolvido
 

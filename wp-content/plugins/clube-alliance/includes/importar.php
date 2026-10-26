@@ -535,7 +535,7 @@ class CAV_Importar {
 		if ( ! empty( $d['resp'] ) ) {
 			update_user_meta( $user_id, CAV_Solicitacoes::META_RESP, [
 				'nome' => $d['resp']['nome'],
-				'cpf'  => $d['resp']['cpf'],
+				'cpf'  => CAV_Cripto::cifrar( $d['resp']['cpf'] ),
 				'em'   => $aceite_em,
 			] );
 		}
@@ -661,11 +661,11 @@ class CAV_Importar {
 		}
 
 		$token = strtolower( wp_generate_password( 16, false ) );
-		set_transient( 'cav_imp_' . $token, [
+		self::guardar_previa( $token, [
 			'user'   => get_current_user_id(),
 			'tipo'   => $tipo,
 			'linhas' => $lido['linhas'],
-		], HOUR_IN_SECONDS );
+		] );
 
 		self::volta( [ 'previa' => $token ] );
 	}
@@ -677,7 +677,7 @@ class CAV_Importar {
 		check_admin_referer( 'cav_importar_confirmar' );
 
 		$token = isset( $_POST['token'] ) ? sanitize_key( wp_unslash( $_POST['token'] ) ) : '';
-		$dados = get_transient( 'cav_imp_' . $token );
+		$dados = self::ler_previa( $token );
 
 		if ( ! is_array( $dados ) || (int) $dados['user'] !== get_current_user_id() ) {
 			self::volta( [ 'aviso' => 'expirou' ] );
@@ -992,8 +992,25 @@ class CAV_Importar {
 		<?php
 	}
 
+	/**
+	 * A prévia guarda as linhas da planilha (com CPFs) por alguns minutos até a confirmação.
+	 * Fica embaralhada no banco e some sozinha em 20 minutos.
+	 */
+	private static function guardar_previa( $token, array $dados ) {
+		set_transient( 'cav_imp_' . $token, CAV_Cripto::cifrar( wp_json_encode( $dados ) ), 20 * MINUTE_IN_SECONDS );
+	}
+
+	private static function ler_previa( $token ) {
+		$bruto = get_transient( 'cav_imp_' . $token );
+		if ( ! is_string( $bruto ) || '' === $bruto ) {
+			return null;
+		}
+		$dados = json_decode( CAV_Cripto::decifrar( $bruto ), true );
+		return is_array( $dados ) ? $dados : null;
+	}
+
 	private static function tela_previa( $token ) {
-		$dados = get_transient( 'cav_imp_' . $token );
+		$dados = self::ler_previa( $token );
 
 		if ( ! is_array( $dados ) || (int) $dados['user'] !== get_current_user_id() ) {
 			echo '<div class="notice notice-error"><p>A prévia expirou. <a href="' . esc_url( admin_url( 'admin.php?page=cav-importar' ) ) . '">Voltar</a> e enviar a planilha de novo.</p></div>';

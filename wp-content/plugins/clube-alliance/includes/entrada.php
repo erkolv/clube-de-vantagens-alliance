@@ -81,14 +81,15 @@ class CAV_Entrada {
 		return $mostrar;
 	}
 
-	/** Membro não tem o que fazer no painel de administração: volta para a área dele. */
+	/** Membro e parceiro não têm o que fazer no painel de administração: voltam para a área deles. */
 	public static function tirar_membro_do_admin() {
 		if ( wp_doing_ajax() || ! is_user_logged_in() ) {
 			return;
 		}
 
-		$user = wp_get_current_user();
-		if ( ! in_array( 'cav_membro', (array) $user->roles, true ) || ! self::so_papel_do_clube( $user ) ) {
+		$user    = wp_get_current_user();
+		$parceiro = in_array( 'cav_parceiro', (array) $user->roles, true );
+		if ( ! ( $parceiro || in_array( 'cav_membro', (array) $user->roles, true ) ) || ! self::so_papel_do_clube( $user ) ) {
 			return;
 		}
 
@@ -97,7 +98,7 @@ class CAV_Entrada {
 			return;
 		}
 
-		wp_safe_redirect( self::pagina( 'area-do-membro' ) );
+		wp_safe_redirect( self::pagina( $parceiro ? 'terminal' : 'area-do-membro' ) );
 		exit;
 	}
 }

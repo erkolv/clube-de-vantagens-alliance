@@ -107,7 +107,7 @@ class CAV_Aprovacoes {
 					</thead>
 					<tbody>
 					<?php foreach ( $membros as $u ) :
-						$cpf   = get_user_meta( $u->ID, CAV_Membro::META_CPF, true );
+						$cpf   = CAV_Membro::cpf_do_usuario( $u->ID );
 						$zap   = get_user_meta( $u->ID, CAV_Solicitacoes::META_WHATSAPP, true );
 						$plano = CAV_Solicitacoes::rotulo_plano( get_user_meta( $u->ID, CAV_Solicitacoes::META_PLANO, true ) );
 						$nasc  = get_user_meta( $u->ID, CAV_Solicitacoes::META_NASC, true );
@@ -122,7 +122,7 @@ class CAV_Aprovacoes {
 								<?php if ( $plano ) : ?><br><span class="description">Plano: <?php echo esc_html( $plano ); ?></span><?php endif; ?>
 								<?php if ( null !== $idade ) : ?><br><span class="description"><?php echo (int) $idade; ?> anos</span><?php endif; ?>
 								<?php if ( is_array( $resp ) && ! empty( $resp['nome'] ) ) : ?>
-									<br><span class="description" style="color:#996800">Menor de idade. Responsável: <?php echo esc_html( $resp['nome'] ); ?> (CPF <?php echo esc_html( CAV_CPF::formatar( $resp['cpf'] ) ); ?>), autorizou em <?php echo esc_html( mysql2date( 'd/m/Y', $resp['em'] ) ); ?></span>
+									<br><span class="description" style="color:#996800">Menor de idade. Responsável: <?php echo esc_html( $resp['nome'] ); ?> (CPF <?php echo esc_html( CAV_CPF::formatar( CAV_Cripto::decifrar( $resp['cpf'] ) ) ); ?>), autorizou em <?php echo esc_html( mysql2date( 'd/m/Y', $resp['em'] ) ); ?></span>
 								<?php endif; ?>
 								<?php if ( $turma ) : ?><br><span class="description">Turma: <?php echo esc_html( $turma ); ?></span><?php endif; ?>
 								<?php if ( is_array( $aceite ) && ! empty( $aceite['valor'] ) ) : ?>

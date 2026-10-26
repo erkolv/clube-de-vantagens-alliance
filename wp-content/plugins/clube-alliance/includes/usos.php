@@ -5,12 +5,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class CAV_Usos {
 
-	/** Limite de consultas por operador por hora. */
-	const RATE_LIMIT = 120;
+	/** Limite de consultas de CPF por operador: quem testa CPFs em massa descobre quem é aluno. */
+	const RATE_LIMIT = 60;       // por hora
+	const RATE_LIMIT_DIA = 300;  // por dia
 
 	public static function ip() {
-		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
-		return substr( $ip, 0, 45 );
+		return CAV_Seguranca::ip();
 	}
 
 	public static function registrar_consulta( $operador_id, $cpf, $resultado ) {
@@ -27,13 +27,16 @@ class CAV_Usos {
 	/** true se o operador ainda pode consultar nesta hora. */
 	public static function dentro_do_limite( $operador_id ) {
 		$chave = 'cav_rl_' . (int) $operador_id . '_' . gmdate( 'YmdH' );
+		$dia   = 'cav_rd_' . (int) $operador_id . '_' . gmdate( 'Ymd' );
 		$n     = (int) get_transient( $chave );
+		$d     = (int) get_transient( $dia );
 
-		if ( $n >= self::RATE_LIMIT ) {
+		if ( $n >= self::RATE_LIMIT || $d >= self::RATE_LIMIT_DIA ) {
 			return false;
 		}
 
 		set_transient( $chave, $n + 1, HOUR_IN_SECONDS );
+		set_transient( $dia, $d + 1, DAY_IN_SECONDS );
 		return true;
 	}
 

@@ -60,13 +60,25 @@ class CAV_CPF {
 		return hash_hmac( 'sha256', self::normalizar( $cpf ), wp_salt( 'auth' ) );
 	}
 
-	/** Retorna o WP_User dono do CPF, ou null. */
+	/** Retorna o WP_User dono do CPF, ou null. A busca é pela "impressão digital": o CPF não fica legível no banco. */
 	public static function buscar_usuario( $cpf ) {
 		$cpf = self::normalizar( $cpf );
 		if ( ! self::valido( $cpf ) ) {
 			return null;
 		}
 
+		$users = get_users( [
+			'meta_key'    => CAV_Membro::META_CPF_IDX,
+			'meta_value'  => CAV_Cripto::indice( $cpf ),
+			'number'      => 1,
+			'count_total' => false,
+		] );
+
+		if ( $users ) {
+			return $users[0];
+		}
+
+		// Cadastro antigo que ainda não foi protegido (a rotina de proteção roda sozinha ao carregar o plugin).
 		$users = get_users( [
 			'meta_key'    => CAV_Membro::META_CPF,
 			'meta_value'  => $cpf,

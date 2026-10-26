@@ -10,8 +10,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * ou nem sair. Aqui a Alliance cola os dados de um serviço de envio (Brevo, Amazon SES,
  * Postmark, o e-mail do próprio domínio...) e todos os e-mails do site passam a sair por ele.
  *
- * A senha fica no banco. Quem preferir pode defini-la no wp-config.php, e então ela não
- * aparece nem é salva aqui:  define( 'CAV_SMTP_SENHA', '...' );
+ * A senha fica no banco, embaralhada (veja CAV_Cripto). Quem preferir pode defini-la no
+ * wp-config.php, e então ela não aparece nem é salva aqui:  define( 'CAV_SMTP_SENHA', '...' );
  */
 class CAV_SMTP {
 
@@ -41,6 +41,8 @@ class CAV_SMTP {
 			'de_email'   => '',
 			'de_nome'    => '',
 		] );
+
+		$c['senha'] = CAV_Cripto::decifrar( $c['senha'] );
 
 		if ( defined( 'CAV_SMTP_SENHA' ) && CAV_SMTP_SENHA ) {
 			$c['senha'] = (string) CAV_SMTP_SENHA;
@@ -207,7 +209,9 @@ class CAV_SMTP {
 
 		$senha = isset( $_POST['senha'] ) ? (string) wp_unslash( $_POST['senha'] ) : '';
 		if ( '' === $senha ) {
-			$senha = get_option( self::OPT, [] )['senha'] ?? '';
+			$senha = get_option( self::OPT, [] )['senha'] ?? ''; // já está embaralhada
+		} else {
+			$senha = CAV_Cripto::cifrar( $senha );
 		}
 
 		update_option( self::OPT, [

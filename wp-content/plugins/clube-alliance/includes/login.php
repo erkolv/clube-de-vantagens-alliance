@@ -97,6 +97,7 @@ class CAV_Login {
 		return [
 			'dados'              => [ 'erro', 'E-mail ou senha incorretos. Confira e tente de novo.' ],
 			'falha'              => [ 'erro', 'Não consegui entrar agora. Tente de novo em instantes.' ],
+			'bloqueado'          => [ 'erro', 'Muitas tentativas de entrada. Espere 15 minutos e tente de novo, ou peça uma nova senha.' ],
 			'campos'             => [ 'erro', 'Preencha o e-mail e a senha.' ],
 			'google_sem_cadastro' => [ 'erro', 'Esse e-mail do Google não tem cadastro no clube. Entre com o e-mail e a senha, ou peça acesso na recepção.' ],
 			'google_pendente'    => [ 'erro', 'Seu pedido ainda está em análise pela recepção. Você recebe um e-mail quando o acesso for liberado.' ],
@@ -251,6 +252,9 @@ class CAV_Login {
 		if ( is_wp_error( $user ) ) {
 			$cod = $user->get_error_code();
 			// Mesma mensagem para usuário que não existe e senha errada: não revela quem tem cadastro.
+			if ( 'cav_bloqueado' === $cod ) {
+				self::voltar( 'bloqueado', $pedido );
+			}
 			$erro = in_array( $cod, [ 'invalid_username', 'invalid_email', 'incorrect_password', 'empty_username', 'empty_password' ], true ) ? 'dados' : 'falha';
 			self::voltar( $erro, $pedido );
 		}
@@ -272,6 +276,10 @@ class CAV_Login {
 
 		$pedido    = self::pedido_de_redirect();
 		$client_id = CAV_Config::google_client_id();
+
+		if ( ! CAV_Seguranca::limitar( 'google', 20, 15 * MINUTE_IN_SECONDS ) ) {
+			self::voltar( 'bloqueado', $pedido );
+		}
 
 		if ( ! $client_id ) {
 			self::voltar( 'google_falha', $pedido );

@@ -103,22 +103,23 @@ class CAV_Solicitacoes {
 		<form class="cav-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 			<input type="hidden" name="action" value="cav_solicitar">
 			<?php wp_nonce_field( 'cav_solicitar' ); ?>
+			<?php echo CAV_Seguranca::campos_antirrobo(); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 
 			<?php if ( $msg && 'enviado' !== $msg ) : ?>
 				<p class="cav-erro-form"><?php echo esc_html( self::mensagem_erro( $msg ) ); ?></p>
 			<?php endif; ?>
 
 			<label for="cav-nome">Nome completo</label>
-			<input id="cav-nome" name="nome" type="text" required>
+			<input id="cav-nome" name="nome" type="text" maxlength="120" required>
 
 			<label for="cav-email">E-mail</label>
-			<input id="cav-email" name="email" type="email" required>
+			<input id="cav-email" name="email" type="email" maxlength="100" required>
 
 			<label for="cav-cpf">CPF</label>
 			<input id="cav-cpf" name="cpf" type="text" inputmode="numeric" maxlength="14" required>
 
 			<label for="cav-zap">WhatsApp</label>
-			<input id="cav-zap" name="whatsapp" type="text">
+			<input id="cav-zap" name="whatsapp" type="text" maxlength="20">
 
 			<label for="cav-nasc">Data de nascimento</label>
 			<input id="cav-nasc" name="nascimento" type="date" required>
@@ -128,7 +129,7 @@ class CAV_Solicitacoes {
 				<p class="cav-ajuda">O clube é para alunos a partir de <?php echo (int) self::IDADE_MINIMA; ?> anos. Quem tem menos de 18 precisa da autorização de um responsável. Os alunos maiores de idade podem pular esta parte.</p>
 
 				<label for="cav-resp-nome">Nome do responsável</label>
-				<input id="cav-resp-nome" name="resp_nome" type="text">
+				<input id="cav-resp-nome" name="resp_nome" type="text" maxlength="120">
 
 				<label for="cav-resp-cpf">CPF do responsável</label>
 				<input id="cav-resp-cpf" name="resp_cpf" type="text" inputmode="numeric" maxlength="14">
@@ -169,8 +170,11 @@ class CAV_Solicitacoes {
 	private static function mensagem_erro( $codigo ) {
 		$mapa = [
 			'cpf'         => 'CPF inválido. Confira os números.',
-			'cpf_usado'   => 'Este CPF já tem um pedido ou cadastro no clube.',
-			'email_usado' => 'Este e-mail já está cadastrado. Tente entrar com ele.',
+			// Mesma frase para CPF e e-mail já cadastrados: o formulário não confirma quem faz parte do clube.
+			'cpf_usado'   => 'Já existe um cadastro com esse e-mail ou CPF. Se for o seu, use "Entrar" e peça uma nova senha se precisar.',
+			'email_usado' => 'Já existe um cadastro com esse e-mail ou CPF. Se for o seu, use "Entrar" e peça uma nova senha se precisar.',
+			'muitos'      => 'Muitos pedidos vindos deste endereço em pouco tempo. Espere um pouco ou fale com a recepção.',
+			'tempo'       => 'Não consegui validar o envio. Recarregue a página e envie de novo.',
 			'campos'      => 'Preencha todos os campos obrigatórios.',
 			'nascimento'  => 'Informe a data de nascimento do aluno.',
 			'idade'       => 'O clube é para alunos a partir de ' . self::IDADE_MINIMA . ' anos.',
@@ -192,8 +196,24 @@ class CAV_Solicitacoes {
 	public static function receber_solicitacao() {
 		check_admin_referer( 'cav_solicitar' );
 
-		$nome  = isset( $_POST['nome'] ) ? sanitize_text_field( wp_unslash( $_POST['nome'] ) ) : '';
+		// Robô preenche o campo escondido: finge que deu certo e não grava nada.
+		$robo = CAV_Seguranca::robo();
+		if ( 'armadilha' === $robo ) {
+			self::voltar( 'enviado' );
+		}
+		if ( $robo ) {
+			self::voltar( 'tempo' );
+		}
+		// 15 por hora por endereço: dá para a recepção cadastrar vários alunos seguidos no mesmo wi-fi.
+		if ( ! CAV_Seguranca::limitar( 'pedido', 15, HOUR_IN_SECONDS ) ) {
+			self::voltar( 'muitos' );
+		}
+
+		$nome  = CAV_Seguranca::texto( 'nome', 120 );
 		$email = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
+		if ( strlen( $email ) > 100 ) {
+			$email = '';
+		}
 		$cpf   = isset( $_POST['cpf'] ) ? CAV_CPF::normalizar( wp_unslash( $_POST['cpf'] ) ) : '';
 
 		if ( ! $nome || ! is_email( $email ) || ! $cpf ) {
@@ -210,12 +230,12 @@ class CAV_Solicitacoes {
 
 		$resp = null;
 		if ( $idade < 18 ) {
-			$resp_nome = isset( $_POST['resp_nome'] ) ? sanitize_text_field( wp_unslash( $_POST['resp_nome'] ) ) : '';
+			$resp_nome = CAV_Seguranca::texto( 'resp_nome', 120 );
 			$resp_cpf  = isset( $_POST['resp_cpf'] ) ? CAV_CPF::normalizar( wp_unslash( $_POST['resp_cpf'] ) ) : '';
 			if ( '' === $resp_nome || ! $resp_cpf || ! CAV_CPF::valido( $resp_cpf ) || empty( $_POST['resp_autoriza'] ) ) {
 				self::voltar( 'responsavel' );
 			}
-			$resp = [ 'nome' => $resp_nome, 'cpf' => $resp_cpf, 'em' => current_time( 'mysql' ) ];
+			$resp = [ 'nome' => $resp_nome, 'cpf' => CAV_Cripto::cifrar( $resp_cpf ), 'em' => current_time( 'mysql' ) ];
 		}
 
 		if ( empty( $_POST['consentimento'] ) ) {
@@ -254,7 +274,7 @@ class CAV_Solicitacoes {
 			self::voltar( 'falha' );
 		}
 
-		update_user_meta( $user_id, CAV_Membro::META_CPF, $cpf );
+		CAV_Membro::set_cpf( $user_id, $cpf );
 		update_user_meta( $user_id, 'cav_status', self::STATUS_PENDENTE );
 		update_user_meta( $user_id, CAV_Membro::META_CONSENTE, current_time( 'mysql' ) );
 		update_user_meta( $user_id, self::META_PEDIDO, current_time( 'mysql' ) );
@@ -270,7 +290,7 @@ class CAV_Solicitacoes {
 		] );
 
 		if ( ! empty( $_POST['whatsapp'] ) ) {
-			update_user_meta( $user_id, self::META_WHATSAPP, sanitize_text_field( wp_unslash( $_POST['whatsapp'] ) ) );
+			update_user_meta( $user_id, self::META_WHATSAPP, CAV_Seguranca::telefone( wp_unslash( $_POST['whatsapp'] ) ) );
 		}
 
 		do_action( 'cav_solicitacao_recebida', $user_id );
@@ -341,9 +361,10 @@ class CAV_Solicitacoes {
 		<form class="cav-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 			<input type="hidden" name="action" value="cav_candidatar">
 			<?php wp_nonce_field( 'cav_candidatar' ); ?>
+			<?php echo CAV_Seguranca::campos_antirrobo(); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 
 			<?php if ( $msg && 0 === strpos( $msg, 'cand_' ) ) : ?>
-				<p class="cav-erro-form"><?php echo esc_html( self::mensagem_erro( str_replace( 'cand_', '', $msg ) ) ); ?></p>
+				<p class="cav-erro-form"><?php echo esc_html( 'cand_email_usado' === $msg ? 'Já existe um cadastro com esse e-mail. Se for o seu, use "Entrar" e peça uma nova senha se precisar.' : self::mensagem_erro( str_replace( 'cand_', '', $msg ) ) ); ?></p>
 			<?php endif; ?>
 
 			<label for="cav-estab">Nome do estabelecimento</label>
@@ -377,10 +398,24 @@ class CAV_Solicitacoes {
 	public static function receber_candidatura() {
 		check_admin_referer( 'cav_candidatar' );
 
-		$estab = isset( $_POST['estabelecimento'] ) ? sanitize_text_field( wp_unslash( $_POST['estabelecimento'] ) ) : '';
-		$resp  = isset( $_POST['responsavel'] ) ? sanitize_text_field( wp_unslash( $_POST['responsavel'] ) ) : '';
+		$robo = CAV_Seguranca::robo();
+		if ( 'armadilha' === $robo ) {
+			self::voltar( 'candidatura_enviada' );
+		}
+		if ( $robo ) {
+			self::voltar( 'cand_tempo' );
+		}
+		if ( ! CAV_Seguranca::limitar( 'candidatura', 5, HOUR_IN_SECONDS ) ) {
+			self::voltar( 'cand_muitos' );
+		}
+
+		$estab = CAV_Seguranca::texto( 'estabelecimento', 150 );
+		$resp  = CAV_Seguranca::texto( 'responsavel', 120 );
 		$email = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
-		$ben   = isset( $_POST['beneficio'] ) ? sanitize_text_field( wp_unslash( $_POST['beneficio'] ) ) : '';
+		$ben   = CAV_Seguranca::texto( 'beneficio', 300 );
+		if ( strlen( $email ) > 100 ) {
+			$email = '';
+		}
 
 		if ( ! $estab || ! $resp || ! is_email( $email ) || ! $ben ) {
 			self::voltar( 'cand_campos' );
@@ -404,9 +439,10 @@ class CAV_Solicitacoes {
 		update_post_meta( $post_id, self::CAND_BEN, $ben );
 		update_post_meta( $post_id, self::CAND_STATUS, self::STATUS_PENDENTE );
 
-		foreach ( [ 'categoria' => self::CAND_CAT, 'whatsapp' => self::CAND_ZAP, 'endereco' => self::CAND_END ] as $campo => $meta ) {
-			if ( ! empty( $_POST[ $campo ] ) ) {
-				update_post_meta( $post_id, $meta, sanitize_text_field( wp_unslash( $_POST[ $campo ] ) ) );
+		foreach ( [ 'categoria' => [ self::CAND_CAT, 80 ], 'whatsapp' => [ self::CAND_ZAP, 20 ], 'endereco' => [ self::CAND_END, 200 ] ] as $campo => $cfg ) {
+			$valor = 'whatsapp' === $campo ? CAV_Seguranca::telefone( isset( $_POST[ $campo ] ) ? wp_unslash( $_POST[ $campo ] ) : '' ) : CAV_Seguranca::texto( $campo, $cfg[1] );
+			if ( '' !== $valor ) {
+				update_post_meta( $post_id, $cfg[0], $valor );
 			}
 		}
 
