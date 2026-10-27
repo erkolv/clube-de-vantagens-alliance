@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Clube Alliance
  * Description: Clube de vantagens — elegibilidade por CPF, terminal do parceiro e registro de uso de benefícios.
- * Version:           0.16.1
+ * Version:           0.16.2
  * Author:      Erick
  * Text Domain: clube-alliance
  * Requires PHP: 7.4
@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'CAV_VERSION', '0.16.1' );
+define( 'CAV_VERSION', '0.16.2' );
 define( 'CAV_FILE', __FILE__ );
 define( 'CAV_PATH', plugin_dir_path( __FILE__ ) );
 define( 'CAV_URL', plugin_dir_url( __FILE__ ) );

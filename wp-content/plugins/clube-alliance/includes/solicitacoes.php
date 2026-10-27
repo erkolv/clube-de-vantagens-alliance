@@ -448,7 +448,7 @@ class CAV_Solicitacoes {
 		$msg = isset( $_GET['cav'] ) ? sanitize_text_field( wp_unslash( $_GET['cav'] ) ) : '';
 
 		if ( 'candidatura_enviada' === $msg ) {
-			return '<div class="cav-card"><strong>Candidatura enviada.</strong><br>A academia analisa e responde em até dois dias úteis. '
+			return '<div class="cav-card"><strong>Candidatura enviada.</strong><br>Enviamos uma confirmação para o seu e-mail. A academia analisa e responde em até dois dias úteis. '
 				. 'Se aprovada, você recebe um e-mail com os dados de acesso ao terminal.</div>';
 		}
 
@@ -543,6 +543,7 @@ class CAV_Solicitacoes {
 		}
 
 		do_action( 'cav_candidatura_recebida', $post_id );
+		CAV_Emails::candidatura_recebida( $email, $estab, $resp, $ben );
 		self::voltar( 'candidatura_enviada' );
 	}
 

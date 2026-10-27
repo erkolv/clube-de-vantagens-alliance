@@ -321,6 +321,22 @@ class CAV_Emails {
 		);
 	}
 
+	/** Logo depois que o estabelecimento envia a candidatura: confirma que chegou e o que acontece a seguir. */
+	public static function candidatura_recebida( $email, $nome_estab, $responsavel, $beneficio ) {
+		$corpo  = '<p>Olá, ' . esc_html( $responsavel ) . '.</p>';
+		$corpo .= '<p>Recebemos a candidatura de <strong>' . esc_html( $nome_estab ) . '</strong> para o clube de vantagens da Alliance. Obrigado pelo interesse.</p>';
+		$corpo .= '<p><strong>O que você propôs:</strong><br>' . nl2br( esc_html( $beneficio ) ) . '</p>';
+		$corpo .= '<p>A recepção da Alliance vai analisar o pedido. Quando houver uma resposta, você recebe outro e-mail neste endereço: se for aprovada, com o link para criar a sua senha e o endereço do terminal do caixa.</p>';
+		$corpo .= '<p>Se precisar corrigir alguma informação, é só responder esta mensagem.</p>';
+
+		return wp_mail(
+			$email,
+			'Recebemos a candidatura de ' . $nome_estab,
+			self::molde( 'Candidatura recebida', $corpo, 'Você recebeu este e-mail porque a candidatura de ' . $nome_estab . ' foi enviada no site do clube de vantagens da Alliance Mogi das Cruzes.' ),
+			self::headers()
+		);
+	}
+
 	public static function parceiro_recusado( $email, $nome_estab, $motivo = '' ) {
 		$corpo  = '<p>Agradecemos o interesse de <strong>' . esc_html( $nome_estab ) . '</strong> em fazer parte do clube.</p>';
 		$corpo .= '<p>Por ora não vamos seguir com a parceria.</p>';
