@@ -76,7 +76,7 @@ class CAV_Emails {
 			. '</table></td></tr></table></body></html>';
 	}
 
-	private static function botao( $url, $texto ) {
+	public static function botao( $url, $texto ) {
 		return '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:26px 0"><tr><td style="background:#ffc629;border-radius:2px">'
 			. '<a href="' . esc_url( $url ) . '" style="display:inline-block;padding:15px 30px;font-family:\'Helvetica Neue\',Helvetica,Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#141414;text-decoration:none">'
 			. esc_html( $texto ) . '</a></td></tr></table>'
@@ -137,26 +137,30 @@ class CAV_Emails {
 	public static function wp_redefinir_senha( $email, $chave, $login, $user ) {
 		$url = network_site_url( 'wp-login.php?login=' . rawurlencode( $login ) . '&key=' . $chave . '&action=rp', 'login' );
 
-		$corpo  = '<p>Olá, ' . esc_html( CAV_Membro::primeiro_nome( $user ) ) . '.</p>';
-		$corpo .= '<p>Recebemos um pedido para criar uma nova senha no clube de vantagens da Alliance.</p>';
-		$corpo .= '<p><strong>Seu login:</strong> ' . esc_html( $login ) . '</p>';
-		$corpo .= self::botao( $url, 'Criar nova senha' );
-		$corpo .= '<p>O link vale por poucas horas. Se não foi você que pediu, é só ignorar este e-mail: nada muda na sua conta.</p>';
+		$m = CAV_Modelos::montar( 'wp_redefinir_senha', [
+			'nome'  => $user instanceof WP_User ? CAV_Membro::primeiro_nome( $user ) : '',
+			'login' => $login,
+		], $url );
 
-		$email['subject'] = 'Criar nova senha no clube da Alliance';
-		$email['message'] = self::molde( 'Criar nova senha', $corpo, 'Você recebeu este e-mail porque alguém pediu a troca de senha no clube de vantagens da Alliance Mogi das Cruzes.' );
+		$email['subject'] = $m['assunto'];
+		$email['message'] = $m['html'];
 		$email['headers'] = self::headers();
 
 		return $email;
 	}
 
 	public static function wp_senha_alterada( $mail, $user, $dados ) {
-		$corpo  = '<p>Olá, ' . esc_html( CAV_Membro::primeiro_nome( $user ) ) . '.</p>';
-		$corpo .= '<p>A senha da sua conta no clube de vantagens acabou de ser alterada.</p>';
-		$corpo .= '<p>Se foi você, não precisa fazer nada. <strong>Se não foi, fale com a recepção da Alliance agora.</strong></p>';
+		// O WordPress entrega o usuário como lista de dados, não como objeto.
+		if ( is_array( $user ) && ! empty( $user['ID'] ) ) {
+			$user = get_userdata( (int) $user['ID'] );
+		}
 
-		$mail['subject'] = 'Sua senha do clube foi alterada';
-		$mail['message'] = self::molde( 'Senha alterada', $corpo, 'Aviso de segurança do clube de vantagens da Alliance Mogi das Cruzes.' );
+		$m = CAV_Modelos::montar( 'wp_senha_alterada', [
+			'nome' => $user instanceof WP_User ? CAV_Membro::primeiro_nome( $user ) : '',
+		] );
+
+		$mail['subject'] = $m['assunto'];
+		$mail['message'] = $m['html'];
 		$mail['headers'] = self::headers();
 
 		return $mail;
@@ -201,69 +205,36 @@ class CAV_Emails {
 			return false;
 		}
 
-		$tipo  = CAV_Solicitacoes::tipo( $user->ID );
-		$link  = CAV_Config::link_pagamento( $tipo );
-		$valor = CAV_Config::formatar( CAV_Config::valor_para( $tipo ) );
+		$tipo = CAV_Solicitacoes::tipo( $user->ID );
+		$link = CAV_Config::link_pagamento( $tipo );
 
-		$corpo  = '<p>Olá, ' . esc_html( CAV_Membro::primeiro_nome( $user ) ) . '.</p>';
-		$corpo .= '<p>Recebemos o seu pedido para entrar no clube de vantagens.</p>';
-		$corpo .= '<p>O clube custa <strong>' . esc_html( $valor ) . '</strong> por ' . esc_html( CAV_Config::prazo_formatado() ) . ', em até 12x no cartão de crédito. O acesso é liberado depois que a recepção confirmar o pagamento.</p>';
+		$m = CAV_Modelos::montar( 'pedido_recebido', [
+			'nome'  => CAV_Membro::primeiro_nome( $user ),
+			'valor' => CAV_Config::formatar( CAV_Config::valor_para( $tipo ) ),
+			'prazo' => CAV_Config::prazo_formatado(),
+		], (string) $link );
 
-		if ( $link ) {
-			$corpo .= '<p>Para pagar agora, use o botão abaixo:</p>';
-			$corpo .= self::botao( $link, 'Pagar o clube' );
-			$corpo .= '<p>Se preferir, também dá para pagar na recepção da Alliance.</p>';
-		} else {
-			$corpo .= '<p>O pagamento é feito na recepção da Alliance.</p>';
-		}
-
-		return wp_mail(
-			$user->user_email,
-			'Recebemos o seu pedido para o clube',
-			self::molde( 'Pedido recebido', $corpo ),
-			self::headers()
-		);
+		return wp_mail( $user->user_email, $m['assunto'], $m['html'], self::headers() );
 	}
 
 	public static function membro_aprovado( WP_User $user, $validade ) {
-		$corpo  = '<p>Seu acesso ao clube de vantagens foi liberado pela recepção.</p>';
-		$corpo .= '<p>A partir de agora, é só informar seu CPF no caixa dos estabelecimentos parceiros. Não precisa apresentar carteirinha nem cupom.</p>';
+		$m = CAV_Modelos::montar( 'membro_aprovado', [
+			'nome'     => CAV_Membro::primeiro_nome( $user ),
+			'validade' => $validade ? mysql2date( 'd/m/Y', $validade . ' 00:00:00' ) : '',
+			'login'    => $user->user_email,
+		], self::link_senha( $user ) );
 
-		if ( $validade ) {
-			$corpo .= '<p><strong>Válido até ' . esc_html( mysql2date( 'd/m/Y', $validade . ' 00:00:00' ) ) . '.</strong></p>';
-		}
-
-		$corpo .= '<p>Defina sua senha para acessar sua área e ver os parceiros:</p>';
-		$corpo .= self::botao( self::link_senha( $user ), 'Definir minha senha' );
-
-		return wp_mail(
-			$user->user_email,
-			'Seu acesso ao clube foi liberado',
-			self::molde( 'Acesso liberado', $corpo ),
-			self::headers()
-		);
+		return wp_mail( $user->user_email, $m['assunto'], $m['html'], self::headers() );
 	}
 
 	public static function membro_recusado( $email, $nome, $motivo = '' ) {
-		$corpo  = '<p>Olá, ' . esc_html( $nome ) . '.</p>';
-		$corpo .= '<p>Não conseguimos liberar seu acesso ao clube de vantagens.</p>';
+		$m = CAV_Modelos::montar( 'membro_recusado', [ 'nome' => $nome, 'motivo' => $motivo ] );
 
-		if ( $motivo ) {
-			$corpo .= '<p><strong>Motivo:</strong> ' . esc_html( $motivo ) . '</p>';
-		}
-
-		$corpo .= '<p>Se você acha que houve engano, fale com a recepção da academia e resolvemos na hora.</p>';
-
-		return wp_mail(
-			$email,
-			'Sobre seu pedido de acesso ao clube',
-			self::molde( 'Pedido não aprovado', $corpo ),
-			self::headers()
-		);
+		return wp_mail( $email, $m['assunto'], $m['html'], self::headers() );
 	}
 
 	/** Passo a passo para o parceiro que acabou de ser cadastrado. Só HTML simples, para qualquer e-mail abrir igual. */
-	private static function passo_a_passo_parceiro( $url_terminal = '' ) {
+	public static function passo_a_passo_parceiro( $url_terminal = '' ) {
 		$entrar = home_url( '/entrar/' );
 		$negocio = CAV_AreaParceiro::url( 'meu-negocio' ) ?: home_url( '/' );
 		$promos  = CAV_AreaParceiro::url( 'minhas-promocoes' ) ?: home_url( '/' );
@@ -292,86 +263,50 @@ class CAV_Emails {
 	}
 
 	public static function parceiro_aprovado( WP_User $user, $nome_estab, $url_terminal = '' ) {
-		$corpo  = '<p>A candidatura de <strong>' . esc_html( $nome_estab ) . '</strong> foi aprovada. Seu estabelecimento já faz parte do clube.</p>';
-		$corpo .= '<p>Para começar, crie a sua senha:</p>';
-		$corpo .= self::botao( self::link_senha( $user ), 'Criar minha senha' );
-		$corpo .= '<p><strong>Seu login é:</strong> ' . esc_html( $user->user_email ) . '</p>';
-		$corpo .= self::passo_a_passo_parceiro( $url_terminal );
+		$m = CAV_Modelos::montar( 'parceiro_aprovado', [
+			'estabelecimento' => $nome_estab,
+			'login'           => $user->user_email,
+		], self::link_senha( $user ), [ 'passo_a_passo' => self::passo_a_passo_parceiro( $url_terminal ) ] );
 
-		return wp_mail(
-			$user->user_email,
-			'Sua candidatura foi aprovada — dados de acesso',
-			self::molde( 'Bem-vindo ao clube', $corpo ),
-			self::headers()
-		);
+		return wp_mail( $user->user_email, $m['assunto'], $m['html'], self::headers() );
 	}
 
 	/** Aluno que a academia cadastrou pela planilha: ele só precisa criar a senha. */
 	public static function aluno_importado( WP_User $user, $validade ) {
-		$corpo  = '<p>Olá, ' . esc_html( CAV_Membro::primeiro_nome( $user ) ) . '.</p>';
-		$corpo .= '<p>A Alliance liberou o seu acesso ao clube de vantagens. No caixa dos parceiros é só falar o seu CPF, sem carteirinha nem cupom.</p>';
-		$corpo .= '<p>Para entrar na sua área, crie a sua senha. O link abaixo vale por 7 dias:</p>';
-		$corpo .= self::botao( self::link_senha( $user ), 'Criar minha senha' );
-		$corpo .= '<p><strong>Seu login é:</strong> ' . esc_html( $user->user_email ) . '</p>';
-		$corpo .= '<p>Se o link vencer, abra a página de entrar e use "Esqueci minha senha".</p>';
+		$m = CAV_Modelos::montar( 'aluno_importado', [
+			'nome'  => CAV_Membro::primeiro_nome( $user ),
+			'login' => $user->user_email,
+		], self::link_senha( $user ) );
 
-		return wp_mail(
-			$user->user_email,
-			'Seu acesso ao clube de vantagens da Alliance',
-			self::molde( 'Seu acesso ao clube', $corpo, 'Você recebeu este e-mail porque a Alliance Mogi das Cruzes cadastrou você no clube de vantagens. Em caso de dúvida, responda esta mensagem.' ),
-			self::headers()
-		);
+		return wp_mail( $user->user_email, $m['assunto'], $m['html'], self::headers() );
 	}
 
 	/** Parceiro que a academia cadastrou pela planilha. */
 	public static function parceiro_importado( WP_User $user, $nome_estab, $url_terminal = '' ) {
-		$corpo  = '<p>Olá, ' . esc_html( $user->display_name ) . '.</p>';
-		$corpo .= '<p><strong>' . esc_html( $nome_estab ) . '</strong> já está cadastrado como parceiro no clube de vantagens da Alliance.</p>';
-		$corpo .= '<p>Para começar, crie a sua senha:</p>';
-		$corpo .= self::botao( self::link_senha( $user ), 'Criar minha senha' );
-		$corpo .= '<p><strong>Seu login é:</strong> ' . esc_html( $user->user_email ) . '</p>';
-		$corpo .= self::passo_a_passo_parceiro( $url_terminal );
+		$m = CAV_Modelos::montar( 'parceiro_importado', [
+			'nome'            => $user->display_name,
+			'estabelecimento' => $nome_estab,
+			'login'           => $user->user_email,
+		], self::link_senha( $user ), [ 'passo_a_passo' => self::passo_a_passo_parceiro( $url_terminal ) ] );
 
-		return wp_mail(
-			$user->user_email,
-			'Seu negócio no clube de vantagens da Alliance',
-			self::molde( 'Bem-vindo ao clube', $corpo, 'Você recebeu este e-mail porque a Alliance Mogi das Cruzes cadastrou você no clube de vantagens. Em caso de dúvida, responda esta mensagem.' ),
-			self::headers()
-		);
+		return wp_mail( $user->user_email, $m['assunto'], $m['html'], self::headers() );
 	}
 
 	/** Logo depois que o estabelecimento envia a candidatura: confirma que chegou e o que acontece a seguir. */
 	public static function candidatura_recebida( $email, $nome_estab, $responsavel, $beneficio ) {
-		$corpo  = '<p>Olá, ' . esc_html( $responsavel ) . '.</p>';
-		$corpo .= '<p>Recebemos a candidatura de <strong>' . esc_html( $nome_estab ) . '</strong> para o clube de vantagens da Alliance. Obrigado pelo interesse.</p>';
-		$corpo .= '<p><strong>O que você propôs:</strong><br>' . nl2br( esc_html( $beneficio ) ) . '</p>';
-		$corpo .= '<p>A recepção da Alliance vai analisar o pedido. Quando houver uma resposta, você recebe outro e-mail neste endereço: se for aprovada, com o link para criar a sua senha e o endereço do terminal do caixa.</p>';
-		$corpo .= '<p>Se precisar corrigir alguma informação, é só responder esta mensagem.</p>';
+		$m = CAV_Modelos::montar( 'candidatura_recebida', [
+			'responsavel'     => $responsavel,
+			'estabelecimento' => $nome_estab,
+			'proposta'        => $beneficio,
+		] );
 
-		return wp_mail(
-			$email,
-			'Recebemos a candidatura de ' . $nome_estab,
-			self::molde( 'Candidatura recebida', $corpo, 'Você recebeu este e-mail porque a candidatura de ' . $nome_estab . ' foi enviada no site do clube de vantagens da Alliance Mogi das Cruzes.' ),
-			self::headers()
-		);
+		return wp_mail( $email, $m['assunto'], $m['html'], self::headers() );
 	}
 
 	public static function parceiro_recusado( $email, $nome_estab, $motivo = '' ) {
-		$corpo  = '<p>Agradecemos o interesse de <strong>' . esc_html( $nome_estab ) . '</strong> em fazer parte do clube.</p>';
-		$corpo .= '<p>Por ora não vamos seguir com a parceria.</p>';
+		$m = CAV_Modelos::montar( 'parceiro_recusado', [ 'estabelecimento' => $nome_estab, 'motivo' => $motivo ] );
 
-		if ( $motivo ) {
-			$corpo .= '<p><strong>Motivo:</strong> ' . esc_html( $motivo ) . '</p>';
-		}
-
-		$corpo .= '<p>A lista de parceiros é revista periodicamente. Se quiser, pode se candidatar de novo mais para frente.</p>';
-
-		return wp_mail(
-			$email,
-			'Sobre sua candidatura ao clube',
-			self::molde( 'Candidatura não aprovada', $corpo ),
-			self::headers()
-		);
+		return wp_mail( $email, $m['assunto'], $m['html'], self::headers() );
 	}
 
 	public static function sorteio_ganhador( $sorteio_id, $user_id ) {
@@ -380,23 +315,14 @@ class CAV_Emails {
 			return false;
 		}
 
-		$premio = get_post_meta( $sorteio_id, CAV_Conteudo::META_PREMIO, true ) ?: get_the_title( $sorteio_id );
-		$url    = class_exists( 'CAV_Area' ) ? CAV_Area::url( 'sorteios-do-clube' ) : '';
+		$url = class_exists( 'CAV_Area' ) ? CAV_Area::url( 'sorteios-do-clube' ) : '';
 
-		$corpo  = '<p>Olá, ' . esc_html( CAV_Membro::primeiro_nome( $user ) ) . '.</p>';
-		$corpo .= '<p>Você foi sorteado no <strong>' . esc_html( get_the_title( $sorteio_id ) ) . '</strong>. Parabéns!</p>';
-		$corpo .= '<p><strong>Prêmio:</strong> ' . esc_html( $premio ) . '</p>';
-		$corpo .= '<p>Para retirar, fale com a recepção da academia. Leve um documento com foto.</p>';
+		$m = CAV_Modelos::montar( 'sorteio_ganhador', [
+			'nome'    => CAV_Membro::primeiro_nome( $user ),
+			'sorteio' => get_the_title( $sorteio_id ),
+			'premio'  => get_post_meta( $sorteio_id, CAV_Conteudo::META_PREMIO, true ) ?: get_the_title( $sorteio_id ),
+		], (string) $url );
 
-		if ( $url ) {
-			$corpo .= self::botao( $url, 'Ver o resultado' );
-		}
-
-		return wp_mail(
-			$user->user_email,
-			'Você ganhou o sorteio do clube',
-			self::molde( 'Você ganhou!', $corpo ),
-			self::headers()
-		);
+		return wp_mail( $user->user_email, $m['assunto'], $m['html'], self::headers() );
 	}
 }
