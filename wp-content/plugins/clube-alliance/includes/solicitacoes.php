@@ -11,6 +11,7 @@ class CAV_Solicitacoes {
 
 	const META_WHATSAPP = 'cav_whatsapp';
 	const META_CEP      = 'cav_cep';          // só os 8 números
+	const META_TIPO     = 'cav_tipo';         // 'aluno' (padrão) ou 'nao_aluno'; muda só o valor
 	const META_TURMA    = 'cav_turma';  // só em pedidos antigos
 	const META_PLANO    = 'cav_plano';  // só em cadastros antigos (o clube não depende mais do plano)
 	const META_PEDIDO   = 'cav_pedido_em';
@@ -110,6 +111,17 @@ class CAV_Solicitacoes {
 		$msg = isset( $_GET['cav'] ) ? sanitize_text_field( wp_unslash( $_GET['cav'] ) ) : '';
 
 		if ( 'enviado' === $msg ) {
+			$tipo = isset( $_GET['t'] ) && 'nao_aluno' === $_GET['t'] ? 'nao_aluno' : 'aluno';
+			$link = ( isset( $_GET['t'] ) && in_array( $_GET['t'], [ 'aluno', 'nao_aluno' ], true ) ) ? CAV_Config::link_pagamento( $tipo ) : '';
+
+			if ( $link ) {
+				return '<div class="cav-card"><p><strong>Pedido enviado.</strong><br>Falta o pagamento: ' . esc_html( CAV_Config::formatar( CAV_Config::valor_para( $tipo ) ) )
+					. ', em até 12x no cartão de crédito. Também mandamos o link para o seu e-mail. '
+					. 'Assim que a recepção confirmar o pagamento, o acesso é liberado e você recebe um e-mail.</p>'
+					. '<p><a class="cav-btn" href="' . esc_url( $link ) . '" rel="noopener">Pagar agora</a></p>'
+					. '<p class="cav-ajuda">Se preferir, também dá para pagar na recepção da Alliance.</p></div>';
+			}
+
 			return '<div class="cav-card"><strong>Pedido enviado.</strong><br>Pague o clube na recepção da Alliance. Assim que o pagamento for conferido, '
 				. 'o acesso é liberado e você recebe um e-mail.</div>';
 		}
@@ -124,6 +136,18 @@ class CAV_Solicitacoes {
 			<?php if ( $msg && 'enviado' !== $msg ) : ?>
 				<p class="cav-erro-form"><?php echo esc_html( self::mensagem_erro( $msg ) ); ?></p>
 			<?php endif; ?>
+
+			<fieldset class="cav-tipo">
+				<legend>Você é aluno da Alliance?</legend>
+				<label class="cav-consent">
+					<input type="radio" name="tipo" value="aluno" checked>
+					<span>Sou aluno. O clube custa <?php echo esc_html( CAV_Config::valor_formatado() ); ?>.</span>
+				</label>
+				<label class="cav-consent">
+					<input type="radio" name="tipo" value="nao_aluno">
+					<span>Ainda não sou aluno. O clube custa <?php echo esc_html( CAV_Config::valor_nao_aluno_formatado() ); ?>.</span>
+				</label>
+			</fieldset>
 
 			<label for="cav-nome">Nome completo</label>
 			<input id="cav-nome" name="nome" type="text" maxlength="120" required>
@@ -164,26 +188,61 @@ class CAV_Solicitacoes {
 				<span>Autorizo que estabelecimentos parceiros consultem meu CPF para verificar se tenho direito ao benefício.</span>
 			</label>
 
-			<?php $valor = CAV_Config::valor(); ?>
-			<input type="hidden" name="aceite_valor" value="<?php echo esc_attr( number_format( $valor, 2, '.', '' ) ); ?>">
+			<?php
+			$v_aluno = CAV_Config::valor();
+			$v_nao   = CAV_Config::valor_nao_aluno();
+			?>
+			<input type="hidden" name="aceite_valor_aluno" value="<?php echo esc_attr( number_format( $v_aluno, 2, '.', '' ) ); ?>">
+			<input type="hidden" name="aceite_valor_nao_aluno" value="<?php echo esc_attr( number_format( $v_nao, 2, '.', '' ) ); ?>">
 			<label class="cav-consent cav-consent--valor">
 				<input type="checkbox" name="aceite_mensalidade" value="1" required>
-				<span><?php echo esc_html( self::texto_aceite( $valor ) ); ?></span>
+				<span data-cav-aceite="aluno"><?php echo esc_html( self::texto_aceite( $v_aluno, 'aluno' ) ); ?></span>
+				<span data-cav-aceite="nao_aluno"><?php echo esc_html( self::texto_aceite( $v_nao, 'nao_aluno' ) ); ?></span>
 			</label>
 
 			<button type="submit" class="cav-btn">Enviar pedido</button>
 		</form>
+		<script>
+		(function () {
+			var f = document.currentScript.previousElementSibling;
+			if (!f) { return; }
+			function atualizar() {
+				var t = f.querySelector('input[name="tipo"]:checked');
+				t = t ? t.value : 'aluno';
+				f.querySelectorAll('[data-cav-aceite]').forEach(function (s) {
+					s.hidden = s.getAttribute('data-cav-aceite') !== t;
+				});
+			}
+			f.addEventListener('change', atualizar);
+			atualizar();
+		})();
+		</script>
 		<?php
 		return ob_get_clean();
 	}
 
 	/** O texto que o aluno aceita. É guardado junto com o pedido, exatamente como foi mostrado. */
-	public static function texto_aceite( $valor ) {
+	public static function texto_aceite( $valor, $tipo = 'aluno' ) {
+		$onde = CAV_Config::link_pagamento( $tipo )
+			? 'pelo link de pagamento que vou receber por e-mail, ou na recepção da Alliance'
+			: 'na recepção da Alliance';
+
 		return sprintf(
-			'Estou ciente de que o clube custa %1$s por %2$s, pagos à parte da mensalidade, na recepção da Alliance (no cartão de crédito, em até 12x), e de que o meu acesso só é liberado depois do pagamento.',
+			'Estou ciente de que o clube custa %1$s por %2$s%3$s, de que o pagamento é feito %4$s (no cartão de crédito, em até 12x) e de que o meu acesso só é liberado depois do pagamento.',
 			CAV_Config::formatar( $valor ),
-			CAV_Config::prazo_formatado()
+			CAV_Config::prazo_formatado(),
+			'nao_aluno' === $tipo ? ' (valor para quem não é aluno), à parte da mensalidade' : ', à parte da mensalidade',
+			$onde
 		);
+	}
+
+	/** 'aluno' ou 'nao_aluno'. Pedidos antigos e importados são de aluno. */
+	public static function tipo( $user_id ) {
+		return 'nao_aluno' === get_user_meta( $user_id, self::META_TIPO, true ) ? 'nao_aluno' : 'aluno';
+	}
+
+	public static function rotulo_tipo( $tipo ) {
+		return 'nao_aluno' === $tipo ? 'Não aluno' : 'Aluno';
 	}
 
 	private static function mensagem_erro( $codigo ) {
@@ -207,9 +266,9 @@ class CAV_Solicitacoes {
 		return $mapa[ $codigo ] ?? 'Não foi possível concluir.';
 	}
 
-	private static function voltar( $codigo ) {
+	private static function voltar( $codigo, $extra = [] ) {
 		$url = wp_get_referer() ?: home_url();
-		wp_safe_redirect( add_query_arg( 'cav', $codigo, remove_query_arg( 'cav', $url ) ) );
+		wp_safe_redirect( add_query_arg( array_merge( [ 'cav' => $codigo ], $extra ), remove_query_arg( [ 'cav', 't' ], $url ) ) );
 		exit;
 	}
 
@@ -270,8 +329,13 @@ class CAV_Solicitacoes {
 		}
 
 		// O aceite vale para o valor que a pessoa viu. Se mudou no meio do caminho, mostra de novo.
-		$valor_visto = isset( $_POST['aceite_valor'] ) ? CAV_Ofertas::ler_preco( sanitize_text_field( wp_unslash( $_POST['aceite_valor'] ) ) ) : null;
-		if ( null === $valor_visto || abs( $valor_visto - CAV_Config::valor() ) > 0.001 ) {
+		$tipo = isset( $_POST['tipo'] ) ? sanitize_key( wp_unslash( $_POST['tipo'] ) ) : '';
+		if ( ! in_array( $tipo, [ 'aluno', 'nao_aluno' ], true ) ) {
+			self::voltar( 'campos' );
+		}
+		$campo_valor = 'nao_aluno' === $tipo ? 'aceite_valor_nao_aluno' : 'aceite_valor_aluno';
+		$valor_visto = isset( $_POST[ $campo_valor ] ) ? CAV_Ofertas::ler_preco( sanitize_text_field( wp_unslash( $_POST[ $campo_valor ] ) ) ) : null;
+		if ( null === $valor_visto || abs( $valor_visto - CAV_Config::valor_para( $tipo ) ) > 0.001 ) {
 			self::voltar( 'valor_mudou' );
 		}
 
@@ -304,12 +368,14 @@ class CAV_Solicitacoes {
 		update_user_meta( $user_id, self::META_PEDIDO, current_time( 'mysql' ) );
 		update_user_meta( $user_id, self::META_NASC, $nasc );
 		update_user_meta( $user_id, self::META_CEP, $cep );
+		update_user_meta( $user_id, self::META_TIPO, $tipo );
 		if ( $resp ) {
 			update_user_meta( $user_id, self::META_RESP, $resp );
 		}
 		update_user_meta( $user_id, self::META_ACEITE, [
 			'valor' => number_format( $valor_visto, 2, '.', '' ),
-			'texto' => self::texto_aceite( $valor_visto ),
+			'texto' => self::texto_aceite( $valor_visto, $tipo ),
+			'tipo'  => $tipo,
 			'em'    => current_time( 'mysql' ),
 			'ip'    => CAV_Usos::ip(),
 		] );
@@ -319,7 +385,11 @@ class CAV_Solicitacoes {
 		}
 
 		do_action( 'cav_solicitacao_recebida', $user_id );
-		self::voltar( 'enviado' );
+
+		// O aluno recebe o pedido por e-mail, com o link de pagamento quando ele estiver configurado.
+		CAV_Emails::pedido_recebido( get_userdata( $user_id ) );
+
+		self::voltar( 'enviado', [ 't' => $tipo ] );
 	}
 
 	/** Aprova o aluno com a validade digitada pela recepção. */

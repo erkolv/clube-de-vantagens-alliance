@@ -157,7 +157,7 @@ echo "==> Páginas no Elementor"
 # 3 = o valor do clube vira marca {{valor_clube}}, "Entrar" vira a página de login e o pedido ganha o aceite do valor.
 # 6 = clube pago à parte (R$ 300 por 12 meses, na recepção): textos sem mensalidade nem cancelamento, sem cartões de academia/produtos.
 # 7 = textos com "em até 12x no cartão".
-PAGINAS_VERSAO=7
+PAGINAS_VERSAO=8
 PEDIDO_PAGINAS="${REFAZER_PAGINAS:+refazer}"
 if [ -z "$PEDIDO_PAGINAS" ] && [ "$(wp option get cav_paginas_versao 2>/dev/null || true)" != "$PAGINAS_VERSAO" ]; then
 	PEDIDO_PAGINAS="refazer:inicio,o-que-e,entrar,quero-fazer-parte,seja-parceiro"
@@ -167,6 +167,9 @@ if wp eval-file /scripts/paginas-elementor.php $PEDIDO_PAGINAS; then
 else
 	echo "   (não consegui montar as páginas; veja a mensagem acima)"
 fi
+
+echo "==> Sorteios de novembro a junho (rascunhos, só falta o prêmio)"
+wp eval-file /scripts/sorteios-calendario.php || echo "   (não consegui criar os sorteios; veja a mensagem acima)"
 
 echo "==> Paleta e fontes no Elementor"
 wp eval-file /scripts/elementor-kit.php || echo "   (não consegui aplicar a paleta; veja o README, seção Paleta)"

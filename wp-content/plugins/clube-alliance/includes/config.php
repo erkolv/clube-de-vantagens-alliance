@@ -14,6 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *   {{valor_clube}}      R$ 300,00  (o valor do contrato inteiro)
  *   {{valor_clube_mes}}  R$ 25,00   (o valor dividido pelos meses do prazo)
  *   {{prazo_clube}}      12 meses
+ *   {{valor_nao_aluno}}  R$ 360,00  (quem ainda não é aluno da academia; mesmas condições)
  *
  * {{valor_clube_ano}} continua funcionando e é igual a {{valor_clube}}.
  * Também funcionam os shortcodes [cav_valor], [cav_valor_mes] e [cav_prazo].
@@ -24,6 +25,10 @@ class CAV_Config {
 	const OPT_GOOGLE = 'cav_google_client_id';
 	const OPT_PRAZO  = 'cav_prazo_meses';
 	const PADRAO     = 300.00;
+	const OPT_VALOR_NAO_ALUNO = 'cav_valor_clube_nao_aluno';
+	const OPT_LINK_ALUNO      = 'cav_link_pagamento_aluno';
+	const OPT_LINK_NAO_ALUNO  = 'cav_link_pagamento_nao_aluno';
+	const PADRAO_NAO_ALUNO    = 360.00;
 	const PRAZO_PADRAO = 12;
 
 	public static function init() {
@@ -34,6 +39,9 @@ class CAV_Config {
 		add_shortcode( 'cav_valor_ano', [ __CLASS__, 'sc_valor' ] );
 		add_shortcode( 'cav_valor_mes', [ __CLASS__, 'sc_valor_mes' ] );
 		add_shortcode( 'cav_prazo', [ __CLASS__, 'sc_prazo' ] );
+		add_shortcode( 'cav_valor_nao_aluno', static function () {
+			return esc_html( self::valor_nao_aluno_formatado() );
+		} );
 
 		// O link do e-mail de acesso vale 7 dias (o padrão do WordPress é 1 dia).
 		add_filter( 'password_reset_expiration', static function () {
@@ -51,6 +59,23 @@ class CAV_Config {
 	public static function valor() {
 		$v = get_option( self::OPT_VALOR, '' );
 		return ( '' !== $v && is_numeric( $v ) && (float) $v > 0 ) ? (float) $v : self::PADRAO;
+	}
+
+	/** Valor para quem ainda não é aluno da academia (mesmo prazo, mesmas condições). */
+	public static function valor_nao_aluno() {
+		$v = get_option( self::OPT_VALOR_NAO_ALUNO, '' );
+		return ( '' !== $v && is_numeric( $v ) && (float) $v > 0 ) ? (float) $v : self::PADRAO_NAO_ALUNO;
+	}
+
+	/** Valor conforme o tipo do pedido: 'aluno' ou 'nao_aluno'. */
+	public static function valor_para( $tipo ) {
+		return 'nao_aluno' === $tipo ? self::valor_nao_aluno() : self::valor();
+	}
+
+	/** Link de pagamento (Pagar.me ou outro) do tipo, ou '' se ainda não foi configurado. Só https. */
+	public static function link_pagamento( $tipo ) {
+		$url = trim( (string) get_option( 'nao_aluno' === $tipo ? self::OPT_LINK_NAO_ALUNO : self::OPT_LINK_ALUNO, '' ) );
+		return ( '' !== $url && 0 === strpos( $url, 'https://' ) ) ? esc_url_raw( $url ) : '';
 	}
 
 	/** Meses de acesso que o valor paga. */
@@ -76,6 +101,10 @@ class CAV_Config {
 		return self::formatar( self::valor() );
 	}
 
+	public static function valor_nao_aluno_formatado() {
+		return self::formatar( self::valor_nao_aluno() );
+	}
+
 	public static function valor_mes_formatado() {
 		return self::formatar( round( self::valor() / self::prazo(), 2 ) );
 	}
@@ -91,13 +120,13 @@ class CAV_Config {
 
 	/** Troca as marcas {{valor_clube}}, {{valor_clube_mes}} e {{prazo_clube}} pelos valores atuais. */
 	public static function trocar_marcas( $texto ) {
-		if ( ! is_string( $texto ) || ( false === strpos( $texto, '{{valor_clube' ) && false === strpos( $texto, '{{prazo_clube' ) ) ) {
+		if ( ! is_string( $texto ) || ( false === strpos( $texto, '{{valor_' ) && false === strpos( $texto, '{{prazo_clube' ) ) ) {
 			return $texto;
 		}
 
 		return str_replace(
-			[ '{{valor_clube_mes}}', '{{valor_clube_ano}}', '{{valor_clube}}', '{{prazo_clube}}' ],
-			[ self::valor_mes_formatado(), self::valor_formatado(), self::valor_formatado(), self::prazo_formatado() ],
+			[ '{{valor_clube_mes}}', '{{valor_clube_ano}}', '{{valor_clube}}', '{{valor_nao_aluno}}', '{{prazo_clube}}' ],
+			[ self::valor_mes_formatado(), self::valor_formatado(), self::valor_formatado(), self::valor_nao_aluno_formatado(), self::prazo_formatado() ],
 			$texto
 		);
 	}
@@ -133,6 +162,9 @@ class CAV_Config {
 		}
 
 		$valor_campo = number_format( self::valor(), 2, ',', '' );
+		$valor_na_campo = number_format( self::valor_nao_aluno(), 2, ',', '' );
+		$link_aluno = trim( (string) get_option( self::OPT_LINK_ALUNO, '' ) );
+		$link_nao   = trim( (string) get_option( self::OPT_LINK_NAO_ALUNO, '' ) );
 		$google      = self::google_client_id();
 		$parsed      = wp_parse_url( home_url() );
 		$origem      = ( $parsed['scheme'] ?? 'https' ) . '://' . ( $parsed['host'] ?? '' ) . ( isset( $parsed['port'] ) ? ':' . $parsed['port'] : '' );
@@ -153,6 +185,10 @@ class CAV_Config {
 						echo 'Esse ID do cliente Google não parece certo. Ele termina com .apps.googleusercontent.com. Nada foi salvo.';
 					} elseif ( 3 === (int) $erro_n ) {
 						echo 'A duração precisa ser um número de meses entre 1 e 60. Nada foi salvo.';
+					} elseif ( 4 === (int) $erro_n ) {
+						echo 'O valor para quem não é aluno precisa ser um número maior que zero, por exemplo 360,00. Nada foi salvo.';
+					} elseif ( 5 === (int) $erro_n ) {
+						echo 'Os links de pagamento precisam começar com https://. Nada foi salvo.';
 					} else {
 						echo 'O valor precisa ser um número maior que zero, por exemplo 300,00.';
 					}
@@ -182,6 +218,16 @@ class CAV_Config {
 						</td>
 					</tr>
 					<tr>
+						<th scope="row"><label for="cav_valor_na">Valor para quem não é aluno</label></th>
+						<td>
+							R$ <input type="text" id="cav_valor_na" name="cav_valor_na" value="<?php echo esc_attr( $valor_na_campo ); ?>" class="small-text" inputmode="decimal" required>
+							<p class="description">
+								Mesmas condições do valor acima: mesmo prazo, em até 12x no cartão, pagamento antes do acesso e aprovação pela recepção.
+								O pedido pergunta se a pessoa é aluna e mostra o valor certo. Hoje: <strong><?php echo esc_html( self::valor_nao_aluno_formatado() ); ?></strong>.
+							</p>
+						</td>
+					</tr>
+					<tr>
 						<th scope="row"><label for="cav_prazo">Duração do acesso</label></th>
 						<td>
 							<input type="number" id="cav_prazo" name="cav_prazo" value="<?php echo esc_attr( self::prazo() ); ?>" class="small-text" min="1" max="60" required> meses
@@ -192,6 +238,29 @@ class CAV_Config {
 						</td>
 					</tr>
 				</table>
+
+				<h2>Link de pagamento</h2>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><label for="cav_link_aluno">Link para aluno</label></th>
+						<td>
+							<input type="url" id="cav_link_aluno" name="cav_link_aluno" value="<?php echo esc_attr( $link_aluno ); ?>" class="large-text" placeholder="https://..." autocomplete="off">
+							<p class="description">Crie no Pagar.me um link de pagamento de <?php echo esc_html( self::valor_formatado() ); ?> com parcelamento em até 12x no cartão e cole aqui.</p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="cav_link_nao">Link para quem não é aluno</label></th>
+						<td>
+							<input type="url" id="cav_link_nao" name="cav_link_nao" value="<?php echo esc_attr( $link_nao ); ?>" class="large-text" placeholder="https://..." autocomplete="off">
+							<p class="description">O mesmo, com <?php echo esc_html( self::valor_nao_aluno_formatado() ); ?>.</p>
+						</td>
+					</tr>
+				</table>
+				<p class="description">
+					Quando o aluno envia o pedido, ele vê o botão "Pagar agora" na tela e recebe o link por e-mail. A recepção também tem, na fila de
+					Aprovações, um botão para mandar o link pelo WhatsApp. Sem links aqui, tudo continua como antes: o pagamento é na recepção.
+					Quem libera o acesso continua sendo a recepção, depois de conferir o pagamento.
+				</p>
 
 				<h2>Entrar com Google</h2>
 				<table class="form-table" role="presentation">
@@ -239,6 +308,22 @@ class CAV_Config {
 			exit;
 		}
 
+		$valor_na = CAV_Ofertas::ler_preco( isset( $_POST['cav_valor_na'] ) ? sanitize_text_field( wp_unslash( $_POST['cav_valor_na'] ) ) : '' );
+		if ( null === $valor_na || $valor_na <= 0 || $valor_na > 9999 ) {
+			wp_safe_redirect( add_query_arg( 'erro', 4, $volta ) );
+			exit;
+		}
+
+		$links = [];
+		foreach ( [ 'cav_link_aluno' => self::OPT_LINK_ALUNO, 'cav_link_nao' => self::OPT_LINK_NAO_ALUNO ] as $campo => $opt ) {
+			$url = isset( $_POST[ $campo ] ) ? trim( sanitize_text_field( wp_unslash( $_POST[ $campo ] ) ) ) : '';
+			if ( '' !== $url && ( 0 !== strpos( $url, 'https://' ) || ! wp_http_validate_url( $url ) ) ) {
+				wp_safe_redirect( add_query_arg( 'erro', 5, $volta ) );
+				exit;
+			}
+			$links[ $opt ] = '' === $url ? '' : esc_url_raw( $url );
+		}
+
 		$prazo = isset( $_POST['cav_prazo'] ) ? (int) $_POST['cav_prazo'] : 0;
 		if ( $prazo < 1 || $prazo > 60 ) {
 			wp_safe_redirect( add_query_arg( 'erro', 3, $volta ) );
@@ -254,6 +339,10 @@ class CAV_Config {
 		}
 
 		update_option( self::OPT_VALOR, number_format( $valor, 2, '.', '' ) );
+		update_option( self::OPT_VALOR_NAO_ALUNO, number_format( $valor_na, 2, '.', '' ) );
+		foreach ( $links as $opt => $url ) {
+			update_option( $opt, $url, false );
+		}
 		update_option( self::OPT_GOOGLE, $google );
 		update_option( self::OPT_PRAZO, $prazo );
 

@@ -54,6 +54,55 @@ class CAV_Emails {
 		);
 	}
 
+	/** Link de pagamento do pedido, já com o nome do aluno na mensagem de WhatsApp. Vazio se não houver link. */
+	public static function texto_pagamento( WP_User $user ) {
+		$tipo  = CAV_Solicitacoes::tipo( $user->ID );
+		$link  = CAV_Config::link_pagamento( $tipo );
+		$valor = CAV_Config::formatar( CAV_Config::valor_para( $tipo ) );
+
+		if ( '' === $link ) {
+			return '';
+		}
+
+		return sprintf(
+			'Olá, %1$s! Recebemos o seu pedido para o Clube de Vantagens da Alliance. O clube custa %2$s por %3$s, em até 12x no cartão de crédito. Para pagar é só abrir o link: %4$s Assim que o pagamento for confirmado, o seu acesso é liberado.',
+			CAV_Membro::primeiro_nome( $user ),
+			$valor,
+			CAV_Config::prazo_formatado(),
+			$link
+		);
+	}
+
+	/** E-mail logo após o pedido. Com o link de pagamento, se ele estiver configurado. */
+	public static function pedido_recebido( $user ) {
+		if ( ! $user instanceof WP_User ) {
+			return false;
+		}
+
+		$tipo  = CAV_Solicitacoes::tipo( $user->ID );
+		$link  = CAV_Config::link_pagamento( $tipo );
+		$valor = CAV_Config::formatar( CAV_Config::valor_para( $tipo ) );
+
+		$corpo  = '<p>Olá, ' . esc_html( CAV_Membro::primeiro_nome( $user ) ) . '.</p>';
+		$corpo .= '<p>Recebemos o seu pedido para entrar no clube de vantagens.</p>';
+		$corpo .= '<p>O clube custa <strong>' . esc_html( $valor ) . '</strong> por ' . esc_html( CAV_Config::prazo_formatado() ) . ', em até 12x no cartão de crédito. O acesso é liberado depois que a recepção confirmar o pagamento.</p>';
+
+		if ( $link ) {
+			$corpo .= '<p>Para pagar agora, use o botão abaixo:</p>';
+			$corpo .= self::botao( $link, 'Pagar o clube' );
+			$corpo .= '<p>Se preferir, também dá para pagar na recepção da Alliance.</p>';
+		} else {
+			$corpo .= '<p>O pagamento é feito na recepção da Alliance.</p>';
+		}
+
+		return wp_mail(
+			$user->user_email,
+			'Recebemos o seu pedido para o clube',
+			self::molde( 'Pedido recebido', $corpo ),
+			self::headers()
+		);
+	}
+
 	public static function membro_aprovado( WP_User $user, $validade ) {
 		$corpo  = '<p>Seu acesso ao clube de vantagens foi liberado pela recepção.</p>';
 		$corpo .= '<p>A partir de agora, é só informar seu CPF no caixa dos estabelecimentos parceiros. Não precisa apresentar carteirinha nem cupom.</p>';

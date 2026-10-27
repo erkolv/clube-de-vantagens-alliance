@@ -161,7 +161,7 @@ if ( ! function_exists( 'cav_pg_id' ) ) {
 				cav_pg_olho( 'Serviço à parte da mensalidade' ),
 				cav_pg_titulo( $ouro( 'Bem-vindo ao Clube de Vantagens' ) . '<br>Alliance Mogi das Cruzes', 'h1' ),
 				cav_pg_texto(
-					'<p>Seu kimono abre porta fora do tatame. A Alliance fechou parceria com comércios da cidade: você chega, informa o CPF e o desconto sai na hora. Sem cupom, sem app, sem carteirinha impressa. Entre por <strong class="clube-ouro">{{valor_clube}} por {{prazo_clube}}</strong>, pagos na recepção da Alliance.</p>',
+					'<p>Seu kimono abre porta fora do tatame. A Alliance fechou parceria com comércios da cidade: você chega, informa o CPF e o desconto sai na hora. Sem cupom, sem app, sem carteirinha impressa. Entre por <strong class="clube-ouro">{{valor_clube}} por {{prazo_clube}}</strong> se você é aluno, ou {{valor_nao_aluno}} se ainda não é, em até 12x no cartão.</p>',
 					'clube-lead'
 				),
 				cav_pg_contem( 'clube-linha-botoes', [
@@ -170,7 +170,7 @@ if ( ! function_exists( 'cav_pg_id' ) ) {
 					cav_pg_botao( 'Ver os parceiros', '/parceiros/', true ),
 				] ),
 				cav_pg_contem( 'clube-grade clube-selos', [
-					cav_pg_contem( 'clube-selo', [ cav_pg_titulo( '{{valor_clube}}', 'div', 'clube-selo-v' ), cav_pg_texto( '<p>por {{prazo_clube}}, pagos na recepção</p>' ) ] ),
+					cav_pg_contem( 'clube-selo', [ cav_pg_titulo( '{{valor_clube}}', 'div', 'clube-selo-v' ), cav_pg_texto( '<p>por {{prazo_clube}} para alunos ({{valor_nao_aluno}} para quem não é aluno)</p>' ) ] ),
 					cav_pg_contem( 'clube-selo', [ cav_pg_titulo( 'CPF', 'div', 'clube-selo-v' ), cav_pg_texto( '<p>é tudo que você informa no caixa</p>' ) ] ),
 					cav_pg_contem( 'clube-selo', [ cav_pg_titulo( '{{prazo_clube}}', 'div', 'clube-selo-v' ), cav_pg_texto( '<p>de acesso, a partir do pagamento</p>' ) ] ),
 				] ),
@@ -201,7 +201,7 @@ if ( ! function_exists( 'cav_pg_id' ) ) {
 				cav_pg_titulo( 'Três passos, ' . $ouro( 'bem simples' ) ),
 				cav_pg_contem( 'clube-grade clube-grade-3', [
 					cav_pg_passo( 'Passo 01', 'Peça para entrar', 'Preencha nome, CPF e WhatsApp. Um minuto, sem compromisso.' ),
-					cav_pg_passo( 'Passo 02', 'Pague na recepção', 'Pague os {{valor_clube}} na recepção da Alliance, no cartão de crédito, em até 12x. Quando a recepção conferir o pagamento, o acesso é liberado.' ),
+					cav_pg_passo( 'Passo 02', 'Pague na recepção', 'Pague {{valor_clube}} se você é aluno, ou {{valor_nao_aluno}} se ainda não é, no cartão de crédito, em até 12x. Você recebe o link de pagamento por e-mail, ou paga na recepção da Alliance. Quando a recepção conferir o pagamento, o acesso é liberado.' ),
 					cav_pg_passo( 'Passo 03', 'Informe o CPF no caixa', 'O parceiro confere na hora e aplica o desconto. Não precisa mostrar nada.' ),
 					cav_pg_passo( 'Importante', 'Vale por {{prazo_clube}}', 'O acesso dura {{prazo_clube}} a partir da data do pagamento. A validade aparece na sua área.', true ),
 				] ),
@@ -222,7 +222,7 @@ if ( ! function_exists( 'cav_pg_id' ) ) {
 					cav_pg_contem( 'clube-caixa', [
 						cav_pg_olho( 'Custo' ),
 						cav_pg_titulo( '{{valor_clube}}', 'h3' ),
-						cav_pg_texto( '<p>por {{prazo_clube}}, pagos na recepção, à parte da mensalidade. Dá {{valor_clube_mes}} por mês.</p>' ),
+						cav_pg_texto( '<p>por {{prazo_clube}}, à parte da mensalidade. Dá {{valor_clube_mes}} por mês. Quem ainda não é aluno paga {{valor_nao_aluno}}, com as mesmas condições.</p>' ),
 					] ),
 					cav_pg_contem( 'clube-caixa clube-caixa--ouro', [
 						cav_pg_olho( 'Retorno em um mês típico' ),
@@ -252,7 +252,7 @@ if ( ! function_exists( 'cav_pg_id' ) ) {
 			cav_pg_topo(
 				'Clube de vantagens',
 				'O que é o clube',
-				'Uma rede de comércios de Mogi das Cruzes que dá desconto para quem treina na Alliance. {{valor_clube}} por {{prazo_clube}}, à parte da mensalidade.'
+				'Uma rede de comércios de Mogi das Cruzes que dá desconto para quem treina na Alliance. {{valor_clube}} por {{prazo_clube}} para alunos ({{valor_nao_aluno}} para quem não é aluno), à parte da mensalidade.'
 			),
 
 			cav_pg_secao( 'clube-bloco', [
@@ -270,7 +270,7 @@ if ( ! function_exists( 'cav_pg_id' ) ) {
 							[ 'Sorteios da academia', 'só membros' ],
 							[ 'Promoções por temporada', 'rotativo' ],
 							[ 'Conteúdo técnico gravado', 'só membros' ],
-							[ 'Custo', '{{valor_clube}} por {{prazo_clube}}', true ],
+							[ 'Custo', '{{valor_clube}} por {{prazo_clube}} (aluno) ou {{valor_nao_aluno}} (não aluno)', true ],
 						] ) ),
 					] ),
 				] ),
@@ -280,8 +280,8 @@ if ( ! function_exists( 'cav_pg_id' ) ) {
 				cav_pg_olho( 'Perguntas que sempre aparecem' ),
 				cav_pg_titulo( 'Antes de perguntar ' . $ouro( 'na recepção' ) ),
 				cav_pg_contem( 'clube-grade clube-grade-faq', [
-					cav_pg_pergunta( 'Quanto custa?', '{{valor_clube}} por {{prazo_clube}} ({{valor_clube_mes}} por mês na conta), pagos na recepção da Alliance, no cartão de crédito, em até 12x. O clube é um serviço à parte da mensalidade.' ),
-					cav_pg_pergunta( 'Por que o acesso não é na hora?', 'Porque o clube é pago na recepção. Quando a recepção confere o pagamento, libera o acesso e avisa você por e-mail.' ),
+					cav_pg_pergunta( 'Quanto custa?', '{{valor_clube}} por {{prazo_clube}} ({{valor_clube_mes}} por mês na conta) para alunos, e {{valor_nao_aluno}} para quem ainda não é aluno. Em ambos os casos o pagamento é no cartão de crédito, em até 12x, pelo link que você recebe por e-mail ou na recepção da Alliance. O clube é um serviço à parte da mensalidade.' ),
+					cav_pg_pergunta( 'Por que o acesso não é na hora?', 'Porque o acesso só é liberado depois do pagamento. Quando a recepção confere, libera o acesso e avisa você por e-mail.' ),
 					cav_pg_pergunta( 'Preciso mostrar carteirinha?', 'Não. Você fala o CPF no caixa e o parceiro confere na hora pelo celular dele.' ),
 					cav_pg_pergunta( 'Meus dados ficam expostos?', 'O parceiro vê apenas se você tem direito e seu primeiro nome. Nada de telefone, e-mail, endereço ou plano.' ),
 					cav_pg_pergunta( 'E depois dos {{prazo_clube}}?', 'O acesso vale até a data de validade que aparece na sua área. Para continuar depois dela, fale com a recepção.' ),
@@ -302,7 +302,7 @@ if ( ! function_exists( 'cav_pg_id' ) ) {
 			cav_pg_topo(
 				'Clube de vantagens',
 				'Quero fazer parte',
-				'Preencha o pedido e pague o clube na recepção da Alliance ({{valor_clube}} por {{prazo_clube}}, no cartão de crédito, em até 12x). Quando a recepção conferir o pagamento, libera o acesso e avisa por e-mail.'
+				'Preencha o pedido e pague o clube pelo link que chega no seu e-mail, ou na recepção da Alliance ({{valor_clube}} por {{prazo_clube}} para alunos, {{valor_nao_aluno}} para quem não é aluno; no cartão de crédito, em até 12x). Quando a recepção conferir o pagamento, libera o acesso e avisa por e-mail.'
 			),
 			cav_pg_contem( 'clube-forma', [ cav_pg_atalho( '[cav_solicitar]' ) ], false ),
 		];

@@ -66,6 +66,8 @@ class CAV_Aprovacoes {
 		$mapa   = [
 			'aprovado'  => [ 'success', 'Acesso liberado e e-mail enviado.' ],
 			'recusado'  => [ 'warning', 'Pedido recusado e e-mail enviado.' ],
+			'reenviado' => [ 'success', 'Link de pagamento reenviado por e-mail.' ],
+			'semlink'   => [ 'error', 'Ainda não há link de pagamento configurado. Cole os links em Clube → Configurações.' ],
 			'parceiro'  => [ 'success', 'Estabelecimento aprovado. E-mail com os dados de acesso enviado.' ],
 			'validade'  => [ 'error', 'Informe a data de validade antes de aprovar.' ],
 		];
@@ -94,7 +96,8 @@ class CAV_Aprovacoes {
 
 			<h2>Alunos aguardando <span class="count">(<?php echo count( $membros ); ?>)</span></h2>
 			<p class="description">
-				Aprove só depois de receber o pagamento na recepção (<?php echo esc_html( CAV_Config::valor_formatado() ); ?> por <?php echo esc_html( CAV_Config::prazo_formatado() ); ?>).
+				Aprove só depois de confirmar o pagamento, na recepção ou pelo link (aluno: <?php echo esc_html( CAV_Config::valor_formatado() ); ?>; não aluno: <?php echo esc_html( CAV_Config::valor_nao_aluno_formatado() ); ?>; por <?php echo esc_html( CAV_Config::prazo_formatado() ); ?>).
+				O botão "WhatsApp" abre a conversa com o link de pagamento já escrito; é só enviar.
 				A validade já vem com <?php echo esc_html( CAV_Config::prazo_formatado() ); ?> a partir de hoje; mude a data se o pagamento foi em outro dia.
 			</p>
 
@@ -116,10 +119,14 @@ class CAV_Aprovacoes {
 						$resp  = get_user_meta( $u->ID, CAV_Solicitacoes::META_RESP, true );
 						$turma = get_user_meta( $u->ID, CAV_Solicitacoes::META_TURMA, true ); // pedidos antigos
 						$aceite = get_user_meta( $u->ID, CAV_Solicitacoes::META_ACEITE, true );
+						$tipo   = CAV_Solicitacoes::tipo( $u->ID );
+						$texto_pg = CAV_Emails::texto_pagamento( $u );
+						$zap_num  = self::numero_whatsapp( $zap );
 						?>
 						<tr>
 							<td>
 								<strong><?php echo esc_html( $u->display_name ); ?></strong>
+								<br><span class="description"><?php echo esc_html( CAV_Solicitacoes::rotulo_tipo( $tipo ) ); ?>: <?php echo esc_html( CAV_Config::formatar( CAV_Config::valor_para( $tipo ) ) ); ?></span>
 								<?php if ( $plano ) : ?><br><span class="description">Plano: <?php echo esc_html( $plano ); ?></span><?php endif; ?>
 								<?php if ( null !== $idade ) : ?><br><span class="description"><?php echo (int) $idade; ?> anos</span><?php endif; ?>
 								<?php if ( is_array( $resp ) && ! empty( $resp['nome'] ) ) : ?>
@@ -152,6 +159,13 @@ class CAV_Aprovacoes {
 									<button class="button button-primary" name="decisao" value="aprovar">Aprovar</button>
 									<button class="button" name="decisao" value="recusar"
 									        onclick="return confirm('Recusar este pedido? O aluno recebe um e-mail.');">Recusar</button>
+									<?php if ( $texto_pg ) : ?>
+										<button class="button" name="decisao" value="reenviar" formnovalidate>Reenviar link</button>
+										<?php if ( $zap_num ) : ?>
+											<a class="button" target="_blank" rel="noopener noreferrer"
+											   href="<?php echo esc_url( 'https://wa.me/' . $zap_num . '?text=' . rawurlencode( $texto_pg ) ); ?>">WhatsApp</a>
+										<?php endif; ?>
+									<?php endif; ?>
 								</form>
 							</td>
 						</tr>
@@ -210,6 +224,16 @@ class CAV_Aprovacoes {
 		exit;
 	}
 
+	/** Número no formato do wa.me (só dígitos, com 55). Vazio se não parecer um telefone do Brasil. */
+	public static function numero_whatsapp( $texto ) {
+		$n = preg_replace( '/\D+/', '', (string) $texto );
+		$n = ltrim( $n, '0' );
+		if ( strlen( $n ) === 10 || strlen( $n ) === 11 ) {
+			$n = '55' . $n;
+		}
+		return ( 0 === strpos( $n, '55' ) && strlen( $n ) >= 12 && strlen( $n ) <= 13 ) ? $n : '';
+	}
+
 	public static function acao_membro() {
 		$user_id = isset( $_POST['user_id'] ) ? absint( $_POST['user_id'] ) : 0;
 
@@ -223,6 +247,18 @@ class CAV_Aprovacoes {
 		if ( 'recusar' === $decisao ) {
 			CAV_Solicitacoes::recusar_membro( $user_id, 'Matrícula não localizada.' );
 			self::volta( 'recusado' );
+		}
+
+		if ( 'reenviar' === $decisao ) {
+			$u = get_userdata( $user_id );
+			if ( ! $u || ! in_array( 'cav_membro', (array) $u->roles, true ) || CAV_Solicitacoes::STATUS_PENDENTE !== CAV_Solicitacoes::status( $user_id ) ) {
+				wp_die( 'Pedido não encontrado.' );
+			}
+			if ( '' === CAV_Config::link_pagamento( CAV_Solicitacoes::tipo( $user_id ) ) ) {
+				self::volta( 'semlink' );
+			}
+			CAV_Emails::pedido_recebido( $u );
+			self::volta( 'reenviado' );
 		}
 
 		$validade = isset( $_POST['validade'] ) ? sanitize_text_field( wp_unslash( $_POST['validade'] ) ) : '';

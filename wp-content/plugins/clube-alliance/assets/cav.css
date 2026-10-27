@@ -565,6 +565,18 @@ a.cav-item:hover { border-color: var(--cav-marca); }
 }
 
 /* Responsável, para aluno menor de 18 anos */
+.cav-form .cav-tipo{
+	margin: 0 0 1.2rem;
+	padding: .9rem 1.1rem 1rem;
+	border: 1px solid var(--cav-linha);
+}
+.cav-form .cav-tipo legend{
+	padding: 0 .4rem;
+	font-weight: 600;
+}
+.cav-form .cav-tipo .cav-consent{ margin: .35rem 0; }
+.cav-form [hidden]{ display: none !important; }
+
 .cav-form .cav-responsavel{
 	margin: 1.4rem 0 0;
 	padding: 1rem 1.1rem 1.2rem;
