@@ -55,14 +55,14 @@ class CAV_Emails {
 
 		$home = esc_url( home_url( '/' ) );
 
-		return '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"></head>'
+		return '<!doctype html><!--cav-email--><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><style>.cav-corpo a{color:#141414}</style></head>'
 			. '<body style="margin:0;padding:0;background:#ececec">'
 			. '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ececec"><tr><td align="center" style="padding:24px 12px">'
 			. '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:580px">'
 			// faixa escura com a marca
 			. '<tr><td style="background:#141414;padding:26px 32px;border-bottom:4px solid #ffc629"><a href="' . $home . '" style="text-decoration:none;display:inline-block">' . $marca . '</a></td></tr>'
 			// cartão
-			. '<tr><td style="background:#ffffff;padding:34px 32px 30px;' . $fonte . 'font-size:15px;line-height:1.65;color:#222222">'
+			. '<tr><td class="cav-corpo" style="background:#ffffff;padding:34px 32px 30px;' . $fonte . 'font-size:15px;line-height:1.65;color:#222222">'
 			. '<h1 style="' . $fonte . 'font-size:24px;line-height:1.25;font-weight:700;color:#141414;margin:0 0 20px">' . esc_html( $titulo ) . '</h1>'
 			. $corpo
 			. '</td></tr>'
@@ -85,6 +85,51 @@ class CAV_Emails {
 	public static function init() {
 		add_filter( 'retrieve_password_notification_email', [ __CLASS__, 'wp_redefinir_senha' ], 10, 4 );
 		add_filter( 'password_change_email', [ __CLASS__, 'wp_senha_alterada' ], 10, 3 );
+		// Rede de segurança: qualquer outro e-mail que sair do site (WordPress, plugins, teste) ganha o mesmo visual.
+		add_filter( 'wp_mail', [ __CLASS__, 'embrulhar' ], 50 );
+	}
+
+	/** Coloca no modelo da Alliance o e-mail que ainda não está nele. Não mexe em e-mail que já veio com página HTML completa. */
+	public static function embrulhar( $args ) {
+		$msg = isset( $args['message'] ) ? (string) $args['message'] : '';
+		if ( '' === $msg || false !== strpos( $msg, '<!--cav-email-->' ) ) {
+			return $args;
+		}
+
+		$cab = $args['headers'] ?? [];
+		if ( is_string( $cab ) ) {
+			$cab = preg_split( '/\r\n|\r|\n/', $cab );
+		}
+		$cab  = array_values( array_filter( (array) $cab, 'is_string' ) );
+		$html = false;
+		foreach ( $cab as $linha ) {
+			if ( 0 === stripos( trim( $linha ), 'content-type:' ) && false !== stripos( $linha, 'text/html' ) ) {
+				$html = true;
+			}
+		}
+
+		if ( $html ) {
+			if ( false !== stripos( $msg, '<html' ) ) {
+				return $args; // página completa de outro plugin: não mexe
+			}
+			$corpo = $msg;
+		} else {
+			// Texto puro: vira parágrafos, com os endereços clicáveis. O WordPress escreve links entre < >.
+			$limpo  = preg_replace( '/<(https?:\/\/[^>\s]+)>/i', '$1', $msg );
+			$blocos = preg_split( '/\n\s*\n/', trim( str_replace( "\r", '', $limpo ) ) );
+			$corpo  = '';
+			foreach ( $blocos as $b ) {
+				$corpo .= '<p>' . nl2br( make_clickable( esc_html( $b ) ) ) . '</p>';
+			}
+			$cab[] = 'Content-Type: text/html; charset=UTF-8';
+		}
+
+		$titulo = trim( preg_replace( '/^\[[^\]]*\]\s*/u', '', wp_strip_all_tags( (string) ( $args['subject'] ?? '' ) ) ) );
+
+		$args['message'] = self::molde( '' !== $titulo ? $titulo : get_bloginfo( 'name' ), $corpo, 'Mensagem automática do clube de vantagens da Alliance Mogi das Cruzes.' );
+		$args['headers'] = $cab;
+
+		return $args;
 	}
 
 	public static function wp_redefinir_senha( $email, $chave, $login, $user ) {

@@ -243,7 +243,7 @@ class CAV_SMTP {
 		$ok   = wp_mail(
 			$para,
 			'Teste de e-mail do clube de vantagens',
-			'<p>Este é um e-mail de teste do clube de vantagens da Alliance. Se você está lendo, o envio está funcionando.</p>',
+			CAV_Emails::molde( 'E-mail de teste', '<p>Este é um e-mail de teste do clube de vantagens da Alliance. Se você está lendo, o envio está funcionando.</p>', 'Mensagem de teste, enviada pela tela Clube → E-mails.' ),
 			[ 'Content-Type: text/html; charset=UTF-8' ]
 		);
 
