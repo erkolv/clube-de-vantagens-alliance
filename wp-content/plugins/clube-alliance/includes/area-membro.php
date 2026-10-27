@@ -110,7 +110,7 @@ class CAV_Area {
 		$usos_mes = count( array_filter( $usos, function ( $u ) use ( $mes ) {
 			return 0 === strpos( $u->criado_em, $mes );
 		} ) );
-		$sorteios = count( CAV_Sorteio::do_membro( $user->ID ) );
+		$sorteios = $check['elegivel'] ? count( self::sorteios_abertos( 50 ) ) : 0;
 
 		ob_start();
 		?>
@@ -148,7 +148,7 @@ class CAV_Area {
 				<div class="cav-numeros-membro">
 					<div><strong><?php echo esc_html( $usos_mes ); ?></strong><span>benefícios usados no mês</span></div>
 					<div><strong><?php echo esc_html( count( $usos ) ); ?></strong><span>no total</span></div>
-					<div><strong><?php echo esc_html( $sorteios ); ?></strong><span>sorteios que você participa</span></div>
+					<div><strong><?php echo esc_html( $sorteios ); ?></strong><span>sorteios em andamento</span></div>
 				</div>
 
 				<?php
@@ -187,8 +187,8 @@ class CAV_Area {
 				<?php if ( $abertos ) : ?>
 					<section class="cav-secao">
 						<div class="cav-secao__topo">
-							<h3>Sorteios abertos</h3>
-							<?php echo self::ver_tudo( 'sorteios-do-clube', 'Participar' ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
+							<h3>Sorteios em andamento</h3>
+							<?php echo self::ver_tudo( 'sorteios-do-clube', 'Ver sorteios' ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 						</div>
 						<ul class="cav-lista-simples">
 							<?php foreach ( $abertos as $s ) :
@@ -262,7 +262,7 @@ class CAV_Area {
 		} ) );
 	}
 
-	/** Sorteios com inscrição aberta que o usuário pode ver. */
+	/** Sorteios em andamento que o usuário pode ver. */
 	private static function sorteios_abertos( $qtd ) {
 		$posts = get_posts( [
 			'post_type'      => 'cav_sorteio',
@@ -418,7 +418,7 @@ class CAV_Area {
 			if ( CAV_Conteudo::inscricoes_abertas( $s->ID ) ) {
 				$premio = get_post_meta( $s->ID, CAV_Conteudo::META_PREMIO, true ) ?: get_the_title( $s );
 				$fim    = get_post_meta( $s->ID, CAV_Conteudo::META_FIM, true );
-				$itens[] = [ 'Sorteio aberto', $premio, $fim ? 'até ' . mysql2date( 'd/m', $fim . ' 00:00:00' ) : '' ];
+				$itens[] = [ 'Sorteio em andamento', $premio, $fim ? 'até ' . mysql2date( 'd/m', $fim . ' 00:00:00' ) : '' ];
 				break;
 			}
 		}

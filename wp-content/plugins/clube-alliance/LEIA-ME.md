@@ -135,13 +135,12 @@ visitante pode ver. Com `publico="parceiros"` você monta uma página que é a
 
 ### Sorteios
 
-No sorteio você define prêmio e janela de inscrição. O membro clica em
-*Participar* e entra na lista — uma inscrição por pessoa, garantido no banco.
-Fora da janela o botão não aparece.
+No sorteio você define o prêmio e o período em que ele aparece como "em andamento".
+Não há inscrição: todo membro com a matrícula ativa participa automaticamente.
 
 A apuração é um botão no editor do sorteio. Ela usa `random_int`, sorteia
-apenas entre inscritos **com matrícula ainda ativa** no momento da apuração,
-grava ganhador e data, e não pode ser refeita.
+entre todos os membros **com matrícula ativa** no momento da apuração,
+grava ganhador, data e o total de participantes, e não pode ser refeita.
 
 > Sorteio aberto ao público no Brasil costuma exigir autorização prévia da
 > SPA/Ministério da Fazenda quando é promoção comercial. Vale conferir com a

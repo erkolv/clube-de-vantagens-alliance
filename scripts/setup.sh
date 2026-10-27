@@ -157,7 +157,8 @@ echo "==> Páginas no Elementor"
 # 3 = o valor do clube vira marca {{valor_clube}}, "Entrar" vira a página de login e o pedido ganha o aceite do valor.
 # 6 = clube pago à parte (R$ 300 por 12 meses, na recepção): textos sem mensalidade nem cancelamento, sem cartões de academia/produtos.
 # 7 = textos com "em até 12x no cartão".
-PAGINAS_VERSAO=8
+# 9 = sorteio sem inscrição: todo membro ativo participa.
+PAGINAS_VERSAO=9
 PEDIDO_PAGINAS="${REFAZER_PAGINAS:+refazer}"
 if [ -z "$PEDIDO_PAGINAS" ] && [ "$(wp option get cav_paginas_versao 2>/dev/null || true)" != "$PAGINAS_VERSAO" ]; then
 	PEDIDO_PAGINAS="refazer:inicio,o-que-e,entrar,quero-fazer-parte,seja-parceiro"

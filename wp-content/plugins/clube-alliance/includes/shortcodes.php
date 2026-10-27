@@ -44,11 +44,6 @@ class CAV_Shortcodes {
 			}
 		}
 
-		wp_register_script( 'cav-sorteio', CAV_URL . 'assets/cav-sorteio.js', [], CAV_VERSION, true );
-		wp_localize_script( 'cav-sorteio', 'CAVS', [
-			'endpoint' => esc_url_raw( rest_url( CAV_Rest::NS . '/participar' ) ),
-			'nonce'    => wp_create_nonce( 'wp_rest' ),
-		] );
 
 		wp_register_script( 'cav-terminal', CAV_URL . 'assets/cav-terminal.js', [], CAV_VERSION, true );
 		wp_localize_script( 'cav-terminal', 'CAV', [
@@ -110,11 +105,10 @@ class CAV_Shortcodes {
 		return ob_get_clean();
 	}
 
-	/** Lista de sorteios com botão de participar. */
+	/** Lista de sorteios: em andamento e resultados. Todo membro ativo participa, sem inscrição. */
 	public static function sorteios( $atts ) {
 		$atts = shortcode_atts( [ 'publico' => '', 'qtd' => 12 ], $atts, 'cav_sorteios' );
 		wp_enqueue_style( 'cav' );
-		wp_enqueue_script( 'cav-sorteio' );
 
 		$publicos = self::publicos_visiveis( $atts['publico'] );
 		if ( ! $publicos ) {
@@ -132,7 +126,7 @@ class CAV_Shortcodes {
 			return '<p class="cav-vazio">Nenhum sorteio aberto agora. Fique de olho, sempre tem coisa nova.</p>';
 		}
 
-		$meus   = array_map( 'strval', CAV_Sorteio::do_membro( get_current_user_id() ) );
+		$ativo  = CAV_Acesso::e_membro_ativo();
 		$eu     = get_current_user_id();
 		$abertos    = [];
 		$resultados = [];
@@ -170,7 +164,7 @@ class CAV_Shortcodes {
 		if ( $abertos ) {
 			echo '<h3 class="cav-sorteios__titulo">Em andamento</h3><div class="cav-grade">';
 			foreach ( $abertos as $p ) {
-				self::cartao_sorteio( $p, $meus, $eu );
+				self::cartao_sorteio( $p, $ativo, $eu );
 			}
 			echo '</div>';
 		}
@@ -178,7 +172,7 @@ class CAV_Shortcodes {
 		if ( $resultados ) {
 			echo '<h3 class="cav-sorteios__titulo">Resultados</h3><div class="cav-grade">';
 			foreach ( $resultados as $p ) {
-				self::cartao_sorteio( $p, $meus, $eu );
+				self::cartao_sorteio( $p, $ativo, $eu );
 			}
 			echo '</div>';
 		}
@@ -191,13 +185,12 @@ class CAV_Shortcodes {
 		return ob_get_clean();
 	}
 
-	/** Cartão de um sorteio: aberto, participando, encerrado ou com resultado. */
-	private static function cartao_sorteio( $p, array $meus, $eu ) {
+	/** Cartão de um sorteio: em andamento (participando), aguardando o sorteio ou com resultado. */
+	private static function cartao_sorteio( $p, $ativo, $eu ) {
 		$premio   = get_post_meta( $p->ID, CAV_Conteudo::META_PREMIO, true );
 		$fim      = get_post_meta( $p->ID, CAV_Conteudo::META_FIM, true );
 		$ganhador = (int) get_post_meta( $p->ID, CAV_Conteudo::META_GANHADOR, true );
 		$aberto   = CAV_Conteudo::inscricoes_abertas( $p->ID );
-		$dentro   = in_array( (string) $p->ID, $meus, true );
 		$ganhei   = $ganhador && $ganhador === (int) $eu;
 		?>
 		<div class="cav-item is-sorteio<?php echo $ganhei ? ' is-ganhou' : ''; ?>">
@@ -210,7 +203,7 @@ class CAV_Shortcodes {
 					<span class="cav-item-resumo"><?php echo esc_html( $premio ); ?></span>
 				<?php endif; ?>
 				<?php if ( $fim && $aberto ) : ?>
-					<span class="cav-item-prazo">Participe até <?php echo esc_html( mysql2date( 'd/m/Y', $fim . ' 00:00:00' ) ); ?></span>
+					<span class="cav-item-prazo">Sorteio depois do dia <?php echo esc_html( mysql2date( 'd/m/Y', $fim . ' 00:00:00' ) ); ?></span>
 				<?php endif; ?>
 
 				<?php if ( $ganhei ) : ?>
@@ -222,16 +215,13 @@ class CAV_Shortcodes {
 					<?php $quando = CAV_Sorteio::data_apuracao( $p->ID ); ?>
 					<span class="cav-item-prazo">
 						<?php echo $quando ? 'Sorteado em ' . esc_html( $quando ) : 'Sorteio apurado'; ?>
-						<?php echo $dentro ? ' &middot; você participou' : ''; ?>
 					</span>
-				<?php elseif ( $dentro ) : ?>
+				<?php elseif ( $aberto && $ativo ) : ?>
 					<span class="cav-item-status is-ok">Você está participando</span>
-				<?php elseif ( ! $aberto ) : ?>
-					<span class="cav-item-status">Inscrições encerradas, aguardando o sorteio</span>
-				<?php elseif ( ! CAV_Acesso::e_membro_ativo() ) : ?>
+				<?php elseif ( $aberto ) : ?>
 					<span class="cav-item-status">Só para membros com matrícula ativa</span>
 				<?php else : ?>
-					<button type="button" class="cav-btn cav-participar" data-sorteio="<?php echo esc_attr( $p->ID ); ?>">Participar</button>
+					<span class="cav-item-status">Aguardando o sorteio</span>
 				<?php endif; ?>
 			</div>
 		</div>

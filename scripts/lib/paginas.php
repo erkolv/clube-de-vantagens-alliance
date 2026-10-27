@@ -184,7 +184,7 @@ if ( ! function_exists( 'cav_pg_id' ) ) {
 					cav_pg_contem( 'clube-caixa', [
 						cav_pg_olho( 'Sorteios' ),
 						cav_pg_titulo( 'Prêmios só entre os alunos do clube', 'h3' ),
-						cav_pg_texto( '<p>A academia sorteia prêmios entre os membros. Você participa com um clique e vê o resultado na sua área, com o nome de quem ganhou.</p>' ),
+						cav_pg_texto( '<p>A academia sorteia prêmios entre os membros. Todo aluno com a matrícula ativa participa automaticamente, sem precisar se inscrever, e vê o resultado na sua área, com o nome de quem ganhou.</p>' ),
 					] ),
 					cav_pg_contem( 'clube-caixa', [
 						cav_pg_olho( 'Seminários e eventos' ),

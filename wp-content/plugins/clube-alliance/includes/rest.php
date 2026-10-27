@@ -31,43 +31,6 @@ class CAV_Rest {
 				'beneficio_id' => [ 'required' => true, 'type' => 'integer' ],
 			],
 		] );
-
-		register_rest_route( self::NS, '/participar', [
-			'methods'             => 'POST',
-			'callback'            => [ __CLASS__, 'participar' ],
-			'permission_callback' => 'is_user_logged_in',
-			'args'                => [
-				'sorteio_id' => [ 'required' => true, 'type' => 'integer' ],
-			],
-		] );
-	}
-
-	public static function participar( WP_REST_Request $req ) {
-		$sorteio_id = absint( $req->get_param( 'sorteio_id' ) );
-		$sorteio    = get_post( $sorteio_id );
-
-		if ( ! $sorteio || 'cav_sorteio' !== $sorteio->post_type || 'publish' !== $sorteio->post_status ) {
-			return new WP_Error( 'cav_sorteio', 'Sorteio não encontrado.', [ 'status' => 404 ] );
-		}
-
-		if ( ! CAV_Acesso::pode_ver_post( $sorteio_id ) ) {
-			return new WP_Error( 'cav_sem_acesso', 'Este sorteio não está aberto para você.', [ 'status' => 403 ] );
-		}
-
-		if ( ! CAV_Acesso::e_membro_ativo() ) {
-			return new WP_Error( 'cav_inativo', 'Sua matrícula precisa estar ativa para participar.', [ 'status' => 403 ] );
-		}
-
-		if ( ! CAV_Conteudo::inscricoes_abertas( $sorteio_id ) ) {
-			return new WP_Error( 'cav_fechado', 'As inscrições deste sorteio estão encerradas.', [ 'status' => 409 ] );
-		}
-
-		$res = CAV_Sorteio::inscrever( $sorteio_id, get_current_user_id() );
-		if ( is_wp_error( $res ) ) {
-			return new WP_Error( $res->get_error_code(), $res->get_error_message(), [ 'status' => 409 ] );
-		}
-
-		return new WP_REST_Response( [ 'inscrito' => true ], 200 );
 	}
 
 	public static function pode_operar() {

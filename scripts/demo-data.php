@@ -255,7 +255,7 @@ if ( class_exists( 'CAV_Ofertas' ) && class_exists( 'CAV_Agenda' ) ) {
 			'post_type'    => 'cav_sorteio',
 			'post_status'  => 'publish',
 			'post_title'   => 'Kimono Alliance Pro',
-			'post_content' => 'Um kimono Alliance Pro para um aluno do clube. Participe pela página do sorteio.',
+			'post_content' => 'Um kimono Alliance Pro para um aluno do clube. Todo aluno ativo participa automaticamente.',
 		] );
 		update_post_meta( $sorteio_id, CAV_Acesso::META_PUBLICO, 'membros' );
 		update_post_meta( $sorteio_id, CAV_Conteudo::META_PREMIO, 'Kimono Alliance Pro' );
@@ -265,14 +265,12 @@ if ( class_exists( 'CAV_Ofertas' ) && class_exists( 'CAV_Agenda' ) ) {
 
 	// Dois sorteios já apurados: um ganho pelo aluno.demo (aparece o aviso "você ganhou"),
 	// outro por outro aluno (aparece só o nome dele).
-	$apurado = static function ( $titulo, $premio, $ganhador, $dias_atras, $inscritos ) {
+	$apurado = static function ( $titulo, $premio, $ganhador, $dias_atras ) {
 		$ja = get_posts( [ 'post_type' => 'cav_sorteio', 'title' => $titulo, 'post_status' => 'any', 'numberposts' => 1 ] );
 
 		if ( $ja ) {
 			return;
 		}
-
-		global $wpdb;
 
 		$id = wp_insert_post( [
 			'post_type'    => 'cav_sorteio',
@@ -287,19 +285,10 @@ if ( class_exists( 'CAV_Ofertas' ) && class_exists( 'CAV_Agenda' ) ) {
 		update_post_meta( $id, CAV_Conteudo::META_FIM, wp_date( 'Y-m-d', strtotime( '-' . ( $dias_atras + 1 ) . ' days' ) ) );
 		update_post_meta( $id, CAV_Conteudo::META_GANHADOR, $ganhador );
 		update_post_meta( $id, CAV_Conteudo::META_APURADO, wp_date( 'Y-m-d H:i:s', strtotime( '-' . $dias_atras . ' days' ) ) );
-
-		foreach ( $inscritos as $membro ) {
-			$wpdb->insert( CAV_Sorteio::tabela(), [
-				'sorteio_id' => $id,
-				'membro_id'  => $membro,
-				'criado_em'  => wp_date( 'Y-m-d H:i:s', strtotime( '-' . ( $dias_atras + 5 ) . ' days' ) ),
-				'ip'         => '',
-			] );
-		}
 	};
 
-	$apurado( 'Rashguard Alliance de brinde', 'Rashguard Alliance', $aluno, 4, [ $aluno, $vencido ] );
-	$apurado( 'Kit protetor bucal e faixa', 'Protetor bucal e faixa Alliance', $vencido, 27, [ $vencido ] );
+	$apurado( 'Rashguard Alliance de brinde', 'Rashguard Alliance', $aluno, 4 );
+	$apurado( 'Kit protetor bucal e faixa', 'Protetor bucal e faixa Alliance', $vencido, 27 );
 }
 
 WP_CLI::success( 'Dados de demonstração prontos.' );

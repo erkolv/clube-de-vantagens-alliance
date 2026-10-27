@@ -77,7 +77,7 @@ class CAV_Conteudo {
 		$premio   = get_post_meta( $post->ID, self::META_PREMIO, true );
 		$ganhador = (int) get_post_meta( $post->ID, self::META_GANHADOR, true );
 		$apurado  = get_post_meta( $post->ID, self::META_APURADO, true );
-		$inscritos = CAV_Sorteio::contar( $post->ID );
+		$inscritos = CAV_Sorteio::contar();
 
 		wp_nonce_field( 'cav_salvar_sorteio', 'cav_sorteio_nonce' );
 		?>
@@ -88,7 +88,7 @@ class CAV_Conteudo {
 			       placeholder="Ex.: 1 kimono Alliance + 1 mês de mensalidade">
 		</p>
 		<p>
-			<label><strong>Inscrições</strong></label><br>
+			<label><strong>Período do sorteio</strong></label><br>
 			<label style="margin-right:1.5rem">De
 				<input type="date" name="cav_inscricao_inicio" value="<?php echo esc_attr( $inicio ); ?>">
 			</label>
@@ -96,11 +96,11 @@ class CAV_Conteudo {
 				<input type="date" name="cav_inscricao_fim" value="<?php echo esc_attr( $fim ); ?>">
 			</label>
 			<br>
-			<span class="description">Fora desse período o botão de participar não aparece.</span>
+			<span class="description">Dentro desse período o sorteio aparece como "em andamento" para os alunos. Não há inscrição: todo membro com a matrícula ativa na hora do sorteio participa.</span>
 		</p>
 		<hr>
 		<p>
-			<strong><?php echo esc_html( $inscritos ); ?></strong> inscrito(s).
+			<strong><?php echo esc_html( $inscritos ); ?></strong> participante(s) agora (membros com matrícula ativa).
 			<?php if ( $ganhador ) :
 				$g = get_userdata( $ganhador ); ?>
 				<br><strong>Ganhador:</strong> <?php echo esc_html( $g ? $g->display_name : '#' . $ganhador ); ?>
@@ -165,7 +165,7 @@ class CAV_Conteudo {
 		}
 	}
 
-	/** Inscrições abertas hoje? */
+	/** Sorteio em andamento hoje (dentro do período e ainda sem ganhador)? */
 	public static function inscricoes_abertas( $sorteio_id ) {
 		if ( get_post_meta( $sorteio_id, self::META_GANHADOR, true ) ) {
 			return false;
@@ -195,13 +195,15 @@ class CAV_Conteudo {
 			wp_die( 'Este sorteio já foi apurado.' );
 		}
 
-		$ganhador = CAV_Sorteio::sortear( $sorteio_id );
-
-		if ( ! $ganhador ) {
-			wp_die( 'Nenhum inscrito para sortear.' );
+		$participantes = CAV_Sorteio::participantes();
+		if ( ! $participantes ) {
+			wp_die( 'Nenhum participante com matrícula ativa para sortear.' );
 		}
 
+		$ganhador = (int) $participantes[ random_int( 0, count( $participantes ) - 1 ) ];
+
 		update_post_meta( $sorteio_id, self::META_GANHADOR, $ganhador );
+		update_post_meta( $sorteio_id, '_cav_participantes_total', count( $participantes ) );
 		update_post_meta( $sorteio_id, self::META_APURADO, current_time( 'mysql' ) );
 
 		// Avisa o ganhador. Se o e-mail falhar, o resultado continua valendo e aparece na área dele.

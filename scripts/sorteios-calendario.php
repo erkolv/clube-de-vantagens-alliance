@@ -2,7 +2,7 @@
 /**
  * Sorteios mensais do clube, de novembro a junho, como RASCUNHO (um por mês, com o prêmio combinado).
  * Rascunho não aparece para ninguém: para abrir um mês, vá em Sorteios, confira o prêmio e as datas e publique.
- * A inscrição vem do dia 1 ao último dia do mês; ajuste se o sorteio tiver outras datas.
+ * O período do sorteio vai do dia 1 ao último dia do mês; ajuste se o sorteio tiver outras datas.
  *
  * Roda uma única vez para criar (opção cav_sorteios_calendario), então apagar um sorteio não faz ele voltar.
  * Uma segunda etapa (opção cav_sorteios_premios) preenche os prêmios dos rascunhos que já existiam sem prêmio,
@@ -41,7 +41,7 @@ if ( ! get_option( 'cav_sorteios_calendario' ) ) {
 			'post_type'    => 'cav_sorteio',
 			'post_status'  => 'draft',
 			'post_title'   => 'Sorteio de ' . $dados[0] . ' de ' . $ano,
-			'post_content' => 'Sorteio do clube de ' . $dados[0] . '. Participe pela página do sorteio.',
+			'post_content' => 'Sorteio do clube de ' . $dados[0] . '. Todo aluno ativo participa automaticamente.',
 		] );
 
 		if ( is_wp_error( $id ) || ! $id ) {
