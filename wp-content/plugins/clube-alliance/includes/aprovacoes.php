@@ -67,7 +67,7 @@ class CAV_Aprovacoes {
 			'aprovado'  => [ 'success', 'Acesso liberado e e-mail enviado.' ],
 			'recusado'  => [ 'warning', 'Pedido recusado e e-mail enviado.' ],
 			'reenviado' => [ 'success', 'Link de pagamento reenviado por e-mail.' ],
-			'pagamento' => [ 'error', 'Informe o código do pagamento (o número da transação no Pagar.me ou do comprovante) antes de aprovar.' ],
+			'pagamento' => [ 'error', 'Digite o final do código do pagamento (pelo menos 6 caracteres) ou marque "sem código" antes de aprovar.' ],
 			'pag_usado' => [ 'error', 'Este código de pagamento já foi usado para liberar outro participante. Confira o comprovante.' ],
 			'semlink'   => [ 'error', 'Ainda não há link de pagamento configurado. Cole os links em Clube → Configurações.' ],
 			'parceiro'  => [ 'success', 'Estabelecimento aprovado. E-mail com os dados de acesso enviado.' ],
@@ -155,8 +155,11 @@ class CAV_Aprovacoes {
 									<input type="hidden" name="action" value="cav_aprovar_membro">
 									<input type="hidden" name="user_id" value="<?php echo esc_attr( $u->ID ); ?>">
 									<?php wp_nonce_field( 'cav_aprovar_membro_' . $u->ID ); ?>
-									<label style="font-size:12px">Código do pagamento
-										<input type="text" name="pagamento" maxlength="60" placeholder="Pagar.me ou comprovante" required style="width:170px">
+									<label style="font-size:12px">Final do código do pagamento
+										<input type="text" name="pagamento" maxlength="60" placeholder="últimos 6 caracteres" style="width:150px">
+									</label>
+									<label style="font-size:12px">
+										<input type="checkbox" name="sem_codigo" value="1"> sem código (maquininha)
 									</label>
 									<label style="font-size:12px">Válido até
 										<input type="date" name="validade" value="<?php echo esc_attr( $padrao ); ?>" required>
@@ -267,14 +270,24 @@ class CAV_Aprovacoes {
 		}
 
 		// O código do pagamento (Pagar.me ou comprovante) é o que liga o acesso ao pagamento. Obrigatório, e não pode se repetir.
-		$codigo = isset( $_POST['pagamento'] ) ? strtoupper( preg_replace( '/\s+/', '', sanitize_text_field( wp_unslash( $_POST['pagamento'] ) ) ) ) : '';
-		$codigo = substr( $codigo, 0, 60 );
-		if ( '' === $codigo ) {
-			self::volta( 'pagamento' );
-		}
-		$outros = get_users( [ 'meta_key' => CAV_Membro::META_PAG_COD, 'meta_value' => $codigo, 'exclude' => [ $user_id ], 'number' => 1, 'fields' => 'ids' ] );
-		if ( $outros ) {
-			self::volta( 'pag_usado' );
+		// Basta o final do código (6 caracteres): é o suficiente para achar a transação no painel. Quem pagou na maquininha
+		// da recepção, sem código, marca "sem código" e fica registrado assim.
+		$sem_codigo = ! empty( $_POST['sem_codigo'] );
+		$codigo     = isset( $_POST['pagamento'] ) ? strtoupper( preg_replace( '/\s+/', '', sanitize_text_field( wp_unslash( $_POST['pagamento'] ) ) ) ) : '';
+		$codigo     = substr( $codigo, 0, 60 );
+		$fim        = '';
+
+		if ( $sem_codigo ) {
+			$codigo = '';
+		} else {
+			if ( strlen( $codigo ) < 6 ) {
+				self::volta( 'pagamento' );
+			}
+			$fim    = substr( $codigo, -6 );
+			$outros = get_users( [ 'meta_key' => CAV_Membro::META_PAG_COD, 'meta_value' => $fim, 'exclude' => [ $user_id ], 'number' => 1, 'fields' => 'ids' ] );
+			if ( $outros ) {
+				self::volta( 'pag_usado' );
+			}
 		}
 
 		$validade = isset( $_POST['validade'] ) ? sanitize_text_field( wp_unslash( $_POST['validade'] ) ) : '';
@@ -285,9 +298,14 @@ class CAV_Aprovacoes {
 		}
 
 		$aceite = get_user_meta( $user_id, CAV_Solicitacoes::META_ACEITE, true );
-		update_user_meta( $user_id, CAV_Membro::META_PAG_COD, $codigo );
+		if ( '' !== $fim ) {
+			update_user_meta( $user_id, CAV_Membro::META_PAG_COD, $fim );
+		} else {
+			delete_user_meta( $user_id, CAV_Membro::META_PAG_COD );
+		}
 		update_user_meta( $user_id, CAV_Membro::META_PAGAMENTO, [
 			'codigo' => $codigo,
+			'sem_codigo' => $sem_codigo,
 			'em'     => current_time( 'mysql' ),
 			'por'    => get_current_user_id(),
 			'valor'  => is_array( $aceite ) && isset( $aceite['valor'] ) ? $aceite['valor'] : '',

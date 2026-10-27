@@ -253,11 +253,12 @@ class CAV_Alunos {
 
 	/** Código do pagamento, quando e quem aprovou. */
 	private static function pagamento_html( $pag ) {
-		if ( ! is_array( $pag ) || empty( $pag['codigo'] ) ) {
+		if ( ! is_array( $pag ) || ( empty( $pag['codigo'] ) && empty( $pag['sem_codigo'] ) ) ) {
 			return '<span class="description">—</span>';
 		}
 		$por = ! empty( $pag['por'] ) ? get_userdata( (int) $pag['por'] ) : null;
-		return '<code>' . esc_html( $pag['codigo'] ) . '</code><br><span class="description">aprovado em ' . esc_html( self::data( $pag['em'] ?? '' ) )
+		$rot = ! empty( $pag['codigo'] ) ? '<code>' . esc_html( $pag['codigo'] ) . '</code>' : '<em style="color:#996800">sem código</em>';
+		return $rot . '<br><span class="description">aprovado em ' . esc_html( self::data( $pag['em'] ?? '' ) )
 			. ( $por ? ' por ' . esc_html( $por->display_name ) : '' ) . '</span>';
 	}
 
@@ -366,7 +367,7 @@ class CAV_Alunos {
 				CAV_Solicitacoes::rotulo_tipo( $a['tipo'] ),
 				$seguro( $a['resp'] ),
 				self::data( $a['pedido'] ),
-				$seguro( is_array( $a['pag'] ) ? ( $a['pag']['codigo'] ?? '' ) : '' ),
+				is_array( $a['pag'] ) ? ( ! empty( $a['pag']['codigo'] ) ? $seguro( $a['pag']['codigo'] ) : ( ! empty( $a['pag']['sem_codigo'] ) ? 'SEM CÓDIGO' : '' ) ) : '',
 				is_array( $a['pag'] ) ? self::data( $a['pag']['em'] ?? '' ) : '',
 				$seguro( is_array( $a['pag'] ) && ! empty( $a['pag']['por'] ) && get_userdata( (int) $a['pag']['por'] ) ? get_userdata( (int) $a['pag']['por'] )->display_name : '' ),
 			], ';' );
