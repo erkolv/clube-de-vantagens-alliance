@@ -228,7 +228,7 @@ class CAV_Login {
 	/* --------------------------- E-mail e senha --------------------------- */
 
 	public static function receber() {
-		check_admin_referer( 'cav_entrar', 'cav_nonce' );
+		// Sem nonce de propósito: página pública, pode estar em cache. O limite de tentativas protege o login.
 
 		$pedido = self::pedido_de_redirect();
 
@@ -272,7 +272,7 @@ class CAV_Login {
 	/* ------------------------------- Google ------------------------------- */
 
 	public static function receber_google() {
-		check_admin_referer( 'cav_google', 'cav_nonce' );
+		// Sem nonce de propósito (página pública, pode estar em cache). O Google confirma a identidade e há limite por endereço.
 
 		$pedido    = self::pedido_de_redirect();
 		$client_id = CAV_Config::google_client_id();

@@ -273,7 +273,8 @@ class CAV_Solicitacoes {
 	}
 
 	public static function receber_solicitacao() {
-		check_admin_referer( 'cav_solicitar' );
+		// Sem nonce de propósito: é um formulário público e o Elementor pode guardar a página em cache, o que deixaria o nonce vencido
+		// e mostraria "o link expirou" a quem preenche. A proteção é o campo-armadilha, o tempo mínimo e o limite por endereço.
 
 		// Robô preenche o campo escondido: finge que deu certo e não grava nada.
 		$robo = CAV_Seguranca::robo();
@@ -491,7 +492,7 @@ class CAV_Solicitacoes {
 	}
 
 	public static function receber_candidatura() {
-		check_admin_referer( 'cav_candidatar' );
+		// Sem nonce de propósito (veja receber_solicitacao): página pública, pode estar em cache.
 
 		$robo = CAV_Seguranca::robo();
 		if ( 'armadilha' === $robo ) {
