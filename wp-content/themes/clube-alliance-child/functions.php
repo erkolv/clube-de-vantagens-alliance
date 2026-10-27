@@ -160,7 +160,7 @@ add_filter( 'login_headerurl', function () {
 } );
 
 add_filter( 'login_headertext', function () {
-	return 'Alliance';
+	return 'Alliance Jiu Jitsu Mogi das Cruzes';
 } );
 
 // A tela de "esqueci a senha" tem "Voltar para o site" e "Entrar": o segundo vai para a página nova.

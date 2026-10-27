@@ -13,33 +13,17 @@ body.login {
 
 .login #login { width: min(420px, 92vw); padding: 5vh 0; margin: 0 auto; }
 
-/* Marca em texto no lugar do logo do WordPress */
+/* Logo da Alliance no lugar do logo do WordPress */
 .login h1 { margin: 0 0 1.75rem; }
 .login h1 a {
 	display: block;
-	background-image: none;
-	width: auto;
-	height: auto;
-	margin: 0;
-	text-indent: 0;
-	overflow: visible;
-	text-align: center;
-	font-size: 1.5rem;
-	font-weight: 700;
-	letter-spacing: .38em;
-	text-transform: uppercase;
-	color: #ffffff;
-	line-height: 1.2;
-}
-.login h1 a::after {
-	content: 'Clube de vantagens';
-	display: block;
-	margin-top: .35rem;
-	font-size: .6rem;
-	font-weight: 500;
-	font-style: italic;
-	letter-spacing: .3em;
-	color: #ffc629;
+	width: min(280px, 80vw);
+	height: 68px;
+	margin: 0 auto;
+	background: url('logo-alliance-mogi.svg') center / contain no-repeat;
+	text-indent: -9999px;
+	overflow: hidden;
+	white-space: nowrap;
 }
 .login h1 a:focus { box-shadow: none; outline: 2px solid #ffc629; outline-offset: 4px; }
 

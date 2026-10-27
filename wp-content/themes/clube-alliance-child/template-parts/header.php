@@ -17,8 +17,7 @@ $area    = class_exists( 'CAV_Entrada' ) && is_user_logged_in() ? CAV_Entrada::a
 			<?php if ( has_custom_logo() ) : ?>
 				<?php the_custom_logo(); ?>
 			<?php else : ?>
-				<strong>Alliance</strong>
-				<span>Clube de Vantagens</span>
+				<img class="clube-marca__logo" src="<?php echo esc_url( get_stylesheet_directory_uri() . '/assets/logo-alliance-mogi.svg' ); ?>" alt="Alliance Jiu Jitsu Mogi das Cruzes" width="183" height="44">
 			<?php endif; ?>
 		</a>
 

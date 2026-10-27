@@ -149,7 +149,8 @@ a.clube-btn--linha { background: transparent; color: var(--clube-ouro); }
 	text-transform: uppercase;
 	color: var(--clube-ouro);
 }
-.clube-marca img { max-height: 44px; width: auto; }
+.clube-marca img { max-height: 44px; width: auto; display: block; }
+.clube-marca .clube-marca__logo { height: 44px; max-height: none; width: auto; }
 
 .clube-nav { display: flex; align-items: center; gap: 30px; }
 
@@ -235,6 +236,7 @@ a.clube-btn--linha { background: transparent; color: var(--clube-ouro); }
 	padding: 64px 24px 48px;
 	box-sizing: border-box;
 }
+.clube-rodape__logo { display: block; width: 220px; max-width: 100%; height: auto; }
 .clube-rodape__marca strong {
 	display: block;
 	font-size: 1.15rem;

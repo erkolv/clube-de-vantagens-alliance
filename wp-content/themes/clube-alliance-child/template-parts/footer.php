@@ -11,8 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<div class="clube-rodape__in">
 
 		<div class="clube-rodape__marca">
-			<strong>Alliance</strong>
-			<span>Clube de Vantagens</span>
+			<img class="clube-rodape__logo" src="<?php echo esc_url( get_stylesheet_directory_uri() . '/assets/logo-alliance-mogi.svg' ); ?>" alt="Alliance Jiu Jitsu Mogi das Cruzes" width="220" height="53" loading="lazy">
 			<p>Descontos nos comércios de Mogi das Cruzes para quem treina na Alliance.</p>
 		</div>
 
