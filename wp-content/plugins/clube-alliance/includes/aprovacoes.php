@@ -22,7 +22,7 @@ class CAV_Aprovacoes {
 		return $mostrar;
 	}
 
-	/** Recepção só acessa a tela de aprovações. */
+	/** Recepção só acessa as telas de aprovações e de aniversariantes. */
 	public static function travar_recepcao() {
 		if ( wp_doing_ajax() || ! is_user_logged_in() ) {
 			return;
@@ -34,7 +34,7 @@ class CAV_Aprovacoes {
 		$pagina = isset( $_GET['page'] ) ? sanitize_text_field( wp_unslash( $_GET['page'] ) ) : '';
 		$tela   = isset( $GLOBALS['pagenow'] ) ? $GLOBALS['pagenow'] : '';
 
-		if ( 'admin.php' === $tela && 'cav-aprovacoes' === $pagina ) {
+		if ( 'admin.php' === $tela && in_array( $pagina, [ 'cav-aprovacoes', 'cav-aniversarios' ], true ) ) {
 			return;
 		}
 		if ( in_array( $tela, [ 'profile.php', 'admin-post.php', 'admin-ajax.php' ], true ) ) {
@@ -111,6 +111,7 @@ class CAV_Aprovacoes {
 						$zap   = get_user_meta( $u->ID, CAV_Solicitacoes::META_WHATSAPP, true );
 						$plano = CAV_Solicitacoes::rotulo_plano( get_user_meta( $u->ID, CAV_Solicitacoes::META_PLANO, true ) );
 						$nasc  = get_user_meta( $u->ID, CAV_Solicitacoes::META_NASC, true );
+						$cep   = CAV_Solicitacoes::formatar_cep( get_user_meta( $u->ID, CAV_Solicitacoes::META_CEP, true ) );
 						$idade = $nasc ? CAV_Solicitacoes::idade( $nasc ) : null;
 						$resp  = get_user_meta( $u->ID, CAV_Solicitacoes::META_RESP, true );
 						$turma = get_user_meta( $u->ID, CAV_Solicitacoes::META_TURMA, true ); // pedidos antigos
@@ -138,6 +139,7 @@ class CAV_Aprovacoes {
 							<td>
 								<?php echo esc_html( $u->user_email ); ?>
 								<?php if ( $zap ) : ?><br><span class="description"><?php echo esc_html( $zap ); ?></span><?php endif; ?>
+								<?php if ( $cep ) : ?><br><span class="description">CEP <?php echo esc_html( $cep ); ?></span><?php endif; ?>
 							</td>
 							<td>
 								<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">

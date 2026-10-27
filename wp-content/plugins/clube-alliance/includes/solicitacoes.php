@@ -10,6 +10,7 @@ class CAV_Solicitacoes {
 	const STATUS_RECUSADO = 'recusado';
 
 	const META_WHATSAPP = 'cav_whatsapp';
+	const META_CEP      = 'cav_cep';          // só os 8 números
 	const META_TURMA    = 'cav_turma';  // só em pedidos antigos
 	const META_PLANO    = 'cav_plano';  // só em cadastros antigos (o clube não depende mais do plano)
 	const META_PEDIDO   = 'cav_pedido_em';
@@ -83,6 +84,21 @@ class CAV_Solicitacoes {
 	 * Aluno
 	 * --------------------------------------------------------------- */
 
+	/** CEP só com números. O Excel come o zero da frente, então 7 dígitos viram 8. Devolve '' se não der 8. */
+	public static function normalizar_cep( $texto ) {
+		$d = preg_replace( '/\D+/', '', (string) $texto );
+		if ( 7 === strlen( $d ) ) {
+			$d = '0' . $d;
+		}
+		return 8 === strlen( $d ) ? $d : '';
+	}
+
+	/** 01234567 -> 01234-567 */
+	public static function formatar_cep( $cep ) {
+		$cep = self::normalizar_cep( $cep );
+		return '' === $cep ? '' : substr( $cep, 0, 5 ) . '-' . substr( $cep, 5 );
+	}
+
 	public static function status( $user_id ) {
 		$s = get_user_meta( $user_id, 'cav_status', true );
 		return $s ?: self::STATUS_PENDENTE;
@@ -117,6 +133,9 @@ class CAV_Solicitacoes {
 
 			<label for="cav-cpf">CPF</label>
 			<input id="cav-cpf" name="cpf" type="text" inputmode="numeric" maxlength="14" required>
+
+			<label for="cav-cep">CEP</label>
+			<input id="cav-cep" name="cep" type="text" inputmode="numeric" autocomplete="postal-code" maxlength="9" placeholder="00000-000" required>
 
 			<label for="cav-zap">WhatsApp</label>
 			<input id="cav-zap" name="whatsapp" type="text" maxlength="20">
@@ -176,6 +195,7 @@ class CAV_Solicitacoes {
 			'muitos'      => 'Muitos pedidos vindos deste endereço em pouco tempo. Espere um pouco ou fale com a recepção.',
 			'tempo'       => 'Não consegui validar o envio. Recarregue a página e envie de novo.',
 			'campos'      => 'Preencha todos os campos obrigatórios.',
+			'cep'         => 'Informe o CEP com 8 números.',
 			'nascimento'  => 'Informe a data de nascimento do aluno.',
 			'idade'       => 'O clube é para alunos a partir de ' . self::IDADE_MINIMA . ' anos.',
 			'responsavel' => 'Para alunos com menos de 18 anos, informe o nome e o CPF do responsável e marque a autorização.',
@@ -218,6 +238,10 @@ class CAV_Solicitacoes {
 
 		if ( ! $nome || ! is_email( $email ) || ! $cpf ) {
 			self::voltar( 'campos' );
+		}
+		$cep = self::normalizar_cep( isset( $_POST['cep'] ) ? wp_unslash( $_POST['cep'] ) : '' );
+		if ( '' === $cep ) {
+			self::voltar( 'cep' );
 		}
 		$nasc  = isset( $_POST['nascimento'] ) ? sanitize_text_field( wp_unslash( $_POST['nascimento'] ) ) : '';
 		$idade = self::idade( $nasc );
@@ -279,6 +303,7 @@ class CAV_Solicitacoes {
 		update_user_meta( $user_id, CAV_Membro::META_CONSENTE, current_time( 'mysql' ) );
 		update_user_meta( $user_id, self::META_PEDIDO, current_time( 'mysql' ) );
 		update_user_meta( $user_id, self::META_NASC, $nasc );
+		update_user_meta( $user_id, self::META_CEP, $cep );
 		if ( $resp ) {
 			update_user_meta( $user_id, self::META_RESP, $resp );
 		}

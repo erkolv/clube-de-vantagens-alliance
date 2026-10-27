@@ -57,6 +57,7 @@ class CAV_Importar {
 				'cpf'         => [ 'CPF', true, [] ],
 				'email'       => [ 'E-mail', true, [ 'email' ] ],
 				'whatsapp'    => [ 'WhatsApp', false, [ 'telefone', 'celular' ] ],
+				'cep'         => [ 'CEP', false, [] ],
 				'nascimento'  => [ 'Data de nascimento', true, [ 'nascimento', 'nasc' ] ],
 				'resp_nome'   => [ 'Responsável (menores de 18)', false, [ 'responsavel', 'nome do responsavel', 'responsavel se menor de 18' ] ],
 				'resp_cpf'    => [ 'CPF do responsável (menores de 18)', false, [ 'cpf do responsavel', 'cpf responsavel', 'cpf do responsavel se menor de 18' ] ],
@@ -317,6 +318,16 @@ class CAV_Importar {
 		self::validar_pagamento( $d, $erros );
 		self::validar_nascimento( $d, $erros );
 
+		// CEP é opcional na planilha; se vier, tem que ter 8 números.
+		$d['cep'] = trim( (string) ( $d['cep'] ?? '' ) );
+		if ( '' !== $d['cep'] ) {
+			$cep = CAV_Solicitacoes::normalizar_cep( $d['cep'] );
+			if ( '' === $cep ) {
+				$erros[] = 'CEP inválido.';
+			}
+			$d['cep'] = $cep;
+		}
+
 		$aceite = self::data( $d['aceite_em'] );
 		if ( null === $aceite ) {
 			$erros[] = 'Data do aceite inválida.';
@@ -532,6 +543,9 @@ class CAV_Importar {
 		CAV_Membro::set_validade( $user_id, self::validade_do_pagamento( $d['vence_data'] ) );
 		update_user_meta( $user_id, CAV_Membro::META_CONSENTE, $aceite_em );
 		update_user_meta( $user_id, CAV_Solicitacoes::META_NASC, $d['nascimento_data'] );
+		if ( ! empty( $d['cep'] ) ) {
+			update_user_meta( $user_id, CAV_Solicitacoes::META_CEP, $d['cep'] );
+		}
 		if ( ! empty( $d['resp'] ) ) {
 			update_user_meta( $user_id, CAV_Solicitacoes::META_RESP, [
 				'nome' => $d['resp']['nome'],
