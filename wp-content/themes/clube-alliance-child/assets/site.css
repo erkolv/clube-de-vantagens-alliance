@@ -511,15 +511,45 @@ table.clube-tabela tbody > tr:hover > td {
 	vertical-align: baseline;
 	line-height: 1.4;
 }
-table.clube-tabela tbody > tr > td:first-child { padding-right: 16px; }
-table.clube-tabela tbody > tr > td:last-child { text-align: right; white-space: nowrap; color: #fff; font-variant-numeric: tabular-nums; }
+table.clube-tabela tbody > tr > td:first-child { padding-right: 20px; }
+table.clube-tabela tbody > tr > td:last-child { width: 42%; text-align: right; color: #fff; font-variant-numeric: tabular-nums; }
+table.clube-tabela tbody > tr > td:first-child { color: #d0d0d0; }
 table.clube-tabela tbody > tr.total > td { padding-top: 18px; color: var(--clube-ouro); font-weight: 600; border-bottom: 0; }
 .elementor .e-con.clube-claro table.clube-tabela tbody > tr > td { border-bottom-color: rgba(0, 0, 0, .12); color: #3a3a3a; }
 .elementor .e-con.clube-claro table.clube-tabela tbody > tr > td:last-child { color: #141414; }
 .elementor .e-con.clube-claro table.clube-tabela tbody > tr.total > td { color: var(--clube-ocre); border-bottom: 0; }
 
 /* Formulários do plugin dentro das páginas */
-.elementor .e-con.clube-forma { max-width: 720px; margin-inline: auto; padding: 56px 24px 96px; }
+.elementor .e-con.clube-forma { max-width: 780px; margin-inline: auto; padding: 56px 24px 96px; }
+
+/* Formulários (quero fazer parte, seja parceiro): um cartão centralizado. */
+.clube-forma .cav-form {
+	position: relative;
+	max-width: none;
+	width: 100%;
+	margin-inline: auto;
+	padding: 40px 44px 44px;
+	box-sizing: border-box;
+	background: #1a1a1a;
+	border: 1px solid var(--clube-linha);
+	border-top: 3px solid var(--clube-ouro);
+}
+.clube-forma .cav-form .cav-btn { width: 100%; min-height: 54px; }
+/* O estilo geral de botão de enviar (amarelo sobre fundo) não pode vencer o botão cheio do formulário. */
+.cav-form .cav-btn:not(:hover):not(:focus-visible):not(.cav-btn-ghost) { color: #141414; }
+.cav-form .cav-form-topo { margin-bottom: 6px; }
+.cav-form .cav-form-topo h3 { margin: 0; font-size: 1.5rem; font-weight: 700; line-height: 1.2; color: #fff; }
+.cav-form .cav-form-topo p { margin: 6px 0 0; font-size: .92rem; color: var(--clube-cinza); }
+.cav-form .cav-campo { display: grid; gap: .35rem; align-content: start; min-width: 0; }
+
+/* Candidatura do parceiro: duas colunas no computador. */
+.cav-form.cav-form--duas { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 20px; }
+.cav-form.cav-form--duas > * { grid-column: 1 / -1; }
+.cav-form.cav-form--duas > .cav-campo:not(.cav-campo--largo) { grid-column: auto; }
+@media (max-width: 680px) {
+	.clube-forma .cav-form { padding: 28px 20px 30px; }
+	.cav-form.cav-form--duas { grid-template-columns: minmax(0, 1fr); }
+}
 
 /* ---------- Telas menores ---------- */
 @media (max-width: 960px) {

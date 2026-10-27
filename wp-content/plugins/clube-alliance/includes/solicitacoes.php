@@ -454,7 +454,7 @@ class CAV_Solicitacoes {
 
 		ob_start();
 		?>
-		<form class="cav-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+		<form class="cav-form cav-form--duas" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 			<input type="hidden" name="action" value="cav_candidatar">
 			<?php wp_nonce_field( 'cav_candidatar' ); ?>
 			<?php echo CAV_Seguranca::campos_antirrobo(); // phpcs:ignore WordPress.Security.EscapeOutput ?>
@@ -463,27 +463,40 @@ class CAV_Solicitacoes {
 				<p class="cav-erro-form"><?php echo esc_html( 'cand_email_usado' === $msg ? 'Já existe um cadastro com esse e-mail. Se for o seu, use "Entrar" e peça uma nova senha se precisar.' : self::mensagem_erro( str_replace( 'cand_', '', $msg ) ) ); ?></p>
 			<?php endif; ?>
 
-			<label for="cav-estab">Nome do estabelecimento</label>
-			<input id="cav-estab" name="estabelecimento" type="text" required>
+			<div class="cav-form-topo">
+				<h3>Cadastre o seu negócio</h3>
+				<p>Leva uns dois minutos. A Alliance analisa e responde por e-mail.</p>
+			</div>
 
-			<label for="cav-cat">Categoria</label>
-			<input id="cav-cat" name="categoria" type="text" placeholder="Barbearia, restaurante, clínica…">
-
-			<label for="cav-resp">Responsável</label>
-			<input id="cav-resp" name="responsavel" type="text" required>
-
-			<label for="cav-cemail">E-mail para o acesso</label>
-			<input id="cav-cemail" name="email" type="email" required>
-
-			<label for="cav-czap">WhatsApp</label>
-			<input id="cav-czap" name="whatsapp" type="text">
-
-			<label for="cav-cend">Endereço</label>
-			<input id="cav-cend" name="endereco" type="text">
-
-			<label for="cav-cben">Que benefício você quer oferecer</label>
-			<input id="cav-cben" name="beneficio" type="text" required
-			       placeholder="Ex.: 15% de desconto no corte, seg a qui">
+			<div class="cav-campo">
+				<label for="cav-estab">Nome do estabelecimento</label>
+				<input id="cav-estab" name="estabelecimento" type="text" required>
+			</div>
+			<div class="cav-campo">
+				<label for="cav-cat">Categoria</label>
+				<input id="cav-cat" name="categoria" type="text" placeholder="Barbearia, restaurante, clínica…">
+			</div>
+			<div class="cav-campo">
+				<label for="cav-resp">Responsável</label>
+				<input id="cav-resp" name="responsavel" type="text" required>
+			</div>
+			<div class="cav-campo">
+				<label for="cav-cemail">E-mail para o acesso</label>
+				<input id="cav-cemail" name="email" type="email" required>
+			</div>
+			<div class="cav-campo">
+				<label for="cav-czap">WhatsApp</label>
+				<input id="cav-czap" name="whatsapp" type="text" inputmode="tel">
+			</div>
+			<div class="cav-campo">
+				<label for="cav-cend">Endereço</label>
+				<input id="cav-cend" name="endereco" type="text">
+			</div>
+			<div class="cav-campo cav-campo--largo">
+				<label for="cav-cben">Que benefício você quer oferecer</label>
+				<input id="cav-cben" name="beneficio" type="text" required
+				       placeholder="Ex.: 15% de desconto no corte, de segunda a quinta">
+			</div>
 
 			<button type="submit" class="cav-btn">Enviar candidatura</button>
 		</form>
