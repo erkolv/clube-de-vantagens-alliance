@@ -34,7 +34,7 @@ class CAV_Aprovacoes {
 		$pagina = isset( $_GET['page'] ) ? sanitize_text_field( wp_unslash( $_GET['page'] ) ) : '';
 		$tela   = isset( $GLOBALS['pagenow'] ) ? $GLOBALS['pagenow'] : '';
 
-		if ( 'admin.php' === $tela && in_array( $pagina, [ 'cav-aprovacoes', 'cav-aniversarios' ], true ) ) {
+		if ( 'admin.php' === $tela && in_array( $pagina, [ 'cav-aprovacoes', 'cav-aniversarios', 'cav-alunos' ], true ) ) {
 			return;
 		}
 		if ( in_array( $tela, [ 'profile.php', 'admin-post.php', 'admin-ajax.php' ], true ) ) {
