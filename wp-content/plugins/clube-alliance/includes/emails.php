@@ -260,18 +260,41 @@ class CAV_Emails {
 		);
 	}
 
+	/** Passo a passo para o parceiro que acabou de ser cadastrado. Só HTML simples, para qualquer e-mail abrir igual. */
+	private static function passo_a_passo_parceiro( $url_terminal = '' ) {
+		$entrar = home_url( '/entrar/' );
+		$negocio = CAV_AreaParceiro::url( 'meu-negocio' ) ?: home_url( '/' );
+		$promos  = CAV_AreaParceiro::url( 'minhas-promocoes' ) ?: home_url( '/' );
+
+		$passos = [
+			[ 'Crie a sua senha', 'Clique no botão acima e escolha uma senha. O link vale por 7 dias; se vencer, use "Esqueci minha senha" na página de entrar.' ],
+			[ 'Entre no site', 'Abra <a href="' . esc_url( $entrar ) . '" style="color:#141414">' . esc_html( $entrar ) . '</a> e entre com o seu e-mail e a senha que você acabou de criar.' ],
+			[ 'Preencha os dados do seu negócio', 'No menu, abra <a href="' . esc_url( $negocio ) . '" style="color:#141414"><strong>Meu negócio</strong></a>. Coloque a foto e o logo, uma frase de resumo, a descrição, o WhatsApp, o Instagram, o endereço e o horário, e clique em <strong>Salvar dados do negócio</strong>. É essa página que os alunos veem antes de ir até você. O nome e a categoria quem muda é a Alliance.' ],
+			[ 'Confira as suas promoções', 'Em <a href="' . esc_url( $promos ) . '" style="color:#141414"><strong>Promoções</strong></a> você cria e edita o que oferece aos alunos: o nome, a regra que o seu caixa vai ler (dias, limites, o que está incluído), quantas vezes cada aluno pode usar e as datas. Só aparece para os alunos a promoção marcada como <strong>Promoção no ar</strong>.' ],
+			[ 'Use o Terminal no caixa', 'Quando o aluno chegar, abra o <strong>Terminal</strong>, digite o CPF dele e veja na hora se ele faz parte do clube e qual desconto vale. Depois toque em <strong>Registrar uso</strong>. Não precisa de carteirinha nem cupom.' ],
+		];
+
+		$html = '<p style="margin:26px 0 10px"><strong style="font-size:16px">Como começar, em 5 passos</strong></p>';
+		foreach ( $passos as $i => $p ) {
+			$html .= '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 14px;width:100%"><tr>'
+				. '<td valign="top" width="34" style="padding-top:2px"><div style="width:26px;height:26px;line-height:26px;text-align:center;background:#ffc629;color:#141414;font-weight:700;font-size:13px;border-radius:13px">' . ( $i + 1 ) . '</div></td>'
+				. '<td valign="top" style="font-size:14px;line-height:1.55"><strong>' . esc_html( $p[0] ) . '</strong><br>' . $p[1] . '</td>'
+				. '</tr></table>';
+		}
+		if ( $url_terminal ) {
+			$html .= '<p style="margin-top:20px">O terminal do caixa fica neste endereço. Vale salvar na tela inicial do celular do balcão:<br><a href="' . esc_url( $url_terminal ) . '" style="color:#141414">' . esc_html( $url_terminal ) . '</a></p>';
+		}
+		$html .= '<p style="font-size:13px;color:#6a6a6a">Ficou com dúvida em algum passo? É só responder este e-mail.</p>';
+
+		return $html;
+	}
+
 	public static function parceiro_aprovado( WP_User $user, $nome_estab, $url_terminal = '' ) {
 		$corpo  = '<p>A candidatura de <strong>' . esc_html( $nome_estab ) . '</strong> foi aprovada. Seu estabelecimento já faz parte do clube.</p>';
-		$corpo .= '<p>Primeiro passo: criar a sua senha. O link abaixo vale por 7 dias.</p>';
-		$corpo .= self::botao( self::link_senha( $user ), 'Definir minha senha' );
-
-		if ( $url_terminal ) {
-			$corpo .= '<p>Depois disso, seu terminal fica neste endereço — vale salvar na tela inicial do celular do balcão:</p>';
-			$corpo .= '<p><a href="' . esc_url( $url_terminal ) . '">' . esc_html( $url_terminal ) . '</a></p>';
-		}
-
+		$corpo .= '<p>Para começar, crie a sua senha:</p>';
+		$corpo .= self::botao( self::link_senha( $user ), 'Criar minha senha' );
 		$corpo .= '<p><strong>Seu login é:</strong> ' . esc_html( $user->user_email ) . '</p>';
-		$corpo .= '<p>Na área do parceiro você consulta o CPF do cliente, registra o uso do benefício, acompanha os números e edita os dados do estabelecimento.</p>';
+		$corpo .= self::passo_a_passo_parceiro( $url_terminal );
 
 		return wp_mail(
 			$user->user_email,
@@ -302,16 +325,10 @@ class CAV_Emails {
 	public static function parceiro_importado( WP_User $user, $nome_estab, $url_terminal = '' ) {
 		$corpo  = '<p>Olá, ' . esc_html( $user->display_name ) . '.</p>';
 		$corpo .= '<p><strong>' . esc_html( $nome_estab ) . '</strong> já está cadastrado como parceiro no clube de vantagens da Alliance.</p>';
-		$corpo .= '<p>Para entrar, crie a sua senha. O link abaixo vale por 7 dias:</p>';
+		$corpo .= '<p>Para começar, crie a sua senha:</p>';
 		$corpo .= self::botao( self::link_senha( $user ), 'Criar minha senha' );
-
-		if ( $url_terminal ) {
-			$corpo .= '<p>O terminal do caixa fica neste endereço. Vale salvar na tela inicial do celular do balcão:</p>';
-			$corpo .= '<p><a href="' . esc_url( $url_terminal ) . '">' . esc_html( $url_terminal ) . '</a></p>';
-		}
-
 		$corpo .= '<p><strong>Seu login é:</strong> ' . esc_html( $user->user_email ) . '</p>';
-		$corpo .= '<p>Na sua área você consulta o CPF do aluno, registra o uso do desconto, cria e muda as promoções e edita os dados do seu negócio. Se o link vencer, use "Esqueci minha senha" na página de entrar.</p>';
+		$corpo .= self::passo_a_passo_parceiro( $url_terminal );
 
 		return wp_mail(
 			$user->user_email,
