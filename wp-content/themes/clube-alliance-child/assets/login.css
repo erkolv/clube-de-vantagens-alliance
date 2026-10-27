@@ -16,14 +16,31 @@ body.login {
 /* Logo da Alliance no lugar do logo do WordPress */
 .login h1 { margin: 0 0 1.75rem; }
 .login h1 a {
+	position: relative;
 	display: block;
 	width: min(280px, 80vw);
-	height: 68px;
+	height: 96px;
 	margin: 0 auto;
-	background: url('logo-alliance-mogi.svg') center / contain no-repeat;
+	background: url('logo-alliance-mogi.svg') center top / 100% auto no-repeat;
 	text-indent: -9999px;
 	overflow: hidden;
 	white-space: nowrap;
+}
+/* "Clube de Vantagens" em dourado, embaixo do logo */
+.login h1 a::after {
+	content: 'Clube de Vantagens';
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	text-indent: 0;
+	text-align: center;
+	font-size: .65rem;
+	font-weight: 300;
+	font-style: italic;
+	letter-spacing: .34em;
+	text-transform: uppercase;
+	color: #ffc629;
 }
 .login h1 a:focus { box-shadow: none; outline: 2px solid #ffc629; outline-offset: 4px; }
 

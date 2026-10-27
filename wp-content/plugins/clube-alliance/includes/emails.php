@@ -23,7 +23,7 @@ class CAV_Emails {
 
 	/**
 	 * Logo para o cabeçalho do e-mail: o logo do site (Aparência → Personalizar → Identidade do site), se for
-	 * PNG, JPG ou GIF (Gmail e Outlook não mostram SVG). Sem logo, o e-mail usa o nome em texto, como o site.
+	 * PNG, JPG ou GIF (Gmail e Outlook não mostram SVG). Sem logo, o e-mail usa o nome em texto, como o site. Embaixo do logo vai sempre "Clube de Vantagens" em dourado.
 	 */
 	private static function logo() {
 		// O logo da Alliance em PNG (assets/logo-email.png). Se alguém definir outro em Aparência → Personalizar, ele vale no lugar.
@@ -48,7 +48,8 @@ class CAV_Emails {
 		$logo  = self::logo();
 
 		if ( $logo ) {
-			$marca = '<img src="' . esc_url( $logo ) . '" alt="Alliance Jiu Jitsu Mogi das Cruzes" width="220" style="display:block;border:0;width:220px;max-width:100%;height:auto">';
+			$marca = '<img src="' . esc_url( $logo ) . '" alt="Alliance Jiu Jitsu Mogi das Cruzes" width="220" style="display:block;border:0;width:220px;max-width:100%;height:auto">'
+				. '<div style="' . $fonte . 'font-size:10px;font-style:italic;letter-spacing:4px;text-transform:uppercase;color:#ffc629;margin-top:10px;line-height:1;width:220px;max-width:100%;text-align:center;padding-left:4px;box-sizing:border-box">Clube de Vantagens</div>';
 		} else {
 			$marca = '<div style="' . $fonte . 'font-size:22px;font-weight:700;letter-spacing:6px;text-transform:uppercase;color:#ffffff;line-height:1">Alliance</div>'
 				. '<div style="' . $fonte . 'font-size:10px;font-style:italic;letter-spacing:4px;text-transform:uppercase;color:#ffc629;margin-top:8px;line-height:1">Clube de Vantagens</div>';
