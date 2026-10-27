@@ -5,6 +5,7 @@
 		"ghcr.io/devcontainers/features/docker-in-docker:2": {}
 	},
 	"postCreateCommand": "bash scripts/setup.sh --demo",
+	"postStartCommand": "docker compose up -d",
 	"forwardPorts": [8080, 8025],
 	"portsAttributes": {
 		"8080": { "label": "Site WordPress", "onAutoForward": "notify" },
