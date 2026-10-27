@@ -536,3 +536,16 @@ body:not([class*="elementor-page-"]) .site-main { padding: 56px 24px 96px; box-s
 .elementor .e-con.clube-claro .elementor-widget-text-editor a { color: var(--clube-ocre); }
 .elementor .e-con .elementor-widget-text-editor strong { color: inherit; }
 .elementor .e-con .elementor-widget-text-editor strong.clube-ouro { color: var(--clube-ouro); }
+
+/* Texto só para leitor de tela (o "Menu" do botão). O Hello já traz isso; aqui garante caso o CSS dele não carregue. */
+.screen-reader-text {
+	position: absolute !important;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
