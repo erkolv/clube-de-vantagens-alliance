@@ -67,6 +67,8 @@ class CAV_Aprovacoes {
 			'aprovado'  => [ 'success', 'Acesso liberado e e-mail enviado.' ],
 			'recusado'  => [ 'warning', 'Pedido recusado e e-mail enviado.' ],
 			'reenviado' => [ 'success', 'Link de pagamento reenviado por e-mail.' ],
+			'pagamento' => [ 'error', 'Informe o código do pagamento (o número da transação no Pagar.me ou do comprovante) antes de aprovar.' ],
+			'pag_usado' => [ 'error', 'Este código de pagamento já foi usado para liberar outro participante. Confira o comprovante.' ],
 			'semlink'   => [ 'error', 'Ainda não há link de pagamento configurado. Cole os links em Clube → Configurações.' ],
 			'parceiro'  => [ 'success', 'Estabelecimento aprovado. E-mail com os dados de acesso enviado.' ],
 			'validade'  => [ 'error', 'Informe a data de validade antes de aprovar.' ],
@@ -153,11 +155,14 @@ class CAV_Aprovacoes {
 									<input type="hidden" name="action" value="cav_aprovar_membro">
 									<input type="hidden" name="user_id" value="<?php echo esc_attr( $u->ID ); ?>">
 									<?php wp_nonce_field( 'cav_aprovar_membro_' . $u->ID ); ?>
+									<label style="font-size:12px">Código do pagamento
+										<input type="text" name="pagamento" maxlength="60" placeholder="Pagar.me ou comprovante" required style="width:170px">
+									</label>
 									<label style="font-size:12px">Válido até
 										<input type="date" name="validade" value="<?php echo esc_attr( $padrao ); ?>" required>
 									</label>
 									<button class="button button-primary" name="decisao" value="aprovar">Aprovar</button>
-									<button class="button" name="decisao" value="recusar"
+									<button class="button" name="decisao" value="recusar" formnovalidate
 									        onclick="return confirm('Recusar este pedido? O aluno recebe um e-mail.');">Recusar</button>
 									<?php if ( $texto_pg ) : ?>
 										<button class="button" name="decisao" value="reenviar" formnovalidate>Reenviar link</button>
@@ -245,7 +250,7 @@ class CAV_Aprovacoes {
 		$decisao = isset( $_POST['decisao'] ) ? sanitize_text_field( wp_unslash( $_POST['decisao'] ) ) : '';
 
 		if ( 'recusar' === $decisao ) {
-			CAV_Solicitacoes::recusar_membro( $user_id, 'Matrícula não localizada.' );
+			CAV_Solicitacoes::recusar_membro( $user_id, 'Não encontramos o pagamento do clube. Fale com a recepção da Alliance.' );
 			self::volta( 'recusado' );
 		}
 
@@ -261,12 +266,33 @@ class CAV_Aprovacoes {
 			self::volta( 'reenviado' );
 		}
 
+		// O código do pagamento (Pagar.me ou comprovante) é o que liga o acesso ao pagamento. Obrigatório, e não pode se repetir.
+		$codigo = isset( $_POST['pagamento'] ) ? strtoupper( preg_replace( '/\s+/', '', sanitize_text_field( wp_unslash( $_POST['pagamento'] ) ) ) ) : '';
+		$codigo = substr( $codigo, 0, 60 );
+		if ( '' === $codigo ) {
+			self::volta( 'pagamento' );
+		}
+		$outros = get_users( [ 'meta_key' => CAV_Membro::META_PAG_COD, 'meta_value' => $codigo, 'exclude' => [ $user_id ], 'number' => 1, 'fields' => 'ids' ] );
+		if ( $outros ) {
+			self::volta( 'pag_usado' );
+		}
+
 		$validade = isset( $_POST['validade'] ) ? sanitize_text_field( wp_unslash( $_POST['validade'] ) ) : '';
 		$res      = CAV_Solicitacoes::aprovar_membro( $user_id, $validade );
 
 		if ( is_wp_error( $res ) ) {
 			self::volta( 'cav_validade' === $res->get_error_code() ? 'validade' : $res->get_error_message() );
 		}
+
+		$aceite = get_user_meta( $user_id, CAV_Solicitacoes::META_ACEITE, true );
+		update_user_meta( $user_id, CAV_Membro::META_PAG_COD, $codigo );
+		update_user_meta( $user_id, CAV_Membro::META_PAGAMENTO, [
+			'codigo' => $codigo,
+			'em'     => current_time( 'mysql' ),
+			'por'    => get_current_user_id(),
+			'valor'  => is_array( $aceite ) && isset( $aceite['valor'] ) ? $aceite['valor'] : '',
+			'tipo'   => CAV_Solicitacoes::tipo( $user_id ),
+		] );
 
 		self::volta( 'aprovado' );
 	}

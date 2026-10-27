@@ -63,6 +63,7 @@ class CAV_Alunos {
 				'idade'    => $idade,
 				'validade' => $val,
 				'pedido'   => (string) get_user_meta( $u->ID, CAV_Solicitacoes::META_PEDIDO, true ),
+				'pag'      => get_user_meta( $u->ID, CAV_Membro::META_PAGAMENTO, true ),
 				'resp'     => is_array( $resp ) && ! empty( $resp['nome'] ) ? (string) $resp['nome'] : '',
 			];
 		}
@@ -81,6 +82,7 @@ class CAV_Alunos {
 		$q = function_exists( 'mb_strtolower' ) ? mb_strtolower( trim( $busca ) ) : strtolower( trim( $busca ) );
 
 		return array_values( array_filter( $lista, static function ( $a ) use ( $q, $achado_cpf, $situacao, $tipo ) {
+			$cod = is_array( $a['pag'] ) && ! empty( $a['pag']['codigo'] ) ? strtolower( (string) $a['pag']['codigo'] ) : '';
 			if ( $situacao && $a['status'] !== $situacao ) {
 				return false;
 			}
@@ -95,7 +97,7 @@ class CAV_Alunos {
 				$email = strtolower( $a['email'] );
 				$zap   = preg_replace( '/\D+/', '', $a['zap'] );
 				$so_n  = preg_replace( '/\D+/', '', $q );
-				return false !== strpos( $nome, $q ) || false !== strpos( $email, $q ) || ( '' !== $so_n && strlen( $so_n ) >= 4 && false !== strpos( $zap, $so_n ) );
+				return false !== strpos( $nome, $q ) || false !== strpos( $email, $q ) || ( '' !== $cod && false !== strpos( $cod, $q ) ) || ( '' !== $so_n && strlen( $so_n ) >= 4 && false !== strpos( $zap, $so_n ) );
 			}
 			return true;
 		} ) );
@@ -167,7 +169,7 @@ class CAV_Alunos {
 			<form method="get" style="margin:14px 0;clear:both">
 				<input type="hidden" name="page" value="cav-alunos">
 				<?php if ( $p['situacao'] ) : ?><input type="hidden" name="situacao" value="<?php echo esc_attr( $p['situacao'] ); ?>"><?php endif; ?>
-				<input type="search" name="q" value="<?php echo esc_attr( $p['q'] ); ?>" placeholder="Nome, e-mail, CPF ou WhatsApp" style="min-width:280px">
+				<input type="search" name="q" value="<?php echo esc_attr( $p['q'] ); ?>" placeholder="Nome, e-mail, CPF, WhatsApp ou código do pagamento" style="min-width:280px">
 				<select name="tipo">
 					<option value="">Aluno e não aluno</option>
 					<option value="aluno" <?php selected( $p['tipo'], 'aluno' ); ?>>Só alunos</option>
@@ -185,7 +187,7 @@ class CAV_Alunos {
 				<table class="widefat striped">
 					<thead>
 						<tr>
-							<th>Participante</th><th>Situação</th><th>Válido até</th><th>CPF</th><th>Contato</th><th>Nascimento</th><th>CEP</th><th>Tipo</th><?php echo $pode ? '<th>Ações</th>' : ''; ?>
+							<th>Participante</th><th>Situação</th><th>Válido até</th><th>Pagamento</th><th>CPF</th><th>Contato</th><th>Nascimento</th><th>CEP</th><th>Tipo</th><?php echo $pode ? '<th>Ações</th>' : ''; ?>
 						</tr>
 					</thead>
 					<tbody>
@@ -199,6 +201,7 @@ class CAV_Alunos {
 							</td>
 							<td><span style="color:<?php echo esc_attr( $cor ); ?>;font-weight:600"><?php echo esc_html( $rot[ $a['status'] ] ?? '—' ); ?></span></td>
 							<td><?php echo esc_html( self::data( $a['validade'] ) ); ?></td>
+							<td><?php echo self::pagamento_html( $a['pag'] ); // phpcs:ignore WordPress.Security.EscapeOutput ?></td>
 							<td><?php echo esc_html( CAV_CPF::formatar( CAV_Membro::cpf_do_usuario( $a['id'] ) ) ?: '—' ); ?></td>
 							<td>
 								<?php echo esc_html( $a['email'] ); ?>
@@ -246,6 +249,16 @@ class CAV_Alunos {
 			<?php endif; ?>
 		</div>
 		<?php
+	}
+
+	/** Código do pagamento, quando e quem aprovou. */
+	private static function pagamento_html( $pag ) {
+		if ( ! is_array( $pag ) || empty( $pag['codigo'] ) ) {
+			return '<span class="description">—</span>';
+		}
+		$por = ! empty( $pag['por'] ) ? get_userdata( (int) $pag['por'] ) : null;
+		return '<code>' . esc_html( $pag['codigo'] ) . '</code><br><span class="description">aprovado em ' . esc_html( self::data( $pag['em'] ?? '' ) )
+			. ( $por ? ' por ' . esc_html( $por->display_name ) : '' ) . '</span>';
 	}
 
 	private static function aviso() {
@@ -339,7 +352,7 @@ class CAV_Alunos {
 			return ( '' !== $v && in_array( $v[0], [ '=', '+', '-', '@', "\t", "\r" ], true ) ) ? "'" . $v : $v;
 		};
 
-		fputcsv( $out, [ 'Nome', 'Situação', 'Válido até', 'CPF', 'E-mail', 'WhatsApp', 'Nascimento', 'CEP', 'Tipo', 'Responsável', 'Pedido em' ], ';' );
+		fputcsv( $out, [ 'Nome', 'Situação', 'Válido até', 'CPF', 'E-mail', 'WhatsApp', 'Nascimento', 'CEP', 'Tipo', 'Responsável', 'Pedido em', 'Código do pagamento', 'Pagamento confirmado em', 'Confirmado por' ], ';' );
 		foreach ( $lista as $a ) {
 			fputcsv( $out, [
 				$seguro( $a['nome'] ),
@@ -353,6 +366,9 @@ class CAV_Alunos {
 				CAV_Solicitacoes::rotulo_tipo( $a['tipo'] ),
 				$seguro( $a['resp'] ),
 				self::data( $a['pedido'] ),
+				$seguro( is_array( $a['pag'] ) ? ( $a['pag']['codigo'] ?? '' ) : '' ),
+				is_array( $a['pag'] ) ? self::data( $a['pag']['em'] ?? '' ) : '',
+				$seguro( is_array( $a['pag'] ) && ! empty( $a['pag']['por'] ) && get_userdata( (int) $a['pag']['por'] ) ? get_userdata( (int) $a['pag']['por'] )->display_name : '' ),
 			], ';' );
 		}
 		fclose( $out );

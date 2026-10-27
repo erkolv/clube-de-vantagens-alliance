@@ -10,6 +10,8 @@ class CAV_Membro {
 	const META_VALIDADE  = 'cav_validade';
 	const META_BLOQUEADO = 'cav_bloqueado';
 	const META_CONSENTE  = 'cav_consentimento';
+	const META_PAGAMENTO = 'cav_pagamento';        // array: codigo, em, por, valor, tipo (quem confirmou o pagamento e quando)
+	const META_PAG_COD   = 'cav_pagamento_codigo'; // só o código, em maiúsculas, para achar repetido
 
 	public static function init() {
 		add_action( 'show_user_profile', [ __CLASS__, 'campos_perfil' ] );
