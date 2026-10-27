@@ -16,28 +16,103 @@ class CAV_Emails {
 		];
 	}
 
-	/** Casca simples, legível em qualquer cliente de e-mail. */
-	private static function molde( $titulo, $corpo, $rodape = '' ) {
+	/** Cabeçalhos públicos, para os e-mails do WordPress que passam pelo mesmo visual. */
+	public static function cabecalhos() {
+		return self::headers();
+	}
+
+	/**
+	 * Logo para o cabeçalho do e-mail: o logo do site (Aparência → Personalizar → Identidade do site), se for
+	 * PNG, JPG ou GIF (Gmail e Outlook não mostram SVG). Sem logo, o e-mail usa o nome em texto, como o site.
+	 */
+	private static function logo() {
+		$url = '';
+		$id  = (int) get_theme_mod( 'custom_logo' );
+		if ( $id ) {
+			$arq = get_attached_file( $id );
+			if ( $arq && preg_match( '/\.(png|jpe?g|gif|webp)$/i', $arq ) ) {
+				$url = (string) wp_get_attachment_image_url( $id, 'medium' );
+			}
+		}
+		return (string) apply_filters( 'cav_email_logo', $url );
+	}
+
+	/** Casca do e-mail: faixa escura com a marca, cartão branco, rodapé. Só tabelas e estilo em linha, para funcionar em qualquer cliente. */
+	public static function molde( $titulo, $corpo, $rodape = '' ) {
 		if ( '' === $rodape ) {
 			$rodape = 'Você recebeu este e-mail porque solicitou acesso ao clube de vantagens. Em caso de dúvida, responda esta mensagem.';
 		}
 
-		$marca = get_bloginfo( 'name' );
+		$fonte = "font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;";
+		$logo  = self::logo();
 
-		return '<div style="font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#141414;max-width:560px;margin:0 auto;padding:24px">'
-			. '<p style="font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#8A8A8A;margin:0 0 18px">' . esc_html( $marca ) . '</p>'
-			. '<h1 style="font-size:22px;line-height:1.25;margin:0 0 18px">' . esc_html( $titulo ) . '</h1>'
+		if ( $logo ) {
+			$marca = '<img src="' . esc_url( $logo ) . '" alt="Alliance Mogi das Cruzes" height="48" style="display:block;border:0;height:48px;width:auto;max-width:240px">';
+		} else {
+			$marca = '<div style="' . $fonte . 'font-size:22px;font-weight:700;letter-spacing:6px;text-transform:uppercase;color:#ffffff;line-height:1">Alliance</div>'
+				. '<div style="' . $fonte . 'font-size:10px;font-style:italic;letter-spacing:4px;text-transform:uppercase;color:#ffc629;margin-top:8px;line-height:1">Clube de Vantagens</div>';
+		}
+
+		$home = esc_url( home_url( '/' ) );
+
+		return '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"></head>'
+			. '<body style="margin:0;padding:0;background:#ececec">'
+			. '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ececec"><tr><td align="center" style="padding:24px 12px">'
+			. '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:580px">'
+			// faixa escura com a marca
+			. '<tr><td style="background:#141414;padding:26px 32px;border-bottom:4px solid #ffc629"><a href="' . $home . '" style="text-decoration:none;display:inline-block">' . $marca . '</a></td></tr>'
+			// cartão
+			. '<tr><td style="background:#ffffff;padding:34px 32px 30px;' . $fonte . 'font-size:15px;line-height:1.65;color:#222222">'
+			. '<h1 style="' . $fonte . 'font-size:24px;line-height:1.25;font-weight:700;color:#141414;margin:0 0 20px">' . esc_html( $titulo ) . '</h1>'
 			. $corpo
-			. '<p style="margin-top:32px;padding-top:18px;border-top:1px solid #E4E4E4;font-size:13px;color:#8A8A8A">'
+			. '</td></tr>'
+			// rodapé
+			. '<tr><td style="background:#141414;padding:22px 32px;' . $fonte . 'font-size:12px;line-height:1.6;color:#9a9a9a">'
 			. esc_html( $rodape )
-			. '</p></div>';
+			. '<br><br><span style="color:#ffc629;letter-spacing:2px;text-transform:uppercase;font-size:11px">Alliance Mogi das Cruzes</span>'
+			. '</td></tr>'
+			. '</table></td></tr></table></body></html>';
 	}
 
 	private static function botao( $url, $texto ) {
-		return '<p style="margin:24px 0"><a href="' . esc_url( $url ) . '" '
-			. 'style="display:inline-block;background:#141414;color:#fff;text-decoration:none;'
-			. 'padding:14px 24px;font-size:13px;letter-spacing:.08em;text-transform:uppercase">'
-			. esc_html( $texto ) . '</a></p>';
+		return '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:26px 0"><tr><td style="background:#ffc629;border-radius:2px">'
+			. '<a href="' . esc_url( $url ) . '" style="display:inline-block;padding:15px 30px;font-family:\'Helvetica Neue\',Helvetica,Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#141414;text-decoration:none">'
+			. esc_html( $texto ) . '</a></td></tr></table>'
+			. '<p style="margin:0 0 6px;font-size:12px;color:#8a8a8a">Se o botão não abrir, copie este endereço no navegador:<br><a href="' . esc_url( $url ) . '" style="color:#8a8a8a;word-break:break-all">' . esc_html( $url ) . '</a></p>';
+	}
+
+	/** Os e-mails que o próprio WordPress manda (redefinir senha, senha alterada) usam o mesmo visual. */
+	public static function init() {
+		add_filter( 'retrieve_password_notification_email', [ __CLASS__, 'wp_redefinir_senha' ], 10, 4 );
+		add_filter( 'password_change_email', [ __CLASS__, 'wp_senha_alterada' ], 10, 3 );
+	}
+
+	public static function wp_redefinir_senha( $email, $chave, $login, $user ) {
+		$url = network_site_url( 'wp-login.php?login=' . rawurlencode( $login ) . '&key=' . $chave . '&action=rp', 'login' );
+
+		$corpo  = '<p>Olá, ' . esc_html( CAV_Membro::primeiro_nome( $user ) ) . '.</p>';
+		$corpo .= '<p>Recebemos um pedido para criar uma nova senha no clube de vantagens da Alliance.</p>';
+		$corpo .= '<p><strong>Seu login:</strong> ' . esc_html( $login ) . '</p>';
+		$corpo .= self::botao( $url, 'Criar nova senha' );
+		$corpo .= '<p>O link vale por poucas horas. Se não foi você que pediu, é só ignorar este e-mail: nada muda na sua conta.</p>';
+
+		$email['subject'] = 'Criar nova senha no clube da Alliance';
+		$email['message'] = self::molde( 'Criar nova senha', $corpo, 'Você recebeu este e-mail porque alguém pediu a troca de senha no clube de vantagens da Alliance Mogi das Cruzes.' );
+		$email['headers'] = self::headers();
+
+		return $email;
+	}
+
+	public static function wp_senha_alterada( $mail, $user, $dados ) {
+		$corpo  = '<p>Olá, ' . esc_html( CAV_Membro::primeiro_nome( $user ) ) . '.</p>';
+		$corpo .= '<p>A senha da sua conta no clube de vantagens acabou de ser alterada.</p>';
+		$corpo .= '<p>Se foi você, não precisa fazer nada. <strong>Se não foi, fale com a recepção da Alliance agora.</strong></p>';
+
+		$mail['subject'] = 'Sua senha do clube foi alterada';
+		$mail['message'] = self::molde( 'Senha alterada', $corpo, 'Aviso de segurança do clube de vantagens da Alliance Mogi das Cruzes.' );
+		$mail['headers'] = self::headers();
+
+		return $mail;
 	}
 
 	/** Link de definição de senha, válido conforme o padrão do WordPress. */
