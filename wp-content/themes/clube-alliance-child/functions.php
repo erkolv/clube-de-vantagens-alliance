@@ -165,3 +165,27 @@ add_filter( 'login_headertext', function () {
 
 // A tela de "esqueci a senha" tem "Voltar para o site" e "Entrar": o segundo vai para a página nova.
 add_filter( 'login_site_html_link', '__return_empty_string' );
+
+/**
+ * Ícone do site (aba do navegador, favoritos, tela inicial do celular).
+ * Se alguém definir um em Aparência > Personalizar > Identidade do site, o dele vale.
+ * Sem isso, usa o ícone da Alliance Mogi das Cruzes, no site, no entrar e no painel.
+ */
+add_filter( 'get_site_icon_url', function ( $url, $tamanho ) {
+	if ( (int) get_option( 'site_icon' ) > 0 && $url ) {
+		return $url;
+	}
+
+	$tamanho = (int) $tamanho;
+	if ( $tamanho > 0 && $tamanho <= 32 ) {
+		$arquivo = 'favicon-32.png';
+	} elseif ( 180 === $tamanho ) {
+		$arquivo = 'apple-touch-icon.png';
+	} elseif ( $tamanho > 0 && $tamanho <= 192 ) {
+		$arquivo = 'favicon-192.png';
+	} else {
+		$arquivo = 'favicon-512.png';
+	}
+
+	return get_stylesheet_directory_uri() . '/assets/' . $arquivo;
+}, 10, 2 );
