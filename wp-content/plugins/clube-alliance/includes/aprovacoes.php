@@ -94,7 +94,7 @@ class CAV_Aprovacoes {
 			<h1>Aprovações do clube</h1>
 			<?php self::aviso(); ?>
 
-			<h2>Alunos aguardando <span class="count">(<?php echo count( $membros ); ?>)</span></h2>
+			<h2>Participantes aguardando <span class="count">(<?php echo count( $membros ); ?>)</span></h2>
 			<p class="description">
 				Aprove só depois de confirmar o pagamento, na recepção ou pelo link (aluno: <?php echo esc_html( CAV_Config::valor_formatado() ); ?>; não aluno: <?php echo esc_html( CAV_Config::valor_nao_aluno_formatado() ); ?>; por <?php echo esc_html( CAV_Config::prazo_formatado() ); ?>).
 				O botão "WhatsApp" abre a conversa com o link de pagamento já escrito; é só enviar.

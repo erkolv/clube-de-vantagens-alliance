@@ -4,8 +4,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Aprovações → Alunos: a lista de todos os alunos do clube, com os dados do cadastro, filtros e busca.
- * A recepção e a administração veem a lista; só a administração baixa a planilha (Excel).
+ * Aprovações → Participantes: todos os participantes do clube (alunos e quem não é aluno), com os dados do cadastro,
+ * filtros e busca. A recepção e a administração veem a lista; só a administração baixa a planilha, bloqueia e exclui.
  */
 class CAV_Alunos {
 
@@ -14,13 +14,14 @@ class CAV_Alunos {
 	public static function init() {
 		add_action( 'admin_menu', [ __CLASS__, 'menu' ], 10 );
 		add_action( 'admin_post_cav_alunos_csv', [ __CLASS__, 'baixar' ] );
+		add_action( 'admin_post_cav_participante', [ __CLASS__, 'acao' ] );
 	}
 
 	public static function menu() {
 		add_submenu_page(
 			'cav-aprovacoes',
-			'Alunos do clube',
-			'Alunos',
+			'Participantes do clube',
+			'Participantes',
 			'cav_aprovar',
 			'cav-alunos',
 			[ __CLASS__, 'tela' ]
@@ -142,13 +143,15 @@ class CAV_Alunos {
 		$visiveis = array_slice( $lista, ( $pag - 1 ) * self::POR_PAGINA, self::POR_PAGINA );
 
 		$base = admin_url( 'admin.php?page=cav-alunos' );
+		$pode = current_user_can( 'cav_gerenciar' );
 		?>
 		<div class="wrap">
-			<h1 class="wp-heading-inline">Alunos do clube</h1>
+			<h1 class="wp-heading-inline">Participantes do clube</h1>
 			<?php if ( current_user_can( 'cav_gerenciar' ) ) : ?>
 				<a class="page-title-action" href="<?php echo esc_url( wp_nonce_url( add_query_arg( array_filter( [ 'action' => 'cav_alunos_csv', 'situacao' => $p['situacao'], 'tipo' => $p['tipo'], 'q' => $p['q'] ] ), admin_url( 'admin-post.php' ) ), 'cav_alunos_csv' ) ); ?>">Baixar planilha (Excel)</a>
 			<?php endif; ?>
 			<hr class="wp-header-end">
+			<?php self::aviso(); ?>
 
 			<ul class="subsubsub">
 				<li><a href="<?php echo esc_url( add_query_arg( array_filter( [ 'tipo' => $p['tipo'], 'q' => $p['q'] ] ), $base ) ); ?>" class="<?php echo $p['situacao'] ? '' : 'current'; ?>">Todos <span class="count">(<?php echo (int) count( $todos ); ?>)</span></a></li>
@@ -177,12 +180,12 @@ class CAV_Alunos {
 			</form>
 
 			<?php if ( ! $visiveis ) : ?>
-				<p>Nenhum aluno encontrado.</p>
+				<p>Nenhum participante encontrado.</p>
 			<?php else : ?>
 				<table class="widefat striped">
 					<thead>
 						<tr>
-							<th>Aluno</th><th>Situação</th><th>Válido até</th><th>CPF</th><th>Contato</th><th>Nascimento</th><th>CEP</th><th>Tipo</th>
+							<th>Participante</th><th>Situação</th><th>Válido até</th><th>CPF</th><th>Contato</th><th>Nascimento</th><th>CEP</th><th>Tipo</th><?php echo $pode ? '<th>Ações</th>' : ''; ?>
 						</tr>
 					</thead>
 					<tbody>
@@ -204,13 +207,31 @@ class CAV_Alunos {
 							<td><?php echo esc_html( self::data( $a['nasc'] ) ); ?><?php echo null !== $a['idade'] ? ' <span class="description">(' . (int) $a['idade'] . ' anos)</span>' : ''; ?></td>
 							<td><?php echo esc_html( CAV_Solicitacoes::formatar_cep( $a['cep'] ) ?: '—' ); ?></td>
 							<td><?php echo esc_html( CAV_Solicitacoes::rotulo_tipo( $a['tipo'] ) ); ?></td>
+							<?php if ( $pode ) : ?>
+								<td>
+									<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:flex;gap:6px;flex-wrap:wrap">
+										<input type="hidden" name="action" value="cav_participante">
+										<input type="hidden" name="user_id" value="<?php echo (int) $a['id']; ?>">
+										<input type="hidden" name="volta" value="<?php echo esc_attr( add_query_arg( array_filter( [ 'situacao' => $p['situacao'], 'tipo' => $p['tipo'], 'q' => $p['q'], 'pag' => $pag > 1 ? $pag : null ] ), $base ) ); ?>">
+										<?php wp_nonce_field( 'cav_participante_' . $a['id'] ); ?>
+										<?php if ( 'bloqueado' === $a['status'] ) : ?>
+											<button class="button" name="decisao" value="desbloquear">Desbloquear</button>
+										<?php else : ?>
+											<button class="button" name="decisao" value="bloquear"
+											        onclick="return confirm('Bloquear este participante? Ele deixa de ter os descontos até você desbloquear.');">Bloquear</button>
+										<?php endif; ?>
+										<button class="button" name="decisao" value="excluir" style="color:#b32d2e;border-color:#b32d2e"
+										        onclick="return confirm('Excluir <?php echo esc_js( $a['nome'] ); ?> de vez? Os dados do cadastro (CPF, contato, inscrições em sorteios) são apagados e não dá para desfazer.');">Excluir</button>
+									</form>
+								</td>
+							<?php endif; ?>
 						</tr>
 					<?php endforeach; ?>
 					</tbody>
 				</table>
 
 				<p class="description" style="margin-top:10px">
-					<?php echo (int) $total; ?> aluno(s)<?php echo $paginas > 1 ? ', página ' . (int) $pag . ' de ' . (int) $paginas : ''; ?>.
+					<?php echo (int) $total; ?> participante(s)<?php echo $paginas > 1 ? ', página ' . (int) $pag . ' de ' . (int) $paginas : ''; ?>.
 				</p>
 				<?php if ( $paginas > 1 ) : ?>
 					<p>
@@ -227,6 +248,74 @@ class CAV_Alunos {
 		<?php
 	}
 
+	private static function aviso() {
+		// phpcs:ignore WordPress.Security.NonceVerification
+		$c = isset( $_GET['cav_msg'] ) ? sanitize_key( wp_unslash( $_GET['cav_msg'] ) ) : '';
+		$mapa = [
+			'bloqueado'    => [ 'warning', 'Participante bloqueado.' ],
+			'desbloqueado' => [ 'success', 'Participante desbloqueado.' ],
+			'excluido'     => [ 'success', 'Participante excluído, com os dados do cadastro.' ],
+			'invalido'     => [ 'error', 'Não foi possível: só dá para atuar em participantes do clube.' ],
+		];
+		if ( isset( $mapa[ $c ] ) ) {
+			printf( '<div class="notice notice-%s is-dismissible"><p>%s</p></div>', esc_attr( $mapa[ $c ][0] ), esc_html( $mapa[ $c ][1] ) );
+		}
+	}
+
+	/** Bloquear, desbloquear e excluir. Só a administração. */
+	public static function acao() {
+		$user_id = isset( $_POST['user_id'] ) ? absint( $_POST['user_id'] ) : 0;
+
+		if ( ! current_user_can( 'cav_gerenciar' ) ) {
+			wp_die( 'Sem permissão.', '', [ 'response' => 403 ] );
+		}
+		check_admin_referer( 'cav_participante_' . $user_id );
+
+		$padrao = admin_url( 'admin.php?page=cav-alunos' );
+		$volta  = isset( $_POST['volta'] ) ? wp_validate_redirect( esc_url_raw( wp_unslash( $_POST['volta'] ) ), $padrao ) : $padrao;
+		$volta  = remove_query_arg( 'cav_msg', $volta );
+		$u      = get_userdata( $user_id );
+
+		// Só participante do clube: nunca administrador, recepção, parceiro nem a própria conta.
+		if ( ! $u || $user_id === get_current_user_id() || [ 'cav_membro' ] !== array_values( (array) $u->roles ) ) {
+			wp_safe_redirect( add_query_arg( 'cav_msg', 'invalido', $volta ) );
+			exit;
+		}
+
+		$decisao = isset( $_POST['decisao'] ) ? sanitize_key( wp_unslash( $_POST['decisao'] ) ) : '';
+
+		if ( 'bloquear' === $decisao ) {
+			update_user_meta( $user_id, CAV_Membro::META_BLOQUEADO, '1' );
+			$msg = 'bloqueado';
+		} elseif ( 'desbloquear' === $decisao ) {
+			delete_user_meta( $user_id, CAV_Membro::META_BLOQUEADO );
+			$msg = 'desbloqueado';
+		} elseif ( 'excluir' === $decisao ) {
+			self::excluir( $user_id );
+			$msg = 'excluido';
+		} else {
+			$msg = 'invalido';
+		}
+
+		wp_safe_redirect( add_query_arg( 'cav_msg', $msg, $volta ) );
+		exit;
+	}
+
+	/**
+	 * Apaga o participante e o que o identifica. Os usos de benefício ficam só como número nos relatórios
+	 * dos parceiros, sem ligação com a pessoa (membro 0, sem IP).
+	 */
+	public static function excluir( $user_id ) {
+		global $wpdb;
+		$user_id = (int) $user_id;
+
+		$wpdb->update( CAV_Install::tabela_usos(), [ 'membro_id' => 0, 'ip' => null ], [ 'membro_id' => $user_id ] );
+		$wpdb->delete( CAV_Install::tabela_inscricoes(), [ 'membro_id' => $user_id ] );
+
+		require_once ABSPATH . 'wp-admin/includes/user.php';
+		wp_delete_user( $user_id );
+	}
+
 	/** Planilha para Excel (separada por ponto e vírgula, com acento certo). Só a administração. */
 	public static function baixar() {
 		if ( ! current_user_can( 'cav_gerenciar' ) ) {
@@ -240,7 +329,7 @@ class CAV_Alunos {
 
 		nocache_headers();
 		header( 'Content-Type: text/csv; charset=utf-8' );
-		header( 'Content-Disposition: attachment; filename="alunos-clube-' . wp_date( 'Y-m-d' ) . '.csv"' );
+		header( 'Content-Disposition: attachment; filename="participantes-clube-' . wp_date( 'Y-m-d' ) . '.csv"' );
 
 		$out = fopen( 'php://output', 'w' );
 		fwrite( $out, "\xEF\xBB\xBF" ); // Excel reconhece o acento
