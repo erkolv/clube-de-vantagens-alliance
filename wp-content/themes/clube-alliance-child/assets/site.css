@@ -499,13 +499,24 @@ body:not([class*="elementor-page-"]) .site-main { padding: 56px 24px 96px; box-s
 .elementor .e-con .clube-selo .elementor-widget-text-editor { font-size: .88rem; color: var(--clube-cinza); }
 
 /* Tabela de custo e retorno */
-.clube-tabela { width: 100%; border-collapse: collapse; font-size: .95rem; }
-.clube-tabela td { padding: 14px 0; border-bottom: 1px solid var(--clube-linha); vertical-align: top; }
-.clube-tabela td:last-child { text-align: right; white-space: nowrap; color: #fff; }
-.clube-tabela tr.total td { color: var(--clube-ouro); font-weight: 600; border-bottom: 0; }
-.elementor .e-con.clube-claro .clube-tabela td { border-bottom-color: rgba(0, 0, 0, .14); }
-.elementor .e-con.clube-claro .clube-tabela td:last-child { color: #141414; }
-.elementor .e-con.clube-claro .clube-tabela tr.total td { color: var(--clube-ocre); }
+/* O tema pai (Hello) põe borda em toda célula e fundo listrado nas linhas; aqui fica só o filete entre as linhas. */
+table.clube-tabela { width: 100%; margin: 4px 0 0; border: 0; border-collapse: collapse; font-size: .95rem; background: transparent; }
+table.clube-tabela tbody > tr > td,
+table.clube-tabela tbody > tr:nth-child(odd) > td,
+table.clube-tabela tbody > tr:hover > td {
+	padding: 14px 0;
+	border: 0;
+	border-bottom: 1px solid var(--clube-linha);
+	background: transparent;
+	vertical-align: baseline;
+	line-height: 1.4;
+}
+table.clube-tabela tbody > tr > td:first-child { padding-right: 16px; }
+table.clube-tabela tbody > tr > td:last-child { text-align: right; white-space: nowrap; color: #fff; font-variant-numeric: tabular-nums; }
+table.clube-tabela tbody > tr.total > td { padding-top: 18px; color: var(--clube-ouro); font-weight: 600; border-bottom: 0; }
+.elementor .e-con.clube-claro table.clube-tabela tbody > tr > td { border-bottom-color: rgba(0, 0, 0, .12); color: #3a3a3a; }
+.elementor .e-con.clube-claro table.clube-tabela tbody > tr > td:last-child { color: #141414; }
+.elementor .e-con.clube-claro table.clube-tabela tbody > tr.total > td { color: var(--clube-ocre); border-bottom: 0; }
 
 /* Formulários do plugin dentro das páginas */
 .elementor .e-con.clube-forma { max-width: 720px; margin-inline: auto; padding: 56px 24px 96px; }
