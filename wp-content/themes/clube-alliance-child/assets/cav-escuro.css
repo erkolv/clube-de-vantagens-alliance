@@ -57,6 +57,9 @@
 .cav-btn {
 	color: #141414;
 }
+.cav-btn.cav-btn-ghost:focus { color: #ffc629; border-color: #ffc629; }
+.cav-btn.cav-btn-ghost:hover,
+.cav-btn.cav-btn-ghost:focus-visible { color: #141414; }
 
 .cav-btn-ghost {
 	color: #ffc629;

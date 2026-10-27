@@ -34,6 +34,29 @@
 }
 
 /* ---------- Botões ---------- */
+/*
+ * O tema Hello Elementor pinta todo <button> e todo botão de enviar de rosa (#c36)
+ * no estado normal, no hover e no foco. Aqui nenhum botão fica rosa: o que não tem
+ * estilo próprio usa a marca. Botões com estilo próprio (classes abaixo e do plugin)
+ * têm seletor mais forte e continuam como estão.
+ */
+[type="button"],
+[type="submit"],
+button {
+	border-color: var(--clube-ouro);
+	color: var(--clube-ouro);
+}
+[type="button"]:hover,
+[type="button"]:focus,
+[type="submit"]:hover,
+[type="submit"]:focus,
+button:hover,
+button:focus {
+	background-color: var(--clube-ouro);
+	border-color: var(--clube-ouro);
+	color: #141414;
+}
+
 .clube-btn,
 a.clube-btn {
 	display: inline-block;

@@ -107,11 +107,25 @@
 
 .cav-btn[disabled] { opacity: .55; cursor: default; }
 
+/*
+ * O tema Hello Elementor pinta botão de rosa (#c36) no hover e no foco (e o foco fica
+ * depois do clique). Aqui o botão segue a marca: no hover ele vira "vazado".
+ * Seletor com a classe duas vezes para ganhar do tema sem depender da ordem dos arquivos.
+ */
+.cav-btn.cav-btn { transition: background .15s, color .15s; }
+.cav-btn.cav-btn:focus { background: var(--cav-marca); color: var(--cav-papel); border-color: var(--cav-marca); }
+.cav-btn.cav-btn:hover,
+.cav-btn.cav-btn:focus-visible { background: transparent; color: var(--cav-marca); border-color: var(--cav-marca); }
+.cav-btn.cav-btn[disabled]:hover { background: var(--cav-marca); color: var(--cav-papel); }
+
 .cav-btn-ghost {
 	background: transparent;
 	color: var(--cav-tinta);
 	border-color: var(--cav-linha);
 }
+.cav-btn.cav-btn-ghost:focus { background: transparent; color: var(--cav-tinta); border-color: var(--cav-linha); }
+.cav-btn.cav-btn-ghost:hover,
+.cav-btn.cav-btn-ghost:focus-visible { background: var(--cav-marca); color: var(--cav-papel); border-color: var(--cav-marca); }
 
 /* Bloco de resposta: precisa ser legível do outro lado do balcão. */
 .cav-resultado {

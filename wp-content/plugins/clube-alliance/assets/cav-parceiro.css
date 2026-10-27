@@ -36,10 +36,13 @@
 	text-decoration: none;
 	cursor: pointer;
 }
-.cav-p-botao:hover { filter: brightness(.94); color: #141414; }
+/* background explícito: sem ele o tema Hello Elementor pinta o botão de rosa no hover e no foco */
+.cav-p-botao:hover,
+.cav-p-botao:focus { background: var(--cav-destaque); color: #141414; filter: brightness(.94); }
 .cav-p-botao:focus-visible, .cav-p-pagina .cav-link-botao:focus-visible { outline: 3px solid var(--cav-destaque); outline-offset: 2px; }
 .cav-p-pagina button.cav-link-botao { background: transparent; font-family: inherit; cursor: pointer; }
 .cav-p-pagina button.cav-link-botao:hover { background: var(--cav-destaque); color: #141414; }
+.cav-p-pagina button.cav-link-botao:focus:not(:hover) { background: transparent; color: var(--cav-tinta); }
 .cav-link-botao--perigo { border-color: var(--cav-nao) !important; color: var(--cav-nao) !important; }
 .cav-link-botao--perigo:hover { background: var(--cav-nao) !important; color: #fff !important; }
 

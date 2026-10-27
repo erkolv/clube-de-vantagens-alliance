@@ -221,6 +221,7 @@
 	color: var(--cav-tinta);
 }
 .cav-link-botao:hover { background: var(--cav-destaque); color: #141414; }
+button.cav-link-botao:focus:not(:hover) { background: transparent; color: var(--cav-tinta); }
 
 @media (max-width: 860px) {
 	.cav-agenda__layout { grid-template-columns: 1fr; gap: 1.75rem; }
