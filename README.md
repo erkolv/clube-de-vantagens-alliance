@@ -196,18 +196,23 @@ Atrás de Cloudflare ou outro proxy, o endereço do visitante chega num cabeçal
 
 ## Levar para a hospedagem
 
+Não precisa de terminal no servidor: basta o painel do WordPress e um acesso SFTP.
+
 ```bash
 ./scripts/empacotar.sh
 ```
 
-Gera dois zips em `dist/`: `clube-alliance.zip` e `clube-alliance-child.zip`. No WordPress do subdomínio (por exemplo `clube.alliancemogi.com.br`):
+Gera dois zips em `dist/`: `clube-alliance.zip` (o plugin, já com a pasta `instalar/` que monta o site) e `clube-alliance-child.zip` (o tema). No WordPress da hospedagem:
 
-1. Instale e ative o Elementor e o tema Hello Elementor.
-2. Plugins → Adicionar → Enviar plugin → `clube-alliance.zip` → ativar.
-3. Aparência → Temas → Adicionar → Enviar tema → `clube-alliance-child.zip` → ativar.
-4. Configurações → Geral: fuso `America/Sao_Paulo`. A validade do acesso do aluno vence à meia-noite desse fuso.
-5. Crie as páginas da tabela acima e salve a URL do terminal: `update_option( 'cav_url_terminal', 'https://clube.alliancemogi.com.br/terminal/' );`
-6. Faça a lista da seção **Segurança** acima antes de divulgar. O principal: a chave `CAV_CHAVE_DADOS` no `wp-config.php` **antes** de importar o primeiro aluno.
+1. Plugins → Adicionar novo → **Elementor** → Instalar → Ativar.
+2. Aparência → Temas → Adicionar novo → **Hello Elementor** → Instalar (não precisa ativar).
+3. Aparência → Temas → Adicionar novo → Enviar tema → `clube-alliance-child.zip` → Ativar.
+4. Plugins → Adicionar novo → Enviar plugin → `clube-alliance.zip` → Ativar.
+5. **Clube → Instalação**: a tela mostra o que está certo e o que falta. Ela sugere a linha da chave `CAV_CHAVE_DADOS`: pelo SFTP, baixe o `wp-config.php`, cole a linha antes de `/* That's all, stop editing!`, envie de volta e guarde uma cópia da linha fora do servidor. Faça isso **antes** do primeiro cadastro.
+6. Ainda em **Clube → Instalação**, clique em **Montar o site**. Faz o mesmo que o `setup.sh` (fuso, datas, links permanentes, páginas, menu, áreas do aluno e do parceiro, páginas no Elementor, sorteios do calendário, paleta e a URL do terminal), menos os dados de teste. Pode clicar de novo: o que existe é mantido. Código em `includes/instalar.php`.
+7. Faça a lista da seção **Segurança** acima antes de divulgar.
+
+Para atualizar depois: gere os zips de novo e envie pelo mesmo caminho (Plugins → Adicionar novo → Enviar plugin; o WordPress pergunta se quer substituir a versão instalada). Se a atualização mudou o texto das páginas, o botão Montar o site refaz só as cinco páginas principais, uma vez (`CAV_Instalar::PAGINAS_VERSAO`, igual ao `PAGINAS_VERSAO` do `setup.sh`; os dois andam juntos).
 
 ## O que ainda não está resolvido
 
