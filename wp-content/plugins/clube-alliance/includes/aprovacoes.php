@@ -253,6 +253,10 @@ class CAV_Aprovacoes {
 	}
 
 	private static function volta( $codigo ) {
+		if ( isset( $_POST['voltar'] ) && 'app' === $_POST['voltar'] && class_exists( 'CAV_AppParceiros' ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+			wp_safe_redirect( CAV_AppParceiros::url( [ 'cav_msg' => rawurlencode( $codigo ) ] ) );
+			exit;
+		}
 		wp_safe_redirect( admin_url( 'admin.php?page=cav-aprovacoes&cav_msg=' . rawurlencode( $codigo ) ) );
 		exit;
 	}
@@ -362,6 +366,10 @@ class CAV_Aprovacoes {
 			self::volta( $res->get_error_message() );
 		}
 
+		$app = isset( $_POST['voltar'] ) && 'app' === $_POST['voltar']; // phpcs:ignore WordPress.Security.NonceVerification
+		if ( $app ) {
+			self::volta( 'atual' === get_post_meta( $post_id, CAV_Solicitacoes::CAND_ORIGEM, true ) ? 'parceiro_atual' : 'parceiro_novo' );
+		}
 		self::volta( 'parceiro' );
 	}
 }
