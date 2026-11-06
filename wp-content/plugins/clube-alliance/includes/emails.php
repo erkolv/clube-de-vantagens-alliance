@@ -225,10 +225,14 @@ class CAV_Emails {
 		}
 
 		$tipo = CAV_Solicitacoes::tipo( $user->ID );
-		$nome = trim( $user->first_name . ' ' . $user->last_name );
+		// O pedido guarda o nome completo em display_name (first_name é só a primeira palavra).
+		$nome = trim( (string) $user->display_name );
+		if ( '' === $nome || false !== strpos( $nome, '@' ) ) {
+			$nome = trim( $user->first_name . ' ' . $user->last_name );
+		}
 
 		$m = CAV_Modelos::montar( 'equipe_novo_pedido', [
-			'nome'     => '' !== $nome ? $nome : $user->display_name,
+			'nome'     => '' !== $nome ? $nome : $user->user_email,
 			'email'    => $user->user_email,
 			'whatsapp' => (string) get_user_meta( $user->ID, CAV_Solicitacoes::META_WHATSAPP, true ),
 			'tipo'     => CAV_Solicitacoes::rotulo_tipo( $tipo ),
