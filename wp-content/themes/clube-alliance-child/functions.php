@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'CLUBE_CHILD_VERSION', '0.3.0' );
+define( 'CLUBE_CHILD_VERSION', '0.3.1' );
 
 add_action( 'wp_enqueue_scripts', function () {
 	wp_enqueue_style(

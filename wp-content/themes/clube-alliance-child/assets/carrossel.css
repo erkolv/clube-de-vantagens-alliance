@@ -86,11 +86,12 @@
 .cav-carrossel .cav-carrossel__trilho > .elementor-widget-video:hover { border-color: var(--cav-ouro); transform: translateY(-4px); }
 .cav-carrossel .cav-carrossel__trilho > .elementor-widget-video.com-som { border-color: var(--cav-ouro); }
 
-.cav-carrossel .cav-carrossel__trilho > .elementor-widget-video > *,
 .cav-carrossel .cav-carrossel__trilho > .elementor-widget-video .elementor-wrapper {
 	position: absolute;
 	inset: 0;
+	width: 100%;
 	height: 100%;
+	aspect-ratio: auto;
 }
 
 .cav-carrossel .cav-carrossel__trilho video {
@@ -100,7 +101,7 @@
 	display: block;
 }
 
-.cav-carrossel__som {
+.cav-carrossel .cav-carrossel__som {
 	position: absolute;
 	top: 12px;
 	right: 12px;
