@@ -41,6 +41,9 @@ class CAV_AreaParceiro {
 
 		add_action( 'add_meta_boxes', [ __CLASS__, 'metabox' ] );
 		add_action( 'admin_enqueue_scripts', [ __CLASS__, 'midia_no_admin' ] );
+		add_action( 'admin_post_cav_reenviar_acesso_parceiro', [ __CLASS__, 'reenviar_acesso' ] );
+		add_action( 'admin_notices', [ __CLASS__, 'aviso_reenvio' ] );
+		add_filter( 'post_row_actions', [ __CLASS__, 'acao_na_lista' ], 10, 2 );
 		add_action( 'save_post', [ __CLASS__, 'salvar_metabox' ] );
 	}
 
@@ -742,7 +745,82 @@ class CAV_AreaParceiro {
 
 	/* ------------------- Campos do negócio no painel do WordPress ------------------- */
 
+	/** Contas de acesso ligadas ao estabelecimento. */
+	public static function contas( $parceiro_id ) {
+		return get_users( [
+			'meta_key'   => CAV_Parceiro::META_USER_PARCEIRO,
+			'meta_value' => (int) $parceiro_id,
+			'number'     => 20,
+		] );
+	}
+
+	private static function url_reenvio( $parceiro_id, $user_id, $voltar = 'editar' ) {
+		return wp_nonce_url(
+			admin_url( 'admin-post.php?action=cav_reenviar_acesso_parceiro&parceiro=' . (int) $parceiro_id . '&usuario=' . (int) $user_id . '&voltar=' . $voltar ),
+			'cav_reenviar_acesso_' . (int) $parceiro_id . '_' . (int) $user_id
+		);
+	}
+
+	public static function metabox_acesso( $post ) {
+		$contas = self::contas( $post->ID );
+		if ( ! $contas ) {
+			echo '<p>Este estabelecimento ainda não tem conta de acesso ligada.</p>';
+			return;
+		}
+		foreach ( $contas as $u ) {
+			echo '<p style="margin:0 0 4px"><strong>' . esc_html( $u->display_name ) . '</strong><br><span class="description">' . esc_html( $u->user_email ) . '</span></p>';
+			echo '<p><a class="button" href="' . esc_url( self::url_reenvio( $post->ID, $u->ID ) ) . '" onclick="return confirm(\'Reenviar o e-mail de acesso, com o link da senha e o passo a passo do caixa, para ' . esc_js( $u->user_email ) . '?\')">Reenviar acesso</a></p>';
+		}
+		echo '<p class="description">Manda de novo o e-mail de aprovação: link novo para criar a senha e o passo a passo para conferir o CPF no caixa. O link anterior deixa de valer.</p>';
+	}
+
+	public static function acao_na_lista( $acoes, $post ) {
+		if ( cav_parceiro_post_type() !== $post->post_type || ! current_user_can( 'edit_post', $post->ID ) ) {
+			return $acoes;
+		}
+		$contas = self::contas( $post->ID );
+		if ( 1 === count( $contas ) ) {
+			$acoes['cav_reenviar'] = '<a href="' . esc_url( self::url_reenvio( $post->ID, $contas[0]->ID, 'lista' ) ) . '" onclick="return confirm(\'Reenviar o e-mail de acesso para ' . esc_js( $contas[0]->user_email ) . '?\')">Reenviar acesso</a>';
+		}
+		return $acoes;
+	}
+
+	public static function reenviar_acesso() {
+		$parceiro = isset( $_GET['parceiro'] ) ? absint( $_GET['parceiro'] ) : 0;
+		$usuario  = isset( $_GET['usuario'] ) ? absint( $_GET['usuario'] ) : 0;
+		check_admin_referer( 'cav_reenviar_acesso_' . $parceiro . '_' . $usuario );
+
+		if ( ! current_user_can( 'edit_post', $parceiro ) ) {
+			wp_die( 'Sem permissão.' );
+		}
+		$user = get_userdata( $usuario );
+		if ( ! $user || (int) get_user_meta( $usuario, CAV_Parceiro::META_USER_PARCEIRO, true ) !== $parceiro ) {
+			wp_die( 'Essa conta não é deste estabelecimento.' );
+		}
+
+		$ok     = CAV_Emails::parceiro_aprovado( $user, get_the_title( $parceiro ), get_option( 'cav_url_terminal', '' ) );
+		$voltar = isset( $_GET['voltar'] ) && 'lista' === $_GET['voltar']
+			? admin_url( 'edit.php?post_type=' . cav_parceiro_post_type() )
+			: get_edit_post_link( $parceiro, 'url' );
+
+		wp_safe_redirect( add_query_arg( 'cav_reenvio', $ok ? 'ok' : 'erro', $voltar ) );
+		exit;
+	}
+
+	public static function aviso_reenvio() {
+		if ( empty( $_GET['cav_reenvio'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+			return;
+		}
+		$ok = 'ok' === $_GET['cav_reenvio']; // phpcs:ignore WordPress.Security.NonceVerification
+		printf(
+			'<div class="notice notice-%s is-dismissible"><p>%s</p></div>',
+			$ok ? 'success' : 'error',
+			$ok ? 'E-mail de acesso reenviado, com o link da senha e o passo a passo do caixa.' : 'O e-mail não saiu. Veja o motivo em Clube → E-mails, na lista de últimos envios.'
+		);
+	}
+
 	public static function metabox() {
+		add_meta_box( 'cav_acesso_parceiro', 'Acesso do parceiro', [ __CLASS__, 'metabox_acesso' ], cav_parceiro_post_type(), 'side', 'default' );
 		add_meta_box( 'cav_negocio_dados', 'Dados do negócio (o parceiro também edita pelo site)', [ __CLASS__, 'render_metabox' ], cav_parceiro_post_type(), 'normal', 'default' );
 	}
 
