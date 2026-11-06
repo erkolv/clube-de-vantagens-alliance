@@ -40,6 +40,7 @@ class CAV_AreaParceiro {
 		add_action( 'wp_enqueue_scripts', [ __CLASS__, 'assets' ] );
 
 		add_action( 'add_meta_boxes', [ __CLASS__, 'metabox' ] );
+		add_action( 'admin_enqueue_scripts', [ __CLASS__, 'midia_no_admin' ] );
 		add_action( 'save_post', [ __CLASS__, 'salvar_metabox' ] );
 	}
 
@@ -754,7 +755,43 @@ class CAV_AreaParceiro {
 		<p><label><strong>Horário</strong><br><textarea name="cav_a_horario" rows="3" style="width:100%;max-width:600px"><?php echo esc_textarea( $d['horario'] ); ?></textarea></label></p>
 		<p><label><strong>Instagram</strong><br><input type="text" name="cav_a_instagram" value="<?php echo esc_attr( $d['instagram'] ? '@' . $d['instagram'] : '' ); ?>" style="width:100%;max-width:320px"></label></p>
 		<p><label><strong>Site</strong><br><input type="text" name="cav_a_site" value="<?php echo esc_attr( $d['site'] ); ?>" style="width:100%;max-width:420px"></label></p>
-		<p class="description">A foto do negócio é a Imagem destacada. O logo é enviado pelo parceiro na página "Meu negócio".</p>
+		<?php $logo = (int) get_post_meta( $post->ID, self::META_LOGO, true ); ?>
+		<div style="margin:1em 0">
+			<strong>Logo</strong><br>
+			<input type="hidden" name="cav_a_logo" id="cav-a-logo" value="<?php echo esc_attr( $logo ?: '' ); ?>">
+			<div id="cav-a-logo-prev" style="margin:8px 0;<?php echo $logo ? '' : 'display:none;'; ?>">
+				<?php echo $logo ? wp_get_attachment_image( $logo, [ 96, 96 ], false, [ 'style' => 'width:96px;height:96px;object-fit:contain;background:#fff;border:1px solid #ddd' ] ) : '<img alt="" style="width:96px;height:96px;object-fit:contain;background:#fff;border:1px solid #ddd">'; ?>
+			</div>
+			<button type="button" class="button" id="cav-a-logo-escolher"><?php echo $logo ? 'Trocar logo' : 'Escolher logo'; ?></button>
+			<button type="button" class="button-link" id="cav-a-logo-tirar" style="margin-left:8px;color:#b32d2e;<?php echo $logo ? '' : 'display:none;'; ?>">Remover logo</button>
+		</div>
+		<p class="description">A foto do negócio é a Imagem destacada (na coluna ao lado). O parceiro também pode trocar a logo e a foto pela página "Meu negócio".</p>
+		<script>
+		jQuery(function($){
+			var quadro;
+			$('#cav-a-logo-escolher').on('click', function(e){
+				e.preventDefault();
+				if (quadro) { quadro.open(); return; }
+				quadro = wp.media({ title: 'Logo do parceiro', button: { text: 'Usar como logo' }, library: { type: 'image' }, multiple: false });
+				quadro.on('select', function(){
+					var a = quadro.state().get('selection').first().toJSON();
+					var url = (a.sizes && a.sizes.thumbnail) ? a.sizes.thumbnail.url : a.url;
+					$('#cav-a-logo').val(a.id);
+					$('#cav-a-logo-prev').show().find('img').attr({src: url, srcset: ''});
+					$('#cav-a-logo-escolher').text('Trocar logo');
+					$('#cav-a-logo-tirar').show();
+				});
+				quadro.open();
+			});
+			$('#cav-a-logo-tirar').on('click', function(e){
+				e.preventDefault();
+				$('#cav-a-logo').val('0');
+				$('#cav-a-logo-prev').hide();
+				$('#cav-a-logo-escolher').text('Escolher logo');
+				$(this).hide();
+			});
+		});
+		</script>
 		<?php
 	}
 
@@ -774,5 +811,21 @@ class CAV_AreaParceiro {
 		update_post_meta( $post_id, self::META_HORARIO, isset( $_POST['cav_a_horario'] ) ? sanitize_textarea_field( wp_unslash( $_POST['cav_a_horario'] ) ) : '' );
 		update_post_meta( $post_id, self::META_INSTAGRAM, self::limpar_instagram( isset( $_POST['cav_a_instagram'] ) ? wp_unslash( $_POST['cav_a_instagram'] ) : '' ) );
 		update_post_meta( $post_id, self::META_SITE, self::limpar_site( isset( $_POST['cav_a_site'] ) ? wp_unslash( $_POST['cav_a_site'] ) : '' ) );
+
+		if ( isset( $_POST['cav_a_logo'] ) && '' !== $_POST['cav_a_logo'] ) {
+			$logo = absint( $_POST['cav_a_logo'] );
+			if ( $logo && wp_attachment_is_image( $logo ) ) {
+				update_post_meta( $post_id, self::META_LOGO, $logo );
+			} elseif ( 0 === $logo ) {
+				delete_post_meta( $post_id, self::META_LOGO );
+			}
+		}
+	}
+
+	/** Biblioteca de mídia na tela de edição do parceiro (para escolher a logo). */
+	public static function midia_no_admin( $hook ) {
+		if ( in_array( $hook, [ 'post.php', 'post-new.php' ], true ) && get_post_type() === cav_parceiro_post_type() ) {
+			wp_enqueue_media();
+		}
 	}
 }
