@@ -46,6 +46,7 @@ class CAV_SMTP {
 			'de_email'   => '',
 			'de_nome'    => '',
 			'equipe'     => '',
+			'equipe_parceiros' => '',
 		] );
 
 		$c['senha'] = CAV_Cripto::decifrar( $c['senha'] );
@@ -93,8 +94,14 @@ class CAV_SMTP {
 	 * Quem recebe os avisos da equipe (pedido novo, candidatura nova). Pode ser mais de um, separados por vírgula.
 	 * Em branco, vai para o e-mail de envio.
 	 */
-	public static function equipe() {
-		$c     = self::cfg();
+	public static function equipe( $quem = 'equipe' ) {
+		$c = self::cfg();
+		if ( 'equipe_parceiros' === $quem ) {
+			$lista = array_filter( array_map( 'trim', explode( ',', (string) $c['equipe_parceiros'] ) ), 'is_email' );
+			if ( $lista ) {
+				return array_values( $lista );
+			}
+		}
 		$lista = array_filter( array_map( 'trim', explode( ',', (string) $c['equipe'] ) ), 'is_email' );
 		if ( ! $lista && is_email( $c['de_email'] ) ) {
 			$lista = [ $c['de_email'] ];
@@ -211,6 +218,11 @@ class CAV_SMTP {
 						<td><input type="text" id="cav_smtp_equipe" name="equipe" value="<?php echo esc_attr( $c['equipe'] ); ?>" class="regular-text" placeholder="<?php echo esc_attr( $c['de_email'] ?: 'frontdesk@alliancemogi.com.br' ); ?>">
 							<p class="description">Quem recebe o aviso de pedido novo e de candidatura de parceiro. Para mais de um, separe por vírgula. Em branco, vai para o e-mail de envio.</p></td>
 					</tr>
+					<tr>
+						<th scope="row"><label for="cav_smtp_equipe_parceiros">Avisos da página "Dados do parceiro"</label></th>
+						<td><input type="text" id="cav_smtp_equipe_parceiros" name="equipe_parceiros" value="<?php echo esc_attr( $c['equipe_parceiros'] ); ?>" class="regular-text">
+							<p class="description">Quem recebe o aviso quando um parceiro que já era do clube manda os dados da loja. Em branco, vai para os "Avisos para a equipe".</p></td>
+					</tr>
 				</table>
 
 				<?php submit_button( 'Salvar' ); ?>
@@ -277,6 +289,8 @@ class CAV_SMTP {
 
 		$equipe = isset( $_POST['equipe'] ) ? (string) wp_unslash( $_POST['equipe'] ) : '';
 		$equipe = implode( ', ', array_filter( array_map( 'sanitize_email', array_map( 'trim', explode( ',', $equipe ) ) ), 'is_email' ) );
+		$equipe_parc = isset( $_POST['equipe_parceiros'] ) ? (string) wp_unslash( $_POST['equipe_parceiros'] ) : '';
+		$equipe_parc = implode( ', ', array_filter( array_map( 'sanitize_email', array_map( 'trim', explode( ',', $equipe_parc ) ) ), 'is_email' ) );
 
 		$senha = isset( $_POST['senha'] ) ? (string) wp_unslash( $_POST['senha'] ) : '';
 		if ( '' === $senha ) {
@@ -294,6 +308,7 @@ class CAV_SMTP {
 			'de_email'  => $de,
 			'de_nome'   => isset( $_POST['de_nome'] ) ? sanitize_text_field( wp_unslash( $_POST['de_nome'] ) ) : '',
 			'equipe'    => $equipe,
+			'equipe_parceiros' => $equipe_parc,
 		], false );
 
 		unset( $antigo );

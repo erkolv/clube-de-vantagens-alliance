@@ -246,7 +246,7 @@ class CAV_Emails {
 
 	/** Avisa a equipe que um estabelecimento se candidatou. */
 	public static function equipe_nova_candidatura( $email, $nome_estab, $responsavel, $beneficio, $ja_parceiro = false ) {
-		$para = CAV_SMTP::equipe();
+		$para = CAV_SMTP::equipe( $ja_parceiro ? 'equipe_parceiros' : 'equipe' );
 		if ( ! $para ) {
 			return false;
 		}
