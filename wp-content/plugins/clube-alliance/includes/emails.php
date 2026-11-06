@@ -245,13 +245,14 @@ class CAV_Emails {
 	}
 
 	/** Avisa a equipe que um estabelecimento se candidatou. */
-	public static function equipe_nova_candidatura( $email, $nome_estab, $responsavel, $beneficio ) {
+	public static function equipe_nova_candidatura( $email, $nome_estab, $responsavel, $beneficio, $ja_parceiro = false ) {
 		$para = CAV_SMTP::equipe();
 		if ( ! $para ) {
 			return false;
 		}
 
 		$m = CAV_Modelos::montar( 'equipe_nova_candidatura', [
+			'situacao'        => $ja_parceiro ? 'Já é parceiro, mandou os dados da loja' : 'Parceiro novo',
 			'estabelecimento' => $nome_estab,
 			'responsavel'     => $responsavel,
 			'email'           => $email,
@@ -263,6 +264,15 @@ class CAV_Emails {
 			$h[] = 'Reply-To: ' . $email;
 		}
 		return wp_mail( $para, $m['assunto'], $m['html'], $h );
+	}
+
+	/** Confirmação para quem já era parceiro e mandou os dados da loja pelo site. */
+	public static function dados_parceiro_recebidos( $email, $nome_estab, $responsavel ) {
+		$m = CAV_Modelos::montar( 'dados_parceiro_recebidos', [
+			'responsavel'     => $responsavel,
+			'estabelecimento' => $nome_estab,
+		] );
+		return wp_mail( $email, $m['assunto'], $m['html'], self::headers() );
 	}
 
 	public static function membro_aprovado( WP_User $user, $validade ) {

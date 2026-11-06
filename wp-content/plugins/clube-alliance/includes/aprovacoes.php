@@ -183,7 +183,7 @@ class CAV_Aprovacoes {
 			<?php endif; ?>
 
 			<h2 style="margin-top:2.5rem">Estabelecimentos aguardando <span class="count">(<?php echo count( $cands ); ?>)</span></h2>
-			<p class="description">Ao aprovar, o sistema cria o estabelecimento e o benefício como rascunho, gera o login e envia o e-mail de acesso.</p>
+			<p class="description">Ao aprovar, o sistema cria o estabelecimento e o benefício, gera o login e envia o e-mail de acesso. Parceiro novo entra como rascunho para você revisar; quem <strong>já é parceiro</strong> entra direto no ar, com a logo e a foto que mandou.</p>
 
 			<?php if ( ! $cands ) : ?>
 				<p>Nenhuma candidatura na fila.</p>
@@ -194,20 +194,43 @@ class CAV_Aprovacoes {
 					</thead>
 					<tbody>
 					<?php foreach ( $cands as $c ) :
-						$cat = get_post_meta( $c->ID, CAV_Solicitacoes::CAND_CAT, true );
-						$end = get_post_meta( $c->ID, CAV_Solicitacoes::CAND_END, true );
+						$cat   = get_post_meta( $c->ID, CAV_Solicitacoes::CAND_CAT, true );
+						$end   = get_post_meta( $c->ID, CAV_Solicitacoes::CAND_END, true );
+						$ja    = 'atual' === get_post_meta( $c->ID, CAV_Solicitacoes::CAND_ORIGEM, true );
+						$zap   = get_post_meta( $c->ID, CAV_Solicitacoes::CAND_ZAP, true );
+						$insta = get_post_meta( $c->ID, CAV_Solicitacoes::CAND_INSTA, true );
+						$hor   = get_post_meta( $c->ID, CAV_Solicitacoes::CAND_HORARIO, true );
+						$regra = get_post_meta( $c->ID, CAV_Solicitacoes::CAND_REGRA, true );
+						$lim   = get_post_meta( $c->ID, CAV_Solicitacoes::CAND_LIMITE, true );
+						$lims  = [ 'dia' => '1x por dia', 'semana' => '1x por semana', 'mes' => '1x por mês' ];
+						$logo  = (int) get_post_meta( $c->ID, CAV_Solicitacoes::CAND_LOGO, true );
+						$foto  = (int) get_post_meta( $c->ID, CAV_Solicitacoes::CAND_FOTO, true );
 						?>
 						<tr>
 							<td>
+								<?php if ( $ja ) : ?><span style="display:inline-block;background:#ffc629;color:#111;font-size:11px;font-weight:600;padding:1px 6px;margin-bottom:4px">JÁ É PARCEIRO</span><br><?php endif; ?>
 								<strong><?php echo esc_html( $c->post_title ); ?></strong>
+								<?php if ( $logo || $foto ) : ?>
+									<div style="display:flex;gap:6px;margin:6px 0">
+										<?php if ( $logo ) { echo wp_get_attachment_image( $logo, [ 48, 48 ], false, [ 'style' => 'width:48px;height:48px;object-fit:contain;background:#fff;border:1px solid #ddd' ] ); } ?>
+										<?php if ( $foto ) { echo wp_get_attachment_image( $foto, [ 96, 48 ], false, [ 'style' => 'width:96px;height:48px;object-fit:cover;border:1px solid #ddd' ] ); } ?>
+									</div>
+								<?php endif; ?>
 								<?php if ( $cat ) : ?><br><span class="description"><?php echo esc_html( $cat ); ?></span><?php endif; ?>
 								<?php if ( $end ) : ?><br><span class="description"><?php echo esc_html( $end ); ?></span><?php endif; ?>
+								<?php if ( $hor ) : ?><br><span class="description"><?php echo esc_html( $hor ); ?></span><?php endif; ?>
+								<?php if ( $insta ) : ?><br><span class="description">@<?php echo esc_html( $insta ); ?></span><?php endif; ?>
+								<?php if ( $zap ) : ?><br><span class="description"><?php echo esc_html( $zap ); ?></span><?php endif; ?>
 							</td>
 							<td>
 								<?php echo esc_html( get_post_meta( $c->ID, CAV_Solicitacoes::CAND_RESP, true ) ); ?><br>
 								<span class="description"><?php echo esc_html( get_post_meta( $c->ID, CAV_Solicitacoes::CAND_EMAIL, true ) ); ?></span>
 							</td>
-							<td><?php echo esc_html( get_post_meta( $c->ID, CAV_Solicitacoes::CAND_BEN, true ) ); ?></td>
+							<td>
+								<?php echo esc_html( get_post_meta( $c->ID, CAV_Solicitacoes::CAND_BEN, true ) ); ?>
+								<?php if ( $regra ) : ?><br><span class="description">Regra: <?php echo esc_html( $regra ); ?></span><?php endif; ?>
+								<?php if ( isset( $lims[ $lim ] ) ) : ?><br><span class="description">Limite: <?php echo esc_html( $lims[ $lim ] ); ?></span><?php endif; ?>
+							</td>
 							<td>
 								<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:flex;gap:6px;flex-wrap:wrap">
 									<input type="hidden" name="action" value="cav_aprovar_candidatura">

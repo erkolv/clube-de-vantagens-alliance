@@ -28,6 +28,14 @@ class CAV_Solicitacoes {
 	const CAND_CAT      = '_cav_cand_categoria';
 	const CAND_BEN      = '_cav_cand_beneficio';
 	const CAND_STATUS   = '_cav_cand_status';
+	const CAND_INSTA    = '_cav_cand_instagram';
+	const CAND_HORARIO  = '_cav_cand_horario';
+	const CAND_REGRA    = '_cav_cand_regra';     // exceções e regras do benefício
+	const CAND_LIMITE   = '_cav_cand_limite';    // nenhum | dia | semana | mes
+	const CAND_LOGO     = '_cav_cand_logo';      // ID do anexo
+	const CAND_FOTO     = '_cav_cand_foto';      // ID do anexo
+	const CAND_ORIGEM   = '_cav_cand_origem';    // 'nova' (candidatura) ou 'atual' (já era parceiro)
+	const MAX_IMAGEM    = 4194304; // 4 MB
 
 	/** Rótulos dos planos em cadastros antigos. */
 	const PLANOS = [
@@ -443,30 +451,61 @@ class CAV_Solicitacoes {
 	 * Estabelecimento
 	 * --------------------------------------------------------------- */
 
-	public static function form_candidatura() {
+	/**
+	 * Formulário do estabelecimento.
+	 * [cav_candidatura]             candidatura de parceiro novo.
+	 * [cav_candidatura tipo="atual"] para quem já é parceiro mandar os dados da loja (sem "candidatura").
+	 */
+	public static function form_candidatura( $atts = [] ) {
 		wp_enqueue_style( 'cav' );
 
-		$msg = isset( $_GET['cav'] ) ? sanitize_text_field( wp_unslash( $_GET['cav'] ) ) : '';
+		$atts  = shortcode_atts( [ 'tipo' => '' ], $atts, 'cav_candidatura' );
+		$atual = 'atual' === $atts['tipo'];
+		$msg   = isset( $_GET['cav'] ) ? sanitize_text_field( wp_unslash( $_GET['cav'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
 
 		if ( 'candidatura_enviada' === $msg ) {
+			if ( $atual ) {
+				return '<div class="cav-card"><strong>Dados recebidos. Obrigado!</strong><br>A Alliance confere e coloca a sua loja no site. '
+					. 'Quando estiver no ar, chega um e-mail com o seu acesso e o passo a passo para conferir o CPF dos alunos no caixa.</div>';
+			}
 			return '<div class="cav-card"><strong>Candidatura enviada.</strong><br>Enviamos uma confirmação para o seu e-mail. A academia analisa e responde em até dois dias úteis. '
 				. 'Se aprovada, você recebe um e-mail com os dados de acesso ao terminal.</div>';
 		}
 
+		$erros_img = [
+			'cand_img_tamanho' => 'A logo ou a foto passou de 4 MB. Mande uma versão menor.',
+			'cand_img_tipo'    => 'A logo e a foto precisam ser JPG, PNG ou WEBP.',
+			'cand_img_falha'   => 'Não conseguimos receber a imagem. Tente de novo.',
+		];
+
 		ob_start();
 		?>
-		<form class="cav-form cav-form--duas" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+		<form class="cav-form cav-form--duas" method="post" enctype="multipart/form-data" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 			<input type="hidden" name="action" value="cav_candidatar">
+			<input type="hidden" name="origem" value="<?php echo $atual ? 'atual' : 'nova'; ?>">
 			<?php wp_nonce_field( 'cav_candidatar' ); ?>
 			<?php echo CAV_Seguranca::campos_antirrobo(); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 
 			<?php if ( $msg && 0 === strpos( $msg, 'cand_' ) ) : ?>
-				<p class="cav-erro-form"><?php echo esc_html( 'cand_email_usado' === $msg ? 'Já existe um cadastro com esse e-mail. Se for o seu, use "Entrar" e peça uma nova senha se precisar.' : self::mensagem_erro( str_replace( 'cand_', '', $msg ) ) ); ?></p>
+				<p class="cav-erro-form"><?php
+				if ( isset( $erros_img[ $msg ] ) ) {
+					echo esc_html( $erros_img[ $msg ] );
+				} elseif ( 'cand_email_usado' === $msg ) {
+					echo esc_html( 'Já existe um cadastro com esse e-mail. Se for o seu, use "Entrar" e peça uma nova senha se precisar.' );
+				} else {
+					echo esc_html( self::mensagem_erro( str_replace( 'cand_', '', $msg ) ) );
+				}
+				?></p>
 			<?php endif; ?>
 
 			<div class="cav-form-topo">
-				<h3>Cadastre o seu negócio</h3>
-				<p>Leva uns dois minutos. A Alliance analisa e responde por e-mail.</p>
+				<?php if ( $atual ) : ?>
+					<h3>Dados da sua loja no clube</h3>
+					<p>Você já é parceiro da Alliance. Preencha aqui que a gente coloca a sua loja no site do clube, do jeito que os alunos vão ver.</p>
+				<?php else : ?>
+					<h3>Cadastre o seu negócio</h3>
+					<p>Leva uns dois minutos. A Alliance analisa e responde por e-mail.</p>
+				<?php endif; ?>
 			</div>
 
 			<div class="cav-campo">
@@ -486,23 +525,80 @@ class CAV_Solicitacoes {
 				<input id="cav-cemail" name="email" type="email" required>
 			</div>
 			<div class="cav-campo">
-				<label for="cav-czap">WhatsApp</label>
-				<input id="cav-czap" name="whatsapp" type="text" inputmode="tel">
+				<label for="cav-czap">WhatsApp da loja</label>
+				<input id="cav-czap" name="whatsapp" type="text" inputmode="tel"<?php echo $atual ? ' required' : ''; ?>>
+			</div>
+			<div class="cav-campo">
+				<label for="cav-cinsta">Instagram</label>
+				<input id="cav-cinsta" name="instagram" type="text" placeholder="@sualoja">
 			</div>
 			<div class="cav-campo">
 				<label for="cav-cend">Endereço</label>
-				<input id="cav-cend" name="endereco" type="text">
+				<input id="cav-cend" name="endereco" type="text"<?php echo $atual ? ' required' : ''; ?>>
+			</div>
+			<div class="cav-campo">
+				<label for="cav-chor">Horário de funcionamento</label>
+				<input id="cav-chor" name="horario" type="text" placeholder="Seg a sex, 9h às 19h; sáb, 9h às 13h">
 			</div>
 			<div class="cav-campo cav-campo--largo">
-				<label for="cav-cben">Que benefício você quer oferecer</label>
+				<label for="cav-cben"><?php echo $atual ? 'Qual é o desconto ou benefício para os alunos' : 'Que benefício você quer oferecer'; ?></label>
 				<input id="cav-cben" name="beneficio" type="text" required
-				       placeholder="Ex.: 15% de desconto no corte, de segunda a quinta">
+				       placeholder="Ex.: 10% de desconto em tudo">
+			</div>
+			<div class="cav-campo">
+				<label for="cav-cregra">Tem alguma exceção ou regra?</label>
+				<input id="cav-cregra" name="regra" type="text" placeholder="Ex.: não vale em produtos em promoção">
+			</div>
+			<div class="cav-campo">
+				<label for="cav-climite">Limite de uso por aluno</label>
+				<select id="cav-climite" name="limite">
+					<option value="nenhum">Sem limite</option>
+					<option value="dia">1 vez por dia</option>
+					<option value="semana">1 vez por semana</option>
+					<option value="mes">1 vez por mês</option>
+				</select>
+			</div>
+			<div class="cav-campo">
+				<label for="cav-clogo">Logo da loja <span class="cav-opcional">(JPG ou PNG, até 4 MB)</span></label>
+				<input id="cav-clogo" name="logo" type="file" accept="image/jpeg,image/png,image/webp">
+			</div>
+			<div class="cav-campo">
+				<label for="cav-cfoto">Uma foto do lugar <span class="cav-opcional">(fachada ou de dentro, na horizontal)</span></label>
+				<input id="cav-cfoto" name="foto" type="file" accept="image/jpeg,image/png,image/webp">
 			</div>
 
-			<button type="submit" class="cav-btn">Enviar candidatura</button>
+			<button type="submit" class="cav-btn"><?php echo $atual ? 'Enviar os dados' : 'Enviar candidatura'; ?></button>
 		</form>
 		<?php
 		return ob_get_clean();
+	}
+
+	/** Recebe a logo ou a foto da candidatura. 0 se não veio arquivo; WP_Error com o motivo se não deu. */
+	private static function receber_imagem( $campo, $post_id ) {
+		if ( empty( $_FILES[ $campo ]['name'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+			return 0;
+		}
+		$arq = $_FILES[ $campo ]; // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput
+
+		if ( in_array( (int) $arq['error'], [ UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE ], true ) || (int) $arq['size'] > self::MAX_IMAGEM ) {
+			return new WP_Error( 'img_tamanho' );
+		}
+		if ( UPLOAD_ERR_OK !== (int) $arq['error'] ) {
+			return new WP_Error( 'img_falha' );
+		}
+
+		$mimes = [ 'jpg|jpeg|jpe' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp' ];
+		$tipo  = wp_check_filetype_and_ext( $arq['tmp_name'], $arq['name'], $mimes );
+		if ( empty( $tipo['type'] ) || ! @getimagesize( $arq['tmp_name'] ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors
+			return new WP_Error( 'img_tipo' );
+		}
+
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		require_once ABSPATH . 'wp-admin/includes/media.php';
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+
+		$anexo = media_handle_upload( $campo, $post_id, [], [ 'test_form' => false, 'mimes' => $mimes ] );
+		return is_wp_error( $anexo ) ? new WP_Error( 'img_falha' ) : (int) $anexo;
 	}
 
 	public static function receber_candidatura() {
@@ -549,7 +645,33 @@ class CAV_Solicitacoes {
 		update_post_meta( $post_id, self::CAND_BEN, $ben );
 		update_post_meta( $post_id, self::CAND_STATUS, self::STATUS_PENDENTE );
 
-		foreach ( [ 'categoria' => [ self::CAND_CAT, 80 ], 'whatsapp' => [ self::CAND_ZAP, 20 ], 'endereco' => [ self::CAND_END, 200 ] ] as $campo => $cfg ) {
+		$origem = isset( $_POST['origem'] ) && 'atual' === $_POST['origem'] ? 'atual' : 'nova'; // phpcs:ignore WordPress.Security.NonceVerification
+		update_post_meta( $post_id, self::CAND_ORIGEM, $origem );
+
+		$limite = isset( $_POST['limite'] ) ? sanitize_key( wp_unslash( $_POST['limite'] ) ) : 'nenhum'; // phpcs:ignore WordPress.Security.NonceVerification
+		update_post_meta( $post_id, self::CAND_LIMITE, in_array( $limite, [ 'nenhum', 'dia', 'semana', 'mes' ], true ) ? $limite : 'nenhum' );
+
+		$insta = CAV_AreaParceiro::limpar_instagram( CAV_Seguranca::texto( 'instagram', 80 ) );
+		if ( '' !== $insta ) {
+			update_post_meta( $post_id, self::CAND_INSTA, $insta );
+		}
+
+		foreach ( [ 'logo' => self::CAND_LOGO, 'foto' => self::CAND_FOTO ] as $campo => $meta ) {
+			$img = self::receber_imagem( $campo, $post_id );
+			if ( is_wp_error( $img ) ) {
+				$ja = (int) get_post_meta( $post_id, self::CAND_LOGO, true );
+				if ( $ja ) {
+					wp_delete_attachment( $ja, true );
+				}
+				wp_delete_post( $post_id, true );
+				self::voltar( 'cand_' . $img->get_error_code() );
+			}
+			if ( $img ) {
+				update_post_meta( $post_id, $meta, $img );
+			}
+		}
+
+		foreach ( [ 'categoria' => [ self::CAND_CAT, 80 ], 'whatsapp' => [ self::CAND_ZAP, 20 ], 'endereco' => [ self::CAND_END, 200 ], 'horario' => [ self::CAND_HORARIO, 200 ], 'regra' => [ self::CAND_REGRA, 300 ] ] as $campo => $cfg ) {
 			$valor = 'whatsapp' === $campo ? CAV_Seguranca::telefone( isset( $_POST[ $campo ] ) ? wp_unslash( $_POST[ $campo ] ) : '' ) : CAV_Seguranca::texto( $campo, $cfg[1] );
 			if ( '' !== $valor ) {
 				update_post_meta( $post_id, $cfg[0], $valor );
@@ -557,8 +679,12 @@ class CAV_Solicitacoes {
 		}
 
 		do_action( 'cav_candidatura_recebida', $post_id );
-		CAV_Emails::candidatura_recebida( $email, $estab, $resp, $ben );
-		CAV_Emails::equipe_nova_candidatura( $email, $estab, $resp, $ben );
+		if ( 'atual' === $origem ) {
+			CAV_Emails::dados_parceiro_recebidos( $email, $estab, $resp );
+		} else {
+			CAV_Emails::candidatura_recebida( $email, $estab, $resp, $ben );
+		}
+		CAV_Emails::equipe_nova_candidatura( $email, $estab, $resp, $ben, 'atual' === $origem );
 		self::voltar( 'candidatura_enviada' );
 	}
 
@@ -581,10 +707,12 @@ class CAV_Solicitacoes {
 			return new WP_Error( 'cav_email_usado', 'Já existe uma conta com este e-mail.' );
 		}
 
-		// 1. Post do parceiro no diretório, como rascunho para revisão.
+		// 1. Post do parceiro no diretório. Parceiro novo entra como rascunho para revisão;
+		// quem já era parceiro (página de parceiros atuais) já entra no ar com o benefício.
+		$no_ar       = 'atual' === get_post_meta( $post_id, self::CAND_ORIGEM, true );
 		$parceiro_id = wp_insert_post( [
 			'post_type'    => cav_parceiro_post_type(),
-			'post_status'  => 'draft',
+			'post_status'  => $no_ar ? 'publish' : 'draft',
 			'post_title'   => $estab,
 			'post_content' => '',
 		] );
@@ -609,20 +737,50 @@ class CAV_Solicitacoes {
 
 		update_user_meta( $user_id, CAV_Parceiro::META_USER_PARCEIRO, $parceiro_id );
 
+		// Dados da loja que vieram no formulário.
+		$m = static function ( $k ) use ( $post_id ) {
+			return (string) get_post_meta( $post_id, $k, true );
+		};
+		$cat = $m( self::CAND_CAT );
+		if ( $cat && taxonomy_exists( 'cav_categoria' ) && 'cav_parceiro' === cav_parceiro_post_type() ) {
+			wp_set_object_terms( $parceiro_id, $cat, 'cav_categoria' );
+		}
+		foreach ( [
+			CAV_AreaParceiro::META_TELEFONE  => self::CAND_ZAP,
+			CAV_AreaParceiro::META_ENDERECO  => self::CAND_END,
+			CAV_AreaParceiro::META_HORARIO   => self::CAND_HORARIO,
+			CAV_AreaParceiro::META_INSTAGRAM => self::CAND_INSTA,
+		] as $destino => $origem_meta ) {
+			if ( '' !== $m( $origem_meta ) ) {
+				update_post_meta( $parceiro_id, $destino, $m( $origem_meta ) );
+			}
+		}
+		$logo = (int) $m( self::CAND_LOGO );
+		if ( $logo ) {
+			update_post_meta( $parceiro_id, CAV_AreaParceiro::META_LOGO, $logo );
+			wp_update_post( [ 'ID' => $logo, 'post_parent' => $parceiro_id ] );
+		}
+		$foto = (int) $m( self::CAND_FOTO );
+		if ( $foto ) {
+			set_post_thumbnail( $parceiro_id, $foto );
+			wp_update_post( [ 'ID' => $foto, 'post_parent' => $parceiro_id ] );
+		}
+
 		// 3. Benefício proposto, em rascunho — ninguém entra no clube sem oferta.
 		$ben = get_post_meta( $post_id, self::CAND_BEN, true );
 
 		if ( $ben ) {
 			$ben_id = wp_insert_post( [
 				'post_type'   => 'cav_beneficio',
-				'post_status' => 'draft',
+				'post_status' => $no_ar ? 'publish' : 'draft',
 				'post_title'  => $ben,
 			] );
 
 			if ( $ben_id && ! is_wp_error( $ben_id ) ) {
+				$regra = trim( $ben . ( $m( self::CAND_REGRA ) ? '. ' . $m( self::CAND_REGRA ) : '' ) );
 				update_post_meta( $ben_id, CAV_Parceiro::META_BEN_PARCEIRO, $parceiro_id );
-				update_post_meta( $ben_id, CAV_Parceiro::META_BEN_REGRA, $ben );
-				update_post_meta( $ben_id, CAV_Parceiro::META_BEN_LIMITE, 'nenhum' );
+				update_post_meta( $ben_id, CAV_Parceiro::META_BEN_REGRA, $regra );
+				update_post_meta( $ben_id, CAV_Parceiro::META_BEN_LIMITE, $m( self::CAND_LIMITE ) ?: 'nenhum' );
 				update_post_meta( $ben_id, CAV_Parceiro::META_BEN_ATIVO, '1' );
 			}
 		}

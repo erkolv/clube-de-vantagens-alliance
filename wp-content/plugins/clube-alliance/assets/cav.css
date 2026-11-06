@@ -591,3 +591,7 @@ a.cav-item:hover { border-color: var(--cav-marca); }
 	font-size: .9rem;
 	color: var(--cav-fraco);
 }
+
+/* Formulário do estabelecimento: campos opcionais e envio de imagens */
+.cav-form .cav-opcional { font-weight: 400; opacity: .65; font-size: .85em; }
+.cav-form input[type="file"] { width: 100%; max-width: 100%; font-size: .9rem; padding: 8px 0; color: inherit; }
