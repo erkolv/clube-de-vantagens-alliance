@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'CLUBE_CHILD_VERSION', '0.2.0' );
+define( 'CLUBE_CHILD_VERSION', '0.3.0' );
 
 add_action( 'wp_enqueue_scripts', function () {
 	wp_enqueue_style(
@@ -30,6 +30,23 @@ add_action( 'wp_enqueue_scripts', function () {
 		get_stylesheet_directory_uri() . '/assets/site.css',
 		[ 'clube-alliance-child' ],
 		is_readable( $site ) ? filemtime( $site ) : CLUBE_CHILD_VERSION
+	);
+
+	// Carrossel de vídeos montado no Elementor (contêiner com a classe "cav-carrossel").
+	$carrossel_css = get_stylesheet_directory() . '/assets/carrossel.css';
+	$carrossel_js  = get_stylesheet_directory() . '/assets/carrossel.js';
+	wp_enqueue_style(
+		'clube-carrossel',
+		get_stylesheet_directory_uri() . '/assets/carrossel.css',
+		[ 'clube-site' ],
+		is_readable( $carrossel_css ) ? filemtime( $carrossel_css ) : CLUBE_CHILD_VERSION
+	);
+	wp_enqueue_script(
+		'clube-carrossel',
+		get_stylesheet_directory_uri() . '/assets/carrossel.js',
+		[],
+		is_readable( $carrossel_js ) ? filemtime( $carrossel_js ) : CLUBE_CHILD_VERSION,
+		true
 	);
 
 	// O plugin registra o handle "cav" (prioridade 10). Aqui, mais tarde, anexamos a

@@ -1,0 +1,156 @@
+/*
+ * Carrossel de vídeos montado no Elementor.
+ * Contêiner com a classe "cav-carrossel"; dentro dele, um contêiner com a classe
+ * "cav-carrossel__trilho" cheio de widgets de Vídeo. Setas, contador, barra e
+ * botão de som são criados pelo carrossel.js.
+ */
+
+.cav-carrossel { --cav-ouro: #ffc629; --cav-linha: rgba(255, 255, 255, .14); }
+
+.cav-carrossel__topo { gap: 24px; }
+
+.cav-carrossel__ctrl {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	margin-left: auto;
+}
+
+.cav-carrossel__cont {
+	font-size: .85rem;
+	letter-spacing: .12em;
+	color: rgba(255, 255, 255, .7);
+	font-variant-numeric: tabular-nums;
+	min-width: 62px;
+	text-align: right;
+}
+
+.cav-carrossel__cont b { color: #fff; font-weight: 600; }
+
+.cav-carrossel .cav-carrossel__seta {
+	width: 48px;
+	height: 48px;
+	display: grid;
+	place-items: center;
+	background: transparent;
+	border: 1px solid var(--cav-ouro);
+	border-radius: 0;
+	color: var(--cav-ouro);
+	cursor: pointer;
+	padding: 0;
+	transition: background .2s, color .2s;
+}
+
+.cav-carrossel .cav-carrossel__seta:hover,
+.cav-carrossel .cav-carrossel__seta:focus-visible {
+	background: var(--cav-ouro);
+	color: #141414;
+	outline: none;
+}
+
+.cav-carrossel .cav-carrossel__seta[disabled] {
+	opacity: .3;
+	cursor: default;
+	background: transparent;
+	color: var(--cav-ouro);
+}
+
+.cav-carrossel__seta svg,
+.cav-carrossel__som svg { width: 18px; height: 18px; }
+
+/* Trilho */
+.cav-carrossel .cav-carrossel__trilho {
+	flex-wrap: nowrap !important;
+	overflow-x: auto;
+	scroll-snap-type: x mandatory;
+	scroll-behavior: smooth;
+	scrollbar-width: none;
+}
+
+.cav-carrossel .cav-carrossel__trilho::-webkit-scrollbar { display: none; }
+
+.cav-carrossel .cav-carrossel__trilho > .elementor-widget-video {
+	flex: 0 0 calc((100% - 3 * var(--cav-gap, 16px)) / 4) !important;
+	width: auto !important;
+	max-width: none !important;
+	scroll-snap-align: start;
+	position: relative;
+	aspect-ratio: 9 / 16;
+	background: #000;
+	border: 1px solid var(--cav-linha);
+	overflow: hidden;
+	cursor: pointer;
+	transition: border-color .25s, transform .25s;
+}
+
+.cav-carrossel .cav-carrossel__trilho > .elementor-widget-video:hover { border-color: var(--cav-ouro); transform: translateY(-4px); }
+.cav-carrossel .cav-carrossel__trilho > .elementor-widget-video.com-som { border-color: var(--cav-ouro); }
+
+.cav-carrossel .cav-carrossel__trilho > .elementor-widget-video > *,
+.cav-carrossel .cav-carrossel__trilho > .elementor-widget-video .elementor-wrapper {
+	position: absolute;
+	inset: 0;
+	height: 100%;
+}
+
+.cav-carrossel .cav-carrossel__trilho video {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+.cav-carrossel__som {
+	position: absolute;
+	top: 12px;
+	right: 12px;
+	width: 40px;
+	height: 40px;
+	display: grid;
+	place-items: center;
+	background: rgba(0, 0, 0, .55);
+	border: 1px solid rgba(255, 255, 255, .35);
+	border-radius: 0;
+	color: #fff;
+	padding: 0;
+	cursor: pointer;
+	z-index: 2;
+}
+
+.cav-carrossel .cav-carrossel__som:hover,
+.cav-carrossel .cav-carrossel__som:focus-visible { background: rgba(0, 0, 0, .55); border-color: var(--cav-ouro); color: var(--cav-ouro); outline: none; }
+
+.cav-carrossel__som .on { display: none; }
+.com-som > .cav-carrossel__som .on { display: block; }
+.com-som > .cav-carrossel__som .off { display: none; }
+
+.cav-carrossel__barra {
+	height: 2px;
+	background: var(--cav-linha);
+	position: relative;
+	width: 100%;
+}
+
+.cav-carrossel__barra i {
+	position: absolute;
+	left: 0;
+	top: 0;
+	height: 100%;
+	background: var(--cav-ouro);
+	width: 0;
+	transition: width .2s;
+}
+
+@media (max-width: 1024px) {
+	.cav-carrossel .cav-carrossel__trilho > .elementor-widget-video { flex-basis: calc((100% - 2 * var(--cav-gap, 16px)) / 2.4) !important; }
+}
+
+@media (max-width: 640px) {
+	.cav-carrossel .cav-carrossel__trilho > .elementor-widget-video { flex-basis: 72% !important; }
+	.cav-carrossel .cav-carrossel__seta { width: 42px; height: 42px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.cav-carrossel .cav-carrossel__trilho { scroll-behavior: auto; }
+	.cav-carrossel .cav-carrossel__trilho > .elementor-widget-video:hover { transform: none; }
+}
