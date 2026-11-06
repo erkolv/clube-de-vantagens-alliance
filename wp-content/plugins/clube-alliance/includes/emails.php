@@ -253,6 +253,7 @@ class CAV_Emails {
 
 		$m = CAV_Modelos::montar( 'equipe_nova_candidatura', [
 			'situacao'        => $ja_parceiro ? 'Já é parceiro, mandou os dados da loja' : 'Parceiro novo',
+			'acao'            => $ja_parceiro ? 'Parceiro mandou os dados' : 'Nova candidatura de parceiro',
 			'estabelecimento' => $nome_estab,
 			'responsavel'     => $responsavel,
 			'email'           => $email,
