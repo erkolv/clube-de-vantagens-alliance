@@ -26,7 +26,7 @@ while ( have_posts() ) :
 					<a href="<?php echo esc_url( get_post_type_archive_link( 'cav_parceiro' ) ); ?>">&larr; Parceiros</a>
 				</p>
 				<?php if ( ! empty( $negocio['logo_id'] ) ) : ?>
-					<div class="clube-parceiro__logo"><?php echo wp_get_attachment_image( $negocio['logo_id'], 'thumbnail', false, [ 'alt' => '' ] ); ?></div>
+					<div class="clube-parceiro__logo"><?php echo wp_get_attachment_image( $negocio['logo_id'], 'medium', false, [ 'alt' => '' ] ); ?></div>
 				<?php endif; ?>
 				<h1><?php the_title(); ?></h1>
 				<?php if ( $categorias && ! is_wp_error( $categorias ) ) : ?>

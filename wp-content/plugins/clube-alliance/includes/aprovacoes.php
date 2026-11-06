@@ -212,7 +212,7 @@ class CAV_Aprovacoes {
 								<strong><?php echo esc_html( $c->post_title ); ?></strong>
 								<?php if ( $logo || $foto ) : ?>
 									<div style="display:flex;gap:6px;margin:6px 0">
-										<?php if ( $logo ) { echo wp_get_attachment_image( $logo, [ 48, 48 ], false, [ 'style' => 'width:48px;height:48px;object-fit:contain;background:#fff;border:1px solid #ddd' ] ); } ?>
+										<?php if ( $logo ) { echo wp_get_attachment_image( $logo, 'medium', false, [ 'style' => 'width:48px;height:48px;object-fit:contain;padding:4px;box-sizing:border-box;background:#fff;border:1px solid #ddd' ] ); } ?>
 										<?php if ( $foto ) { echo wp_get_attachment_image( $foto, [ 96, 48 ], false, [ 'style' => 'width:96px;height:48px;object-fit:cover;border:1px solid #ddd' ] ); } ?>
 									</div>
 								<?php endif; ?>

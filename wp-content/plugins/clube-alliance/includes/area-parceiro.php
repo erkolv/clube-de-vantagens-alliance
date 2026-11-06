@@ -226,7 +226,7 @@ class CAV_AreaParceiro {
 		$cats  = get_the_terms( $id, 'cav_categoria' );
 		$cat   = ( $cats && ! is_wp_error( $cats ) ) ? $cats[0]->name : '';
 		$capa  = has_post_thumbnail( $id ) ? get_the_post_thumbnail( $id, 'medium', [ 'loading' => 'lazy' ] ) : '';
-		$logo  = $d['logo_id'] ? wp_get_attachment_image( $d['logo_id'], 'thumbnail', false, [ 'loading' => 'lazy' ] ) : '';
+		$logo  = $d['logo_id'] ? wp_get_attachment_image( $d['logo_id'], 'medium', false, [ 'loading' => 'lazy' ] ) : '';
 
 		ob_start();
 		?>
@@ -760,7 +760,7 @@ class CAV_AreaParceiro {
 			<strong>Logo</strong><br>
 			<input type="hidden" name="cav_a_logo" id="cav-a-logo" value="<?php echo esc_attr( $logo ?: '' ); ?>">
 			<div id="cav-a-logo-prev" style="margin:8px 0;<?php echo $logo ? '' : 'display:none;'; ?>">
-				<?php echo $logo ? wp_get_attachment_image( $logo, [ 96, 96 ], false, [ 'style' => 'width:96px;height:96px;object-fit:contain;background:#fff;border:1px solid #ddd' ] ) : '<img alt="" style="width:96px;height:96px;object-fit:contain;background:#fff;border:1px solid #ddd">'; ?>
+				<?php echo $logo ? wp_get_attachment_image( $logo, 'medium', false, [ 'style' => 'width:96px;height:96px;object-fit:contain;padding:8px;box-sizing:border-box;background:#fff;border:1px solid #ddd' ] ) : '<img alt="" style="width:96px;height:96px;object-fit:contain;padding:8px;box-sizing:border-box;background:#fff;border:1px solid #ddd">'; ?>
 			</div>
 			<button type="button" class="button" id="cav-a-logo-escolher"><?php echo $logo ? 'Trocar logo' : 'Escolher logo'; ?></button>
 			<button type="button" class="button-link" id="cav-a-logo-tirar" style="margin-left:8px;color:#b32d2e;<?php echo $logo ? '' : 'display:none;'; ?>">Remover logo</button>
@@ -775,7 +775,7 @@ class CAV_AreaParceiro {
 				quadro = wp.media({ title: 'Logo do parceiro', button: { text: 'Usar como logo' }, library: { type: 'image' }, multiple: false });
 				quadro.on('select', function(){
 					var a = quadro.state().get('selection').first().toJSON();
-					var url = (a.sizes && a.sizes.thumbnail) ? a.sizes.thumbnail.url : a.url;
+					var url = (a.sizes && a.sizes.medium) ? a.sizes.medium.url : a.url;
 					$('#cav-a-logo').val(a.id);
 					$('#cav-a-logo-prev').show().find('img').attr({src: url, srcset: ''});
 					$('#cav-a-logo-escolher').text('Trocar logo');

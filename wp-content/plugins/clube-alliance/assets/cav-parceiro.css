@@ -85,7 +85,8 @@
 .cav-p-previa { display: flex; align-items: center; justify-content: center; margin-bottom: .6rem; background: rgba(127, 127, 127, .14); overflow: hidden; color: var(--cav-fraco); font-size: .85rem; }
 .cav-p-previa img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .cav-p-previa--capa { aspect-ratio: 16 / 10; }
-.cav-p-previa--logo { aspect-ratio: 1 / 1; }
+.cav-p-previa--logo { aspect-ratio: 1 / 1; background: #fff; padding: 12px; box-sizing: border-box; }
+.cav-p-previa--logo img { width: 100%; height: 100%; object-fit: contain; }
 .cav-p-imagem input[type="file"] { max-width: 100%; font-size: .85rem; }
 
 /* ---------- Lista de promoções ---------- */

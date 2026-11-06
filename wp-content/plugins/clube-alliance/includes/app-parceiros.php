@@ -112,7 +112,7 @@ h1{font-size:1.45rem;margin:0;line-height:1.15}
 .capa{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;background:#111}
 .corpo{padding:16px}
 .cab{display:flex;gap:12px;align-items:center;margin-bottom:12px}
-.logo{width:52px;height:52px;flex:0 0 52px;object-fit:contain;background:#fff}
+.logo{width:52px;height:52px;flex:0 0 52px;object-fit:contain;background:#fff;padding:5px;box-sizing:border-box}
 .tag{display:inline-block;font-size:.62rem;font-weight:700;letter-spacing:.12em;padding:2px 7px;margin-bottom:4px}
 .tag.ja{background:var(--ouro);color:#111}
 .tag.novo{border:1px solid var(--ouro);color:var(--ouro)}
@@ -182,7 +182,7 @@ details p{white-space:pre-line;color:rgba(255,255,255,.85);margin:8px 0 0;line-h
 			<?php if ( $foto ) { echo wp_get_attachment_image( $foto, 'large', false, [ 'class' => 'capa', 'alt' => '' ] ); } ?>
 			<div class="corpo">
 				<div class="cab">
-					<?php if ( $logo ) { echo wp_get_attachment_image( $logo, 'thumbnail', false, [ 'class' => 'logo', 'alt' => '' ] ); } ?>
+					<?php if ( $logo ) { echo wp_get_attachment_image( $logo, 'medium', false, [ 'class' => 'logo', 'alt' => '' ] ); } ?>
 					<div>
 						<span class="tag <?php echo $ja ? 'ja' : 'novo'; ?>"><?php echo $ja ? 'JÁ É PARCEIRO' : 'PARCEIRO NOVO'; ?></span>
 						<p class="nome"><?php echo esc_html( $c->post_title ); ?></p>
