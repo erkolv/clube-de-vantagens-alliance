@@ -217,6 +217,50 @@ class CAV_Emails {
 		return wp_mail( $user->user_email, $m['assunto'], $m['html'], self::headers() );
 	}
 
+	/** Avisa a equipe (e-mail definido em Clube → E-mails) que chegou um pedido novo. */
+	public static function equipe_novo_pedido( $user ) {
+		$para = CAV_SMTP::equipe();
+		if ( ! $user instanceof WP_User || ! $para ) {
+			return false;
+		}
+
+		$tipo = CAV_Solicitacoes::tipo( $user->ID );
+		$nome = trim( $user->first_name . ' ' . $user->last_name );
+
+		$m = CAV_Modelos::montar( 'equipe_novo_pedido', [
+			'nome'     => '' !== $nome ? $nome : $user->display_name,
+			'email'    => $user->user_email,
+			'whatsapp' => (string) get_user_meta( $user->ID, CAV_Solicitacoes::META_WHATSAPP, true ),
+			'tipo'     => CAV_Solicitacoes::rotulo_tipo( $tipo ),
+			'valor'    => CAV_Config::formatar( CAV_Config::valor_para( $tipo ) ),
+		], admin_url( 'admin.php?page=cav-aprovacoes' ) );
+
+		$h   = self::headers();
+		$h[] = 'Reply-To: ' . $user->user_email;
+		return wp_mail( $para, $m['assunto'], $m['html'], $h );
+	}
+
+	/** Avisa a equipe que um estabelecimento se candidatou. */
+	public static function equipe_nova_candidatura( $email, $nome_estab, $responsavel, $beneficio ) {
+		$para = CAV_SMTP::equipe();
+		if ( ! $para ) {
+			return false;
+		}
+
+		$m = CAV_Modelos::montar( 'equipe_nova_candidatura', [
+			'estabelecimento' => $nome_estab,
+			'responsavel'     => $responsavel,
+			'email'           => $email,
+			'proposta'        => $beneficio,
+		], admin_url( 'admin.php?page=cav-aprovacoes' ) );
+
+		$h = self::headers();
+		if ( is_email( $email ) ) {
+			$h[] = 'Reply-To: ' . $email;
+		}
+		return wp_mail( $para, $m['assunto'], $m['html'], $h );
+	}
+
 	public static function membro_aprovado( WP_User $user, $validade ) {
 		$m = CAV_Modelos::montar( 'membro_aprovado', [
 			'nome'     => CAV_Membro::primeiro_nome( $user ),

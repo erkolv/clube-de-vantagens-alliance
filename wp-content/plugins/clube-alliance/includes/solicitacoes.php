@@ -389,6 +389,7 @@ class CAV_Solicitacoes {
 
 		// O aluno recebe o pedido por e-mail, com o link de pagamento quando ele estiver configurado.
 		CAV_Emails::pedido_recebido( get_userdata( $user_id ) );
+		CAV_Emails::equipe_novo_pedido( get_userdata( $user_id ) );
 
 		self::voltar( 'enviado', [ 't' => $tipo ] );
 	}
@@ -557,6 +558,7 @@ class CAV_Solicitacoes {
 
 		do_action( 'cav_candidatura_recebida', $post_id );
 		CAV_Emails::candidatura_recebida( $email, $estab, $resp, $ben );
+		CAV_Emails::equipe_nova_candidatura( $email, $estab, $resp, $ben );
 		self::voltar( 'candidatura_enviada' );
 	}
 

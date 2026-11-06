@@ -166,6 +166,39 @@ class CAV_Modelos {
 				'botao'      => 'Ver o resultado',
 				'rodape'     => self::rodape_padrao(),
 			],
+			'equipe_novo_pedido' => [
+				'nome'       => 'Aviso para a equipe: novo pedido',
+				'quando'     => 'Vai para o e-mail da equipe (Clube → E-mails) quando alguém preenche "Quero fazer parte".',
+				'marcadores' => [
+					'nome'     => 'Nome completo da pessoa',
+					'email'    => 'E-mail da pessoa',
+					'whatsapp' => 'WhatsApp da pessoa (a linha some se ela não informou)',
+					'tipo'     => 'Aluno ou Não aluno',
+					'valor'    => 'Valor do clube para ela',
+					'botao'    => 'Botão para abrir as Aprovações',
+				],
+				'assunto'    => 'Novo pedido no clube: {nome}',
+				'titulo'     => 'Novo pedido no clube',
+				'corpo'      => "**{nome}** pediu para entrar no clube.\n\n**E-mail:** {email}\n\n**WhatsApp:** {whatsapp}\n\n**Tipo:** {tipo} ({valor})\n\nQuando o pagamento for confirmado, aprove o pedido:\n\n{botao}",
+				'botao'      => 'Abrir as Aprovações',
+				'rodape'     => 'Aviso automático do site do clube. Para responder à pessoa, é só responder este e-mail.',
+			],
+			'equipe_nova_candidatura' => [
+				'nome'       => 'Aviso para a equipe: nova candidatura de parceiro',
+				'quando'     => 'Vai para o e-mail da equipe (Clube → E-mails) quando um estabelecimento se candidata no site.',
+				'marcadores' => [
+					'estabelecimento' => 'Nome do estabelecimento',
+					'responsavel'     => 'Nome do responsável',
+					'email'           => 'E-mail do responsável',
+					'proposta'        => 'O benefício que o estabelecimento propôs',
+					'botao'           => 'Botão para abrir as Aprovações',
+				],
+				'assunto'    => 'Nova candidatura de parceiro: {estabelecimento}',
+				'titulo'     => 'Nova candidatura de parceiro',
+				'corpo'      => "**{estabelecimento}** quer ser parceiro do clube.\n\n**Responsável:** {responsavel}\n\n**E-mail:** {email}\n\n**O que propôs:**\n{proposta}\n\n{botao}",
+				'botao'      => 'Abrir as Aprovações',
+				'rodape'     => 'Aviso automático do site do clube. Para responder ao estabelecimento, é só responder este e-mail.',
+			],
 			'wp_redefinir_senha' => [
 				'nome'       => 'Criar nova senha (esqueci a senha)',
 				'quando'     => 'Quando alguém usa "Esqueci minha senha".',
@@ -203,7 +236,10 @@ class CAV_Modelos {
 	public static function exemplo( $chave ) {
 		$link = home_url( '/' );
 		$vars = [
-			'nome'            => 'Camila',
+			'nome'            => false !== strpos( $chave, 'equipe_' ) ? 'Camila Souza' : 'Camila',
+			'email'           => 'camila@exemplo.com.br',
+			'whatsapp'        => '(11) 99999-0000',
+			'tipo'            => 'Aluno',
 			'valor'           => 'R$ 300,00',
 			'prazo'           => '12 meses',
 			'validade'        => wp_date( 'd/m/Y', strtotime( '+12 months' ) ),

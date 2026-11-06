@@ -16,6 +16,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 class CAV_SMTP {
 
 	const OPT = 'cav_smtp';
+	const OPT_LOG = 'cav_email_log';
+	const LOG_MAX = 60;
 
 	public static function init() {
 		add_action( 'admin_menu', [ __CLASS__, 'menu' ], 25 );
@@ -25,6 +27,9 @@ class CAV_SMTP {
 		add_action( 'phpmailer_init', [ __CLASS__, 'configurar' ] );
 		add_filter( 'wp_mail_from', [ __CLASS__, 'de_email' ], 99 );
 		add_filter( 'wp_mail_from_name', [ __CLASS__, 'de_nome' ], 99 );
+
+		add_action( 'wp_mail_succeeded', [ __CLASS__, 'registrar_ok' ] );
+		add_action( 'wp_mail_failed', [ __CLASS__, 'registrar_erro' ] );
 	}
 
 	/** Valores salvos, com o que faltar preenchido. */
@@ -40,6 +45,7 @@ class CAV_SMTP {
 			'senha'      => '',
 			'de_email'   => '',
 			'de_nome'    => '',
+			'equipe'     => '',
 		] );
 
 		$c['senha'] = CAV_Cripto::decifrar( $c['senha'] );
@@ -81,6 +87,42 @@ class CAV_SMTP {
 	public static function de_nome( $nome ) {
 		$c = self::cfg();
 		return ( self::ativo() && '' !== trim( $c['de_nome'] ) ) ? $c['de_nome'] : $nome;
+	}
+
+	/**
+	 * Quem recebe os avisos da equipe (pedido novo, candidatura nova). Pode ser mais de um, separados por vírgula.
+	 * Em branco, vai para o e-mail de envio.
+	 */
+	public static function equipe() {
+		$c     = self::cfg();
+		$lista = array_filter( array_map( 'trim', explode( ',', (string) $c['equipe'] ) ), 'is_email' );
+		if ( ! $lista && is_email( $c['de_email'] ) ) {
+			$lista = [ $c['de_email'] ];
+		}
+		return array_values( $lista );
+	}
+
+	/* ------------------------- Registro de envios ------------------------- */
+
+	private static function registrar( $para, $assunto, $erro ) {
+		$log = get_option( self::OPT_LOG, [] );
+		$log = is_array( $log ) ? $log : [];
+		array_unshift( $log, [
+			'em'      => current_time( 'mysql' ),
+			'para'    => implode( ', ', array_map( 'sanitize_email', (array) $para ) ),
+			'assunto' => wp_strip_all_tags( (string) $assunto ),
+			'erro'    => (string) $erro,
+		] );
+		update_option( self::OPT_LOG, array_slice( $log, 0, self::LOG_MAX ), false );
+	}
+
+	public static function registrar_ok( $dados ) {
+		self::registrar( $dados['to'] ?? [], $dados['subject'] ?? '', '' );
+	}
+
+	public static function registrar_erro( $erro ) {
+		$d = is_wp_error( $erro ) ? (array) $erro->get_error_data() : [];
+		self::registrar( $d['to'] ?? [], $d['subject'] ?? '', is_wp_error( $erro ) ? $erro->get_error_message() : 'Falha no envio' );
 	}
 
 	/* ------------------------------ Admin ------------------------------ */
@@ -164,6 +206,11 @@ class CAV_SMTP {
 						<th scope="row"><label for="cav_smtp_de_nome">Nome de envio</label></th>
 						<td><input type="text" id="cav_smtp_de_nome" name="de_nome" value="<?php echo esc_attr( $c['de_nome'] ); ?>" class="regular-text" placeholder="Clube de Vantagens Alliance"></td>
 					</tr>
+					<tr>
+						<th scope="row"><label for="cav_smtp_equipe">Avisos para a equipe</label></th>
+						<td><input type="text" id="cav_smtp_equipe" name="equipe" value="<?php echo esc_attr( $c['equipe'] ); ?>" class="regular-text" placeholder="<?php echo esc_attr( $c['de_email'] ?: 'frontdesk@alliancemogi.com.br' ); ?>">
+							<p class="description">Quem recebe o aviso de pedido novo e de candidatura de parceiro. Para mais de um, separe por vírgula. Em branco, vai para o e-mail de envio.</p></td>
+					</tr>
 				</table>
 
 				<?php submit_button( 'Salvar' ); ?>
@@ -176,6 +223,27 @@ class CAV_SMTP {
 				<?php wp_nonce_field( 'cav_smtp_teste' ); ?>
 				<?php submit_button( 'Enviar e-mail de teste', 'secondary' ); ?>
 			</form>
+
+			<h2>Últimos envios</h2>
+			<p>Os <?php echo (int) self::LOG_MAX; ?> e-mails mais recentes que o site tentou mandar. "Enviado" quer dizer que o servidor de e-mail aceitou; se a pessoa não achou, peça para olhar o spam ou o lixo eletrônico.</p>
+			<?php $log = get_option( self::OPT_LOG, [] ); ?>
+			<?php if ( ! $log ) : ?>
+				<p><em>Nenhum envio registrado ainda.</em></p>
+			<?php else : ?>
+				<table class="widefat striped">
+					<thead><tr><th>Quando</th><th>Para</th><th>Assunto</th><th>Situação</th></tr></thead>
+					<tbody>
+					<?php foreach ( (array) $log as $l ) : ?>
+						<tr>
+							<td><?php echo esc_html( mysql2date( 'd/m/Y H:i', $l['em'] ?? '' ) ); ?></td>
+							<td><?php echo esc_html( $l['para'] ?? '' ); ?></td>
+							<td><?php echo esc_html( $l['assunto'] ?? '' ); ?></td>
+							<td><?php echo empty( $l['erro'] ) ? '<span style="color:#1a7f37">Enviado</span>' : '<span style="color:#b32d2e">Não saiu:</span> <code>' . esc_html( $l['erro'] ) . '</code>'; ?></td>
+						</tr>
+					<?php endforeach; ?>
+					</tbody>
+				</table>
+			<?php endif; ?>
 		</div>
 		<?php
 	}
@@ -207,6 +275,9 @@ class CAV_SMTP {
 			self::volta( 'invalido' );
 		}
 
+		$equipe = isset( $_POST['equipe'] ) ? (string) wp_unslash( $_POST['equipe'] ) : '';
+		$equipe = implode( ', ', array_filter( array_map( 'sanitize_email', array_map( 'trim', explode( ',', $equipe ) ) ), 'is_email' ) );
+
 		$senha = isset( $_POST['senha'] ) ? (string) wp_unslash( $_POST['senha'] ) : '';
 		if ( '' === $senha ) {
 			$senha = get_option( self::OPT, [] )['senha'] ?? ''; // já está embaralhada
@@ -222,6 +293,7 @@ class CAV_SMTP {
 			'senha'     => $senha,
 			'de_email'  => $de,
 			'de_nome'   => isset( $_POST['de_nome'] ) ? sanitize_text_field( wp_unslash( $_POST['de_nome'] ) ) : '',
+			'equipe'    => $equipe,
 		], false );
 
 		unset( $antigo );
