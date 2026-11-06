@@ -591,3 +591,22 @@ table.clube-tabela tbody > tr.total > td { padding-top: 18px; color: var(--clube
 	white-space: nowrap;
 	border: 0;
 }
+
+/* ------------------------------------------------------------------
+ * O reset do tema Hello pinta todo link de azul (#336) no hover.
+ * Aqui o hover padrão vira o dourado do clube; quem tem cor própria
+ * de hover (botões, menu, chips) continua com a sua.
+ * ------------------------------------------------------------------ */
+a:hover,
+a:active { color: var(--clube-ouro); }
+
+/* Sobre fundo dourado, o hover não pode ser dourado. */
+.elementor .e-con.clube-recruta a:not(.elementor-button):hover,
+.elementor .e-con.clube-recruta a:not(.elementor-button):active { color: #141414; text-decoration: underline; }
+
+/* Cartões de parceiro, benefício e evento: o cartão inteiro é link. */
+a.clube-cartao:hover,
+a.clube-cartao:active { color: inherit; }
+a.clube-cartao:hover h2,
+a.clube-cartao:hover h3,
+a.clube-cartao:hover .clube-cartao__titulo { color: var(--clube-ouro); }
