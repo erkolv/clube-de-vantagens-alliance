@@ -595,3 +595,9 @@ a.cav-item:hover { border-color: var(--cav-marca); }
 /* Formulário do estabelecimento: campos opcionais e envio de imagens */
 .cav-form .cav-opcional { font-weight: 400; opacity: .65; font-size: .85em; }
 .cav-form input[type="file"] { width: 100%; max-width: 100%; font-size: .9rem; padding: 8px 0; color: inherit; }
+
+.cav-form textarea {
+	width: 100%; box-sizing: border-box; font: inherit; font-size: 1rem; line-height: 1.5;
+	padding: .8rem .9rem; border: 1px solid rgba(255, 255, 255, .16); border-radius: var(--cav-raio);
+	background: #252525; color: #fff; resize: vertical; min-height: 120px;
+}

@@ -34,6 +34,7 @@ class CAV_Solicitacoes {
 	const CAND_LIMITE   = '_cav_cand_limite';    // nenhum | dia | semana | mes
 	const CAND_LOGO     = '_cav_cand_logo';      // ID do anexo
 	const CAND_FOTO     = '_cav_cand_foto';      // ID do anexo
+	const CAND_DESC     = '_cav_cand_descricao'; // texto "sobre o negócio" da página da loja
 	const CAND_ORIGEM   = '_cav_cand_origem';    // 'nova' (candidatura) ou 'atual' (já era parceiro)
 	const MAX_IMAGEM    = 4194304; // 4 MB
 
@@ -541,6 +542,11 @@ class CAV_Solicitacoes {
 				<input id="cav-chor" name="horario" type="text" placeholder="Seg a sex, 9h às 19h; sáb, 9h às 13h">
 			</div>
 			<div class="cav-campo cav-campo--largo">
+				<label for="cav-cdesc">Conte sobre o seu negócio <span class="cav-opcional">(aparece na página da loja; uns 2 ou 3 parágrafos curtos)</span></label>
+				<textarea id="cav-cdesc" name="descricao" rows="5" maxlength="1500"<?php echo $atual ? ' required' : ''; ?>
+				          placeholder="O que você faz, o que tem de diferente, há quanto tempo está em Mogi…"></textarea>
+			</div>
+			<div class="cav-campo cav-campo--largo">
 				<label for="cav-cben"><?php echo $atual ? 'Qual é o desconto ou benefício para os alunos' : 'Que benefício você quer oferecer'; ?></label>
 				<input id="cav-cben" name="beneficio" type="text" required
 				       placeholder="Ex.: 10% de desconto em tudo">
@@ -678,6 +684,14 @@ class CAV_Solicitacoes {
 			}
 		}
 
+		if ( isset( $_POST['descricao'] ) && is_string( $_POST['descricao'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+			$desc = sanitize_textarea_field( wp_unslash( $_POST['descricao'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
+			$desc = function_exists( 'mb_substr' ) ? mb_substr( $desc, 0, 1500 ) : substr( $desc, 0, 1500 );
+			if ( '' !== trim( $desc ) ) {
+				update_post_meta( $post_id, self::CAND_DESC, $desc );
+			}
+		}
+
 		do_action( 'cav_candidatura_recebida', $post_id );
 		if ( 'atual' === $origem ) {
 			CAV_Emails::dados_parceiro_recebidos( $email, $estab, $resp );
@@ -714,7 +728,7 @@ class CAV_Solicitacoes {
 			'post_type'    => cav_parceiro_post_type(),
 			'post_status'  => $no_ar ? 'publish' : 'draft',
 			'post_title'   => $estab,
-			'post_content' => '',
+			'post_content' => wpautop( esc_html( (string) get_post_meta( $post_id, self::CAND_DESC, true ) ) ),
 		] );
 
 		if ( ! $parceiro_id || is_wp_error( $parceiro_id ) ) {

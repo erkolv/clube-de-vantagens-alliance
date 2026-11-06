@@ -229,6 +229,8 @@ class CAV_Aprovacoes {
 							<td>
 								<?php echo esc_html( get_post_meta( $c->ID, CAV_Solicitacoes::CAND_BEN, true ) ); ?>
 								<?php if ( $regra ) : ?><br><span class="description">Regra: <?php echo esc_html( $regra ); ?></span><?php endif; ?>
+								<?php $desc = get_post_meta( $c->ID, CAV_Solicitacoes::CAND_DESC, true ); ?>
+								<?php if ( $desc ) : ?><details style="margin-top:6px"><summary>Sobre o negócio</summary><div class="description" style="white-space:pre-line;max-width:420px"><?php echo esc_html( $desc ); ?></div></details><?php endif; ?>
 								<?php if ( isset( $lims[ $lim ] ) ) : ?><br><span class="description">Limite: <?php echo esc_html( $lims[ $lim ] ); ?></span><?php endif; ?>
 							</td>
 							<td>
