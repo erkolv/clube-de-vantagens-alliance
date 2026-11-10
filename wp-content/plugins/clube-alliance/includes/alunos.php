@@ -83,7 +83,12 @@ class CAV_Alunos {
 
 		return array_values( array_filter( $lista, static function ( $a ) use ( $q, $achado_cpf, $situacao, $tipo ) {
 			$cod = is_array( $a['pag'] ) && ! empty( $a['pag']['codigo'] ) ? strtolower( (string) $a['pag']['codigo'] ) : '';
-			if ( $situacao && $a['status'] !== $situacao ) {
+			if ( 'vencendo' === $situacao ) {
+				$d = CAV_Renovacao::dias_para_vencer( $a['id'] );
+				if ( 'ok' !== $a['status'] || null === $d || $d > 30 ) {
+					return false;
+				}
+			} elseif ( $situacao && $a['status'] !== $situacao ) {
 				return false;
 			}
 			if ( $tipo && $a['tipo'] !== $tipo ) {
@@ -115,7 +120,7 @@ class CAV_Alunos {
 		$bus = isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( $_GET['q'] ) ) : '';
 		// phpcs:enable
 		return [
-			'situacao' => isset( $rot[ $sit ] ) ? $sit : '',
+			'situacao' => ( isset( $rot[ $sit ] ) || 'vencendo' === $sit ) ? $sit : '',
 			'tipo'     => in_array( $tip, [ 'aluno', 'nao_aluno' ], true ) ? $tip : '',
 			'q'        => substr( $bus, 0, 80 ),
 		];
@@ -136,6 +141,7 @@ class CAV_Alunos {
 			}
 		}
 
+		$n_vencendo = count( self::filtrar( $todos, '', 'vencendo', '' ) );
 		$lista = self::filtrar( $todos, $p['q'], $p['situacao'], $p['tipo'] );
 		$total = count( $lista );
 		// phpcs:ignore WordPress.Security.NonceVerification
@@ -164,6 +170,9 @@ class CAV_Alunos {
 					?>
 					| <li><a href="<?php echo esc_url( add_query_arg( array_filter( [ 'situacao' => $chave, 'tipo' => $p['tipo'], 'q' => $p['q'] ] ), $base ) ); ?>" class="<?php echo $p['situacao'] === $chave ? 'current' : ''; ?>"><?php echo esc_html( $nome ); ?> <span class="count">(<?php echo (int) $conta[ $chave ]; ?>)</span></a></li>
 				<?php endforeach; ?>
+				<?php if ( $n_vencendo ) : ?>
+					| <li><a href="<?php echo esc_url( add_query_arg( array_filter( [ 'situacao' => 'vencendo', 'tipo' => $p['tipo'], 'q' => $p['q'] ] ), $base ) ); ?>" class="<?php echo 'vencendo' === $p['situacao'] ? 'current' : ''; ?>" style="color:#996800">Vencem em 30 dias <span class="count">(<?php echo (int) $n_vencendo; ?>)</span></a></li>
+				<?php endif; ?>
 			</ul>
 
 			<form method="get" style="margin:14px 0;clear:both">
@@ -200,7 +209,22 @@ class CAV_Alunos {
 								<?php if ( $a['resp'] ) : ?><br><span class="description">Responsável: <?php echo esc_html( $a['resp'] ); ?></span><?php endif; ?>
 							</td>
 							<td><span style="color:<?php echo esc_attr( $cor ); ?>;font-weight:600"><?php echo esc_html( $rot[ $a['status'] ] ?? '—' ); ?></span></td>
-							<td><?php echo esc_html( self::data( $a['validade'] ) ); ?></td>
+							<td>
+								<?php echo esc_html( self::data( $a['validade'] ) ); ?>
+								<?php
+								$dias = CAV_Renovacao::dias_para_vencer( $a['id'] );
+								if ( 'ok' === $a['status'] && null !== $dias && $dias <= 30 ) {
+									echo '<br><span class="description" style="color:#996800">' . esc_html( 0 === $dias ? 'vence hoje' : 'faltam ' . $dias . ' dia' . ( 1 === $dias ? '' : 's' ) ) . '</span>';
+								}
+								$ult = CAV_Renovacao::ultima( $a['id'] );
+								if ( $ult ) {
+									echo '<br><span class="description">renovou em ' . esc_html( self::data( substr( $ult['em'], 0, 10 ) ) ) . '</span>';
+								}
+								if ( in_array( $a['status'], [ 'ok', 'expirado' ], true ) ) {
+									echo CAV_Renovacao::botao( $a['id'], add_query_arg( array_filter( [ 'situacao' => $p['situacao'], 'tipo' => $p['tipo'], 'q' => $p['q'], 'pag' => $pag > 1 ? $pag : null ] ), $base ) ); // phpcs:ignore WordPress.Security.EscapeOutput
+								}
+								?>
+							</td>
 							<td><?php echo self::pagamento_html( $a['pag'] ); // phpcs:ignore WordPress.Security.EscapeOutput ?></td>
 							<td><?php echo esc_html( CAV_CPF::formatar( CAV_Membro::cpf_do_usuario( $a['id'] ) ) ?: '—' ); ?></td>
 							<td>
@@ -270,7 +294,13 @@ class CAV_Alunos {
 			'desbloqueado' => [ 'success', 'Participante desbloqueado.' ],
 			'excluido'     => [ 'success', 'Participante excluído, com os dados do cadastro.' ],
 			'invalido'     => [ 'error', 'Não foi possível: só dá para atuar em participantes do clube.' ],
+			'renovado'     => [ 'success', 'Renovação registrada. O participante recebeu um e-mail com a nova validade.' ],
 		];
+		// phpcs:ignore WordPress.Security.NonceVerification
+		$ate = isset( $_GET['cav_ate'] ) ? sanitize_text_field( wp_unslash( $_GET['cav_ate'] ) ) : '';
+		if ( 'renovado' === $c && preg_match( '/^\d{4}-\d{2}-\d{2}$/', $ate ) ) {
+			$mapa['renovado'][1] = 'Renovação registrada: acesso válido até ' . self::data( $ate ) . '. O participante recebeu um e-mail avisando.';
+		}
 		if ( isset( $mapa[ $c ] ) ) {
 			printf( '<div class="notice notice-%s is-dismissible"><p>%s</p></div>', esc_attr( $mapa[ $c ][0] ), esc_html( $mapa[ $c ][1] ) );
 		}

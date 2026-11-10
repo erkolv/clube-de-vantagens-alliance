@@ -16,6 +16,7 @@ class CAV_Install {
 
 	public static function deactivate() {
 		wp_clear_scheduled_hook( 'cav_limpeza_diaria' );
+		wp_clear_scheduled_hook( 'cav_renovacao_diaria' );
 		flush_rewrite_rules();
 	}
 

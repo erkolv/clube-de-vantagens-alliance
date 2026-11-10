@@ -131,6 +131,8 @@ class CAV_Area {
 				</p>
 			</header>
 
+			<?php echo $admin ? '' : CAV_Renovacao::aviso_area( $user ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
+
 			<?php if ( ! $liberado ) : ?>
 				<?php echo CAV_Acesso::bloqueio( 'membros' ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 			<?php else : ?>
