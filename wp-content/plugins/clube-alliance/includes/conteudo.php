@@ -10,6 +10,7 @@ class CAV_Conteudo {
 	const META_PREMIO   = '_cav_premio';
 	const META_GANHADOR = '_cav_ganhador';
 	const META_APURADO  = '_cav_apurado_em';
+	const META_REFEITOS = '_cav_sorteio_refeito'; // histórico: ganhadores anteriores e por que o sorteio foi refeito
 
 	public static function init() {
 		add_action( 'init', [ __CLASS__, 'registrar_cpts' ] );
@@ -17,6 +18,7 @@ class CAV_Conteudo {
 		add_action( 'save_post_cav_conteudo', [ __CLASS__, 'salvar_conteudo' ] );
 		add_action( 'save_post_cav_sorteio', [ __CLASS__, 'salvar_sorteio' ] );
 		add_action( 'admin_post_cav_apurar', [ __CLASS__, 'apurar' ] );
+		add_action( 'admin_post_cav_refazer_sorteio', [ __CLASS__, 'refazer' ] );
 	}
 
 	public static function registrar_cpts() {
@@ -107,6 +109,7 @@ class CAV_Conteudo {
 				<?php if ( $apurado ) : ?>
 					<span class="description">— apurado em <?php echo esc_html( mysql2date( 'd/m/Y H:i', $apurado ) ); ?></span>
 				<?php endif; ?>
+				<?php self::historico_e_refazer( $post ); ?>
 			<?php elseif ( $inscritos > 0 && $post->post_status === 'publish' ) : ?>
 				<br>
 				<a class="button button-primary" style="margin-top:.5rem"
@@ -163,6 +166,107 @@ class CAV_Conteudo {
 			}
 			update_post_meta( $post_id, $meta, $v );
 		}
+	}
+
+	/** Histórico de sorteios refeitos e o formulário para refazer (só administração). */
+	private static function historico_e_refazer( $post ) {
+		$hist = get_post_meta( $post->ID, self::META_REFEITOS, true );
+		$hist = is_array( $hist ) ? $hist : [];
+
+		if ( $hist ) {
+			echo '<div style="margin-top:1rem;padding:.75rem 1rem;background:#f6f7f7;border-left:4px solid #dba617">';
+			echo '<strong>Sorteio refeito ' . count( $hist ) . 'x</strong>';
+			echo '<ul style="margin:.5rem 0 0;list-style:disc;padding-left:1.25rem">';
+			foreach ( $hist as $h ) {
+				$g   = get_userdata( (int) $h['ganhador'] );
+				$por = get_userdata( (int) $h['por'] );
+				printf(
+					'<li>%s, sorteado em %s. Refeito em %s por %s. Motivo: %s</li>',
+					esc_html( $g ? $g->display_name : '#' . (int) $h['ganhador'] ),
+					esc_html( $h['apurado_em'] ? mysql2date( 'd/m/Y H:i', $h['apurado_em'] ) : '—' ),
+					esc_html( mysql2date( 'd/m/Y H:i', $h['em'] ) ),
+					esc_html( $por ? $por->display_name : '—' ),
+					esc_html( $h['motivo'] )
+				);
+			}
+			echo '</ul></div>';
+		}
+
+		if ( ! current_user_can( 'cav_gerenciar' ) || 'publish' !== $post->post_status ) {
+			return;
+		}
+		?>
+		<details style="margin-top:1rem">
+			<summary style="cursor:pointer;color:#b32d2e">Refazer o sorteio</summary>
+			<div style="margin-top:.75rem">
+				<p class="description" style="margin-top:0">Use só se o ganhador não puder receber o prêmio (desistiu, não apareceu, saiu da academia). O ganhador atual fica registrado aqui com o motivo, e quem já foi sorteado não entra de novo.</p>
+				<textarea form="cav-refazer-<?php echo (int) $post->ID; ?>" name="cav_motivo" rows="2" style="width:100%;max-width:600px" placeholder="Motivo (obrigatório). Ex.: não retirou o prêmio até 30/11" required></textarea>
+				<br>
+				<button type="submit" form="cav-refazer-<?php echo (int) $post->ID; ?>" class="button" style="margin-top:.5rem"
+				        onclick="return confirm('Refazer o sorteio? O ganhador atual sai e um novo nome é sorteado entre os outros participantes.');">Refazer sorteio</button>
+			</div>
+		</details>
+		<?php
+		// O formulário fica fora do formulário do editor (não dá para aninhar <form>): vai para o rodapé da tela.
+		add_action( 'admin_footer', static function () use ( $post ) {
+			printf(
+				'<form id="cav-refazer-%1$d" method="post" action="%2$s" style="display:none"><input type="hidden" name="action" value="cav_refazer_sorteio"><input type="hidden" name="sorteio" value="%1$d">%3$s</form>',
+				(int) $post->ID,
+				esc_url( admin_url( 'admin-post.php' ) ),
+				wp_nonce_field( 'cav_refazer_' . $post->ID, '_wpnonce', true, false )
+			);
+		}, 99 );
+	}
+
+	/** Refaz um sorteio já apurado, guardando o ganhador anterior e o motivo. */
+	public static function refazer() {
+		$sorteio_id = isset( $_POST['sorteio'] ) ? absint( $_POST['sorteio'] ) : 0;
+
+		if ( ! $sorteio_id || ! current_user_can( 'cav_gerenciar' ) ) {
+			wp_die( 'Sem permissão.' );
+		}
+		check_admin_referer( 'cav_refazer_' . $sorteio_id );
+
+		$motivo   = isset( $_POST['cav_motivo'] ) ? sanitize_textarea_field( wp_unslash( $_POST['cav_motivo'] ) ) : '';
+		$anterior = (int) get_post_meta( $sorteio_id, self::META_GANHADOR, true );
+
+		if ( ! $anterior ) {
+			wp_die( 'Este sorteio ainda não foi apurado. Use o botão "Sortear ganhador".' );
+		}
+		if ( '' === trim( $motivo ) ) {
+			wp_die( 'Escreva o motivo para refazer o sorteio.', '', [ 'back_link' => true ] );
+		}
+
+		$hist   = get_post_meta( $sorteio_id, self::META_REFEITOS, true );
+		$hist   = is_array( $hist ) ? $hist : [];
+		$hist[] = [
+			'ganhador'   => $anterior,
+			'apurado_em' => (string) get_post_meta( $sorteio_id, self::META_APURADO, true ),
+			'total'      => (int) get_post_meta( $sorteio_id, '_cav_participantes_total', true ),
+			'motivo'     => $motivo,
+			'por'        => get_current_user_id(),
+			'em'         => current_time( 'mysql' ),
+		];
+
+		// Ninguém que já foi sorteado nesse sorteio entra de novo.
+		$fora          = array_map( static function ( $h ) { return (int) $h['ganhador']; }, $hist );
+		$participantes = array_values( array_diff( CAV_Sorteio::participantes(), $fora ) );
+		if ( ! $participantes ) {
+			wp_die( 'Não sobrou nenhum participante com matrícula ativa para sortear.', '', [ 'back_link' => true ] );
+		}
+
+		$ganhador = (int) $participantes[ random_int( 0, count( $participantes ) - 1 ) ];
+
+		update_post_meta( $sorteio_id, self::META_REFEITOS, $hist );
+		update_post_meta( $sorteio_id, self::META_GANHADOR, $ganhador );
+		update_post_meta( $sorteio_id, '_cav_participantes_total', count( $participantes ) );
+		update_post_meta( $sorteio_id, self::META_APURADO, current_time( 'mysql' ) );
+
+		CAV_Emails::sorteio_ganhador( $sorteio_id, $ganhador );
+		do_action( 'cav_sorteio_refeito', $sorteio_id, $ganhador, $anterior, $motivo );
+
+		wp_safe_redirect( get_edit_post_link( $sorteio_id, 'url' ) );
+		exit;
 	}
 
 	/** Sorteio em andamento hoje (dentro do período e ainda sem ganhador)? */
