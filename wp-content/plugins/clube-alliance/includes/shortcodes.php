@@ -132,7 +132,7 @@ class CAV_Shortcodes {
 		$resultados = [];
 
 		foreach ( $posts as $p ) {
-			if ( (int) get_post_meta( $p->ID, CAV_Conteudo::META_GANHADOR, true ) ) {
+			if ( CAV_Sorteio::ganhador_publico( $p->ID ) ) {
 				$resultados[] = $p;
 			} else {
 				$abertos[] = $p;
@@ -148,7 +148,7 @@ class CAV_Shortcodes {
 		} );
 
 		$ganhos = array_filter( $resultados, function ( $p ) use ( $eu ) {
-			return $eu && (int) get_post_meta( $p->ID, CAV_Conteudo::META_GANHADOR, true ) === $eu;
+			return $eu && CAV_Sorteio::ganhador_publico( $p->ID ) === $eu;
 		} );
 
 		ob_start();
@@ -189,7 +189,7 @@ class CAV_Shortcodes {
 	private static function cartao_sorteio( $p, $ativo, $eu ) {
 		$premio   = get_post_meta( $p->ID, CAV_Conteudo::META_PREMIO, true );
 		$fim      = get_post_meta( $p->ID, CAV_Conteudo::META_FIM, true );
-		$ganhador = (int) get_post_meta( $p->ID, CAV_Conteudo::META_GANHADOR, true );
+		$ganhador = CAV_Sorteio::ganhador_publico( $p->ID );
 		$aberto   = CAV_Conteudo::inscricoes_abertas( $p->ID );
 		$ganhei   = $ganhador && $ganhador === (int) $eu;
 		?>

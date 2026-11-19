@@ -10,7 +10,7 @@ class CAV_Conteudo {
 	const META_PREMIO   = '_cav_premio';
 	const META_GANHADOR = '_cav_ganhador';
 	const META_APURADO  = '_cav_apurado_em';
-	const META_REFEITOS = '_cav_sorteio_refeito'; // histórico: ganhadores anteriores e por que o sorteio foi refeito
+	const META_REFEITOS = '_cav_sorteio_refeito'; // histórico: igual a CAV_Sorteio::META_HISTORICO
 
 	public static function init() {
 		add_action( 'init', [ __CLASS__, 'registrar_cpts' ] );
@@ -19,6 +19,7 @@ class CAV_Conteudo {
 		add_action( 'save_post_cav_sorteio', [ __CLASS__, 'salvar_sorteio' ] );
 		add_action( 'admin_post_cav_apurar', [ __CLASS__, 'apurar' ] );
 		add_action( 'admin_post_cav_refazer_sorteio', [ __CLASS__, 'refazer' ] );
+		add_action( 'admin_post_cav_confirmar_sorteio', [ __CLASS__, 'confirmar' ] );
 	}
 
 	public static function registrar_cpts() {
@@ -121,7 +122,7 @@ class CAV_Conteudo {
 				<br>
 				<a class="button button-primary" style="margin-top:.5rem"
 				   href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=cav_apurar&sorteio=' . $post->ID ), 'cav_apurar_' . $post->ID ) ); ?>"
-				   onclick="return confirm('Sortear agora? A apuração é registrada e não pode ser refeita.');">
+				   onclick="return confirm('Sortear agora? Depois você confere o nome e confirma o resultado.');">
 					Sortear ganhador
 				</a>
 			<?php endif; ?>
@@ -175,22 +176,45 @@ class CAV_Conteudo {
 		}
 	}
 
-	/** Histórico de sorteios refeitos e o formulário para refazer (só administração). */
+	/** Histórico, confirmação e "sortear de novo" (só administração). */
 	private static function historico_e_refazer( $post ) {
-		$hist = get_post_meta( $post->ID, self::META_REFEITOS, true );
+		$hist = get_post_meta( $post->ID, CAV_Sorteio::META_HISTORICO, true );
 		$hist = is_array( $hist ) ? $hist : [];
+		$pend = CAV_Sorteio::pendente( $post->ID );
+		$pode = current_user_can( 'cav_gerenciar' ) && 'publish' === $post->post_status;
+		$conf = get_post_meta( $post->ID, CAV_Sorteio::META_CONFIRMADO, true );
+
+		if ( $pend ) {
+			echo '<div style="margin-top:1rem;padding:.9rem 1rem;background:#fff8e5;border-left:4px solid #dba617">';
+			echo '<strong>Aguardando sua confirmação.</strong> O ganhador ainda não foi avisado e o resultado não aparece para os alunos.';
+			if ( $pode ) {
+				printf(
+					'<div style="margin-top:.75rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:flex-start">
+						<button type="submit" form="cav-confirmar-%1$d" class="button button-primary" onclick="return confirm(\'Confirmar o resultado? O ganhador recebe o e-mail e o resultado aparece no site.\');">Confirmar e publicar o resultado</button>
+						<button type="submit" form="cav-refazer-%1$d" class="button" onclick="return confirm(\'Sortear de novo? Este ganhador sai e um novo nome é sorteado.\');">Sortear de novo</button>
+						<input type="text" form="cav-refazer-%1$d" name="cav_motivo" placeholder="Motivo (opcional)" style="min-width:240px">
+					</div>',
+					(int) $post->ID
+				);
+			}
+			echo '</div>';
+		} elseif ( is_array( $conf ) && ! empty( $conf['em'] ) ) {
+			$quem = get_userdata( (int) ( $conf['por'] ?? 0 ) );
+			echo '<br><span class="description" style="color:#1a7f37">Resultado confirmado em ' . esc_html( mysql2date( 'd/m/Y H:i', $conf['em'] ) ) . ( $quem ? ' por ' . esc_html( $quem->display_name ) : '' ) . '.</span>';
+		}
 
 		if ( $hist ) {
-			echo '<div style="margin-top:1rem;padding:.75rem 1rem;background:#f6f7f7;border-left:4px solid #dba617">';
-			echo '<strong>Sorteio refeito ' . count( $hist ) . 'x</strong>';
+			echo '<div style="margin-top:1rem;padding:.75rem 1rem;background:#f6f7f7;border-left:4px solid #8c8f94">';
+			echo '<strong>Sorteado de novo ' . count( $hist ) . 'x</strong>';
 			echo '<ul style="margin:.5rem 0 0;list-style:disc;padding-left:1.25rem">';
 			foreach ( $hist as $h ) {
 				$g   = get_userdata( (int) $h['ganhador'] );
 				$por = get_userdata( (int) $h['por'] );
 				printf(
-					'<li>%s, sorteado em %s. Refeito em %s por %s. Motivo: %s</li>',
+					'<li>%s, sorteado em %s%s. Sorteado de novo em %s por %s. Motivo: %s</li>',
 					esc_html( $g ? $g->display_name : '#' . (int) $h['ganhador'] ),
 					esc_html( $h['apurado_em'] ? mysql2date( 'd/m/Y H:i', $h['apurado_em'] ) : '—' ),
+					empty( $h['confirmado'] ) ? ' (não confirmado)' : ' (já tinha sido confirmado)',
 					esc_html( mysql2date( 'd/m/Y H:i', $h['em'] ) ),
 					esc_html( $por ? $por->display_name : '—' ),
 					esc_html( $h['motivo'] )
@@ -199,33 +223,40 @@ class CAV_Conteudo {
 			echo '</ul></div>';
 		}
 
-		if ( ! current_user_can( 'cav_gerenciar' ) || 'publish' !== $post->post_status ) {
+		if ( ! $pode ) {
 			return;
 		}
-		?>
-		<details style="margin-top:1rem">
-			<summary style="cursor:pointer;color:#b32d2e">Refazer o sorteio</summary>
-			<div style="margin-top:.75rem">
-				<p class="description" style="margin-top:0">Use só se o ganhador não puder receber o prêmio (desistiu, não apareceu, saiu da academia). O ganhador atual fica registrado aqui com o motivo, e quem já foi sorteado não entra de novo.</p>
-				<textarea form="cav-refazer-<?php echo (int) $post->ID; ?>" name="cav_motivo" rows="2" style="width:100%;max-width:600px" placeholder="Motivo (obrigatório). Ex.: não retirou o prêmio até 30/11" required></textarea>
-				<br>
-				<button type="submit" form="cav-refazer-<?php echo (int) $post->ID; ?>" class="button" style="margin-top:.5rem"
-				        onclick="return confirm('Refazer o sorteio? O ganhador atual sai e um novo nome é sorteado entre os outros participantes.');">Refazer sorteio</button>
-			</div>
-		</details>
-		<?php
-		// O formulário fica fora do formulário do editor (não dá para aninhar <form>): vai para o rodapé da tela.
+
+		if ( ! $pend ) {
+			?>
+			<details style="margin-top:1rem">
+				<summary style="cursor:pointer;color:#b32d2e">Refazer o sorteio</summary>
+				<div style="margin-top:.75rem">
+					<p class="description" style="margin-top:0">O resultado já foi confirmado e o ganhador avisado. Use só se ele não puder receber o prêmio (desistiu, não apareceu, saiu da academia). O ganhador atual fica registrado aqui com o motivo, e o novo resultado também precisa ser confirmado.</p>
+					<textarea form="cav-refazer-<?php echo (int) $post->ID; ?>" name="cav_motivo" rows="2" style="width:100%;max-width:600px" placeholder="Motivo (obrigatório). Ex.: não retirou o prêmio até 30/11" required></textarea>
+					<br>
+					<button type="submit" form="cav-refazer-<?php echo (int) $post->ID; ?>" class="button" style="margin-top:.5rem"
+					        onclick="return confirm('Refazer o sorteio? O ganhador atual sai e um novo nome é sorteado entre os outros participantes.');">Refazer sorteio</button>
+				</div>
+			</details>
+			<?php
+		}
+
+		// Os formulários ficam fora do formulário do editor (não dá para aninhar <form>): vão para o rodapé.
 		add_action( 'admin_footer', static function () use ( $post ) {
+			$acao = esc_url( admin_url( 'admin-post.php' ) );
 			printf(
-				'<form id="cav-refazer-%1$d" method="post" action="%2$s" style="display:none"><input type="hidden" name="action" value="cav_refazer_sorteio"><input type="hidden" name="sorteio" value="%1$d">%3$s</form>',
+				'<form id="cav-refazer-%1$d" method="post" action="%2$s" style="display:none"><input type="hidden" name="action" value="cav_refazer_sorteio"><input type="hidden" name="sorteio" value="%1$d">%3$s</form>
+				<form id="cav-confirmar-%1$d" method="post" action="%2$s" style="display:none"><input type="hidden" name="action" value="cav_confirmar_sorteio"><input type="hidden" name="sorteio" value="%1$d">%4$s</form>',
 				(int) $post->ID,
-				esc_url( admin_url( 'admin-post.php' ) ),
-				wp_nonce_field( 'cav_refazer_' . $post->ID, '_wpnonce', true, false )
+				$acao,
+				wp_nonce_field( 'cav_refazer_' . $post->ID, '_wpnonce', true, false ),
+				wp_nonce_field( 'cav_confirmar_' . $post->ID, '_wpnonce', true, false )
 			);
 		}, 99 );
 	}
 
-	/** Refaz um sorteio já apurado, guardando o ganhador anterior e o motivo. */
+	/** Sorteia de novo. Antes da confirmação o motivo é opcional; depois, obrigatório. */
 	public static function refazer() {
 		$sorteio_id = isset( $_POST['sorteio'] ) ? absint( $_POST['sorteio'] ) : 0;
 
@@ -234,43 +265,35 @@ class CAV_Conteudo {
 		}
 		check_admin_referer( 'cav_refazer_' . $sorteio_id );
 
-		$motivo   = isset( $_POST['cav_motivo'] ) ? sanitize_textarea_field( wp_unslash( $_POST['cav_motivo'] ) ) : '';
-		$anterior = (int) get_post_meta( $sorteio_id, self::META_GANHADOR, true );
-
-		if ( ! $anterior ) {
+		if ( ! get_post_meta( $sorteio_id, self::META_GANHADOR, true ) ) {
 			wp_die( 'Este sorteio ainda não foi apurado. Use o botão "Sortear ganhador".' );
 		}
-		if ( '' === trim( $motivo ) ) {
-			wp_die( 'Escreva o motivo para refazer o sorteio.', '', [ 'back_link' => true ] );
+		$pend   = CAV_Sorteio::pendente( $sorteio_id );
+		$motivo = isset( $_POST['cav_motivo'] ) ? trim( sanitize_textarea_field( wp_unslash( $_POST['cav_motivo'] ) ) ) : '';
+		if ( '' === $motivo ) {
+			if ( ! $pend ) {
+				wp_die( 'Escreva o motivo para refazer o sorteio.', '', [ 'back_link' => true ] );
+			}
+			$motivo = 'Sorteado de novo antes de confirmar';
 		}
 
-		$hist   = get_post_meta( $sorteio_id, self::META_REFEITOS, true );
-		$hist   = is_array( $hist ) ? $hist : [];
-		$hist[] = [
-			'ganhador'   => $anterior,
-			'apurado_em' => (string) get_post_meta( $sorteio_id, self::META_APURADO, true ),
-			'total'      => (int) get_post_meta( $sorteio_id, '_cav_participantes_total', true ),
-			'motivo'     => $motivo,
-			'por'        => get_current_user_id(),
-			'em'         => current_time( 'mysql' ),
-		];
-
-		// Ninguém que já foi sorteado nesse sorteio entra de novo, nem quem foi tirado da lista.
-		$fora          = array_merge( CAV_Sorteio::excluidos( $sorteio_id ), array_map( static function ( $h ) { return (int) $h['ganhador']; }, $hist ) );
-		$participantes = array_values( array_diff( CAV_Sorteio::participantes(), $fora ) );
-		if ( ! $participantes ) {
+		if ( ! CAV_Sorteio::sortear_de_novo( $sorteio_id, $motivo, get_current_user_id() ) ) {
 			wp_die( 'Não sobrou nenhum participante com matrícula ativa para sortear.', '', [ 'back_link' => true ] );
 		}
 
-		$ganhador = (int) $participantes[ random_int( 0, count( $participantes ) - 1 ) ];
+		wp_safe_redirect( get_edit_post_link( $sorteio_id, 'url' ) );
+		exit;
+	}
 
-		update_post_meta( $sorteio_id, self::META_REFEITOS, $hist );
-		update_post_meta( $sorteio_id, self::META_GANHADOR, $ganhador );
-		update_post_meta( $sorteio_id, '_cav_participantes_total', count( $participantes ) );
-		update_post_meta( $sorteio_id, self::META_APURADO, current_time( 'mysql' ) );
+	/** Confirma o resultado: avisa o ganhador e publica para os alunos. */
+	public static function confirmar() {
+		$sorteio_id = isset( $_POST['sorteio'] ) ? absint( $_POST['sorteio'] ) : 0;
 
-		CAV_Emails::sorteio_ganhador( $sorteio_id, $ganhador );
-		do_action( 'cav_sorteio_refeito', $sorteio_id, $ganhador, $anterior, $motivo );
+		if ( ! $sorteio_id || ! current_user_can( 'cav_gerenciar' ) ) {
+			wp_die( 'Sem permissão.' );
+		}
+		check_admin_referer( 'cav_confirmar_' . $sorteio_id );
+		CAV_Sorteio::confirmar( $sorteio_id, get_current_user_id() );
 
 		wp_safe_redirect( get_edit_post_link( $sorteio_id, 'url' ) );
 		exit;
@@ -306,20 +329,10 @@ class CAV_Conteudo {
 			wp_die( 'Este sorteio já foi apurado.' );
 		}
 
-		$participantes = CAV_Sorteio::participantes_do_sorteio( $sorteio_id );
-		if ( ! $participantes ) {
+		if ( ! CAV_Sorteio::registrar( $sorteio_id, CAV_Sorteio::participantes_do_sorteio( $sorteio_id ) ) ) {
 			wp_die( 'Nenhum participante com matrícula ativa para sortear.' );
 		}
-
-		$ganhador = (int) $participantes[ random_int( 0, count( $participantes ) - 1 ) ];
-
-		update_post_meta( $sorteio_id, self::META_GANHADOR, $ganhador );
-		update_post_meta( $sorteio_id, '_cav_participantes_total', count( $participantes ) );
-		update_post_meta( $sorteio_id, self::META_APURADO, current_time( 'mysql' ) );
-
-		// Avisa o ganhador. Se o e-mail falhar, o resultado continua valendo e aparece na área dele.
-		CAV_Emails::sorteio_ganhador( $sorteio_id, $ganhador );
-		do_action( 'cav_sorteio_apurado', $sorteio_id, $ganhador );
+		// Ninguém é avisado ainda: o resultado fica aguardando a confirmação.
 
 		wp_safe_redirect( get_edit_post_link( $sorteio_id, 'url' ) );
 		exit;

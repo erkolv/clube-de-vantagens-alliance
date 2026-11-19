@@ -23,6 +23,7 @@ class CAV_SorteioAoVivo {
 		add_action( 'admin_init', [ __CLASS__, 'tela_cheia' ] );
 		add_action( 'admin_post_cav_ao_vivo_lista', [ __CLASS__, 'salvar_lista' ] );
 		add_action( 'wp_ajax_cav_ao_vivo_sortear', [ __CLASS__, 'sortear' ] );
+		add_action( 'wp_ajax_cav_ao_vivo_confirmar', [ __CLASS__, 'confirmar' ] );
 	}
 
 	public static function menu() {
@@ -80,7 +81,7 @@ class CAV_SorteioAoVivo {
 		<?php if ( $premio ) : ?><p style="margin-top:0">Prêmio: <strong><?php echo esc_html( $premio ); ?></strong></p><?php endif; ?>
 
 		<?php if ( $ganhador ) : ?>
-			<div class="notice notice-info inline"><p>Este sorteio já foi apurado. Ganhador: <strong><?php echo esc_html( self::nome( $ganhador, 'completo' ) ); ?></strong>. A tela ao vivo mostra o resultado; para sortear de novo, use "Refazer o sorteio" no sorteio.</p></div>
+			<div class="notice notice-info inline"><p>Este sorteio já foi sorteado. Ganhador: <strong><?php echo esc_html( self::nome( $ganhador, 'completo' ) ); ?></strong><?php echo CAV_Sorteio::pendente( $id ) ? ' (aguardando confirmação: confirme ou sorteie de novo na tela ao vivo)' : ' (resultado confirmado)'; ?>.</p></div>
 		<?php endif; ?>
 
 		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
@@ -202,6 +203,7 @@ class CAV_SorteioAoVivo {
 			'sorteio'  => $id,
 			'nomes'    => array_values( $nomes ),
 			'ganhador' => $ganhador ? self::nome( $ganhador, $modo ) : '',
+			'pendente' => $ganhador && CAV_Sorteio::pendente( $id ),
 		];
 		?>
 <!doctype html>
@@ -237,6 +239,14 @@ button:disabled{opacity:.35;cursor:default;transform:none}
 .sair{position:fixed;top:2vh;left:2vw;color:#666;font-size:12px;text-decoration:none}
 canvas{position:fixed;inset:0;pointer-events:none;z-index:5}
 .erro{color:#ff8a80}
+.acoes{display:none;gap:1rem;justify-content:center;flex-wrap:wrap}
+.pendente .acoes{display:flex}
+.pendente #bt,.confirmado #bt{display:none}
+button.sec{background:transparent;color:#fff;border:2px solid #555;font-size:clamp(14px,1.3vw,20px);padding:1rem 2rem}
+button.sec:hover{border-color:#fff}
+#ok{font-size:clamp(14px,1.4vw,22px);padding:1rem 2.4rem}
+.confirmado-msg{color:#9be7a8;font-size:clamp(13px,1.2vw,20px);display:none}
+.confirmado .confirmado-msg{display:block}
 </style></head>
 <body>
 <a class="sair" href="<?php echo esc_url( self::url( [ 'sorteio' => $id ] ) ); ?>">← voltar</a>
@@ -250,13 +260,15 @@ canvas{position:fixed;inset:0;pointer-events:none;z-index:5}
 <div id="rotulo"><?php echo $ganhador ? 'Ganhador(a)!' : ''; ?></div>
 <div class="info" id="info"><?php echo count( $ids ); ?> participantes concorrendo</div>
 <button id="bt" <?php disabled( $ganhador || ! $ids ); ?>><?php echo $ganhador ? 'Sorteado' : 'Sortear'; ?></button>
+<div class="acoes"><button id="ok">Confirmar resultado</button><button id="denovo" class="sec">Sortear de novo</button></div>
+<div class="confirmado-msg">Resultado confirmado. O ganhador já foi avisado por e-mail.</div>
 <div class="dica">Tecla F: tela cheia · Espaço: sortear</div>
 <canvas id="cf"></canvas>
 <script>
 (function(){
 var D=<?php echo wp_json_encode( $dados ); ?>;
 var el=document.getElementById('nome'),bt=document.getElementById('bt'),info=document.getElementById('info');
-if(D.ganhador){document.body.classList.add('ganhou');}
+if(D.ganhador){document.body.classList.add('ganhou');document.body.classList.add(D.pendente?'pendente':'confirmado');}
 var i=0,rodando=false,parado=false,vel=55,alvo=null,inicio=0;
 function mostra(){el.textContent=D.nomes[i%D.nomes.length];i++;}
 function passo(){
@@ -266,16 +278,31 @@ function passo(){
   if(alvo!==null && vel>520){rodando=false;el.classList.remove('giro');el.textContent=alvo;fim();return;}
   mostra();setTimeout(passo,vel);
 }
-function fim(){document.getElementById('rotulo').textContent='Ganhador(a)!';document.body.classList.add('ganhou');bt.textContent='Sorteado';confete();}
+function fim(){document.getElementById('rotulo').textContent='Ganhador(a)!';document.body.classList.add('ganhou','pendente');bt.textContent='Sorteado';confete();}
+function post(acao,extra){var f=new FormData();f.append('action',acao);f.append('sorteio',D.sorteio);f.append('_wpnonce',D.nonce);for(var k in (extra||{}))f.append(k,extra[k]);
+  return fetch(D.ajax,{method:'POST',body:f,credentials:'same-origin'}).then(function(r){return r.json()}).then(function(j){if(!j.success)throw new Error(j.data||'Erro');return j.data;});}
+function erro(e){rodando=false;el.classList.remove('giro');info.innerHTML='<span class="erro">'+e.message+'</span>';}
 function sortear(){
   if(rodando||parado||bt.disabled||!D.nomes.length)return;
   parado=true;bt.disabled=true;rodando=true;inicio=performance.now();el.classList.add('giro');passo();
-  var f=new FormData();f.append('action','cav_ao_vivo_sortear');f.append('sorteio',D.sorteio);f.append('_wpnonce',D.nonce);
-  fetch(D.ajax,{method:'POST',body:f,credentials:'same-origin'}).then(function(r){return r.json()}).then(function(j){
-    if(!j.success){throw new Error(j.data||'Erro ao sortear');}
-    alvo=j.data.nome;info.textContent=j.data.total+' participantes concorreram';
-  }).catch(function(e){rodando=false;el.classList.remove('giro');el.textContent='—';info.innerHTML='<span class="erro">'+e.message+'</span>';});
+  post('cav_ao_vivo_sortear').then(function(d){alvo=d.nome;info.textContent=d.total+' participantes concorreram';}).catch(function(e){el.textContent='—';erro(e);});
 }
+function girarDeNovo(){
+  if(rodando)return;
+  if(!confirm('Sortear de novo? Este nome sai e outro é sorteado.'))return;
+  var motivo=prompt('Motivo (opcional):','')||'';
+  document.body.classList.remove('ganhou','pendente');document.getElementById('rotulo').textContent='';
+  alvo=null;vel=55;rodando=true;inicio=performance.now();el.classList.add('giro');passo();
+  post('cav_ao_vivo_sortear',{denovo:1,motivo:motivo}).then(function(d){
+    D.nomes=D.nomes.filter(function(n){return n!==d.anterior});alvo=d.nome;info.textContent=d.total+' participantes concorreram';
+  }).catch(erro);
+}
+document.getElementById('denovo').addEventListener('click',girarDeNovo);
+document.getElementById('ok').addEventListener('click',function(){
+  if(!confirm('Confirmar o resultado? O ganhador recebe o e-mail e o resultado aparece no site.'))return;
+  this.disabled=true;
+  post('cav_ao_vivo_confirmar').then(function(){document.body.classList.remove('pendente');document.body.classList.add('confirmado');}).catch(function(e){document.getElementById('ok').disabled=false;erro(e);});
+});
 bt.addEventListener('click',sortear);
 document.addEventListener('keydown',function(e){
   if(e.code==='Space'){e.preventDefault();sortear();}
@@ -300,9 +327,49 @@ if(!D.ganhador&&D.nomes.length){var ocioso=setInterval(function(){if(parado){cle
 		exit;
 	}
 
-	/** Clique em "Sortear": escolhe, grava e avisa o ganhador. */
+	/** Clique em "Sortear" (ou "Sortear de novo"): escolhe e grava como aguardando confirmação. */
 	public static function sortear() {
-		$id = isset( $_POST['sorteio'] ) ? absint( $_POST['sorteio'] ) : 0;
+		$id = self::checar_ajax();
+		$modo  = get_post_meta( $id, self::META_NOMES, true ) ?: 'curto';
+		$atual = (int) get_post_meta( $id, CAV_Conteudo::META_GANHADOR, true );
+
+		if ( ! empty( $_POST['denovo'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+			if ( ! $atual || ! CAV_Sorteio::pendente( $id ) ) {
+				wp_send_json_error( 'O resultado já foi confirmado. Para refazer, use o sorteio no painel.' );
+			}
+			$motivo = isset( $_POST['motivo'] ) ? trim( sanitize_text_field( wp_unslash( $_POST['motivo'] ) ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+			$g = CAV_Sorteio::sortear_de_novo( $id, $motivo ?: 'Sorteado de novo na tela ao vivo, antes de confirmar', get_current_user_id() );
+			if ( ! $g ) {
+				wp_send_json_error( 'Não sobrou ninguém para sortear.' );
+			}
+		} else {
+			if ( $atual ) {
+				wp_send_json_error( 'Este sorteio já foi apurado.' );
+			}
+			$g = CAV_Sorteio::registrar( $id, CAV_Sorteio::participantes_do_sorteio( $id ) );
+			if ( ! $g ) {
+				wp_send_json_error( 'Nenhum participante para sortear.' );
+			}
+		}
+
+		wp_send_json_success( [
+			'nome'     => self::nome( $g, $modo ),
+			'anterior' => $atual ? self::nome( $atual, $modo ) : '',
+			'total'    => (int) get_post_meta( $id, '_cav_participantes_total', true ),
+		] );
+	}
+
+	/** "Confirmar resultado": avisa o ganhador e publica. */
+	public static function confirmar() {
+		$id = self::checar_ajax();
+		if ( ! CAV_Sorteio::confirmar( $id, get_current_user_id() ) ) {
+			wp_send_json_error( 'Nada para confirmar.' );
+		}
+		wp_send_json_success();
+	}
+
+	private static function checar_ajax() {
+		$id = isset( $_POST['sorteio'] ) ? absint( $_POST['sorteio'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification
 		if ( ! $id || ! current_user_can( 'cav_gerenciar' ) || ! check_ajax_referer( 'cav_ao_vivo_sortear_' . $id, '_wpnonce', false ) ) {
 			wp_send_json_error( 'Sem permissão. Recarregue a página.', 403 );
 		}
@@ -310,24 +377,6 @@ if(!D.ganhador&&D.nomes.length){var ocioso=setInterval(function(){if(parado){cle
 		if ( ! $s || 'cav_sorteio' !== $s->post_type || 'publish' !== $s->post_status ) {
 			wp_send_json_error( 'Sorteio não encontrado.' );
 		}
-		if ( get_post_meta( $id, CAV_Conteudo::META_GANHADOR, true ) ) {
-			wp_send_json_error( 'Este sorteio já foi apurado.' );
-		}
-
-		$ids = CAV_Sorteio::participantes_do_sorteio( $id );
-		if ( ! $ids ) {
-			wp_send_json_error( 'Nenhum participante para sortear.' );
-		}
-
-		$ganhador = (int) $ids[ random_int( 0, count( $ids ) - 1 ) ];
-		update_post_meta( $id, CAV_Conteudo::META_GANHADOR, $ganhador );
-		update_post_meta( $id, '_cav_participantes_total', count( $ids ) );
-		update_post_meta( $id, CAV_Conteudo::META_APURADO, current_time( 'mysql' ) );
-
-		CAV_Emails::sorteio_ganhador( $id, $ganhador );
-		do_action( 'cav_sorteio_apurado', $id, $ganhador );
-
-		$modo = get_post_meta( $id, self::META_NOMES, true ) ?: 'curto';
-		wp_send_json_success( [ 'nome' => self::nome( $ganhador, $modo ), 'total' => count( $ids ) ] );
+		return $id;
 	}
 }

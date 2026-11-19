@@ -63,6 +63,85 @@ class CAV_Sorteio {
 		return (int) $ids[ random_int( 0, count( $ids ) - 1 ) ];
 	}
 
+	/*
+	 * Confirmação do resultado.
+	 * Sortear grava o ganhador como "aguardando confirmação": ninguém é avisado e nada aparece
+	 * para os alunos. Só depois de "Confirmar e publicar" o ganhador recebe o e-mail e o
+	 * resultado aparece no site. Antes disso dá para sortear de novo (fica registrado no histórico).
+	 */
+	const META_PENDENTE   = '_cav_aguardando_confirmacao';
+	const META_CONFIRMADO = '_cav_confirmado'; // [ 'em' => mysql, 'por' => user_id ]
+	const META_HISTORICO  = '_cav_sorteio_refeito';
+
+	public static function pendente( $sorteio_id ) {
+		return '1' === (string) get_post_meta( (int) $sorteio_id, self::META_PENDENTE, true );
+	}
+
+	/** Ganhador que pode aparecer para os alunos: 0 enquanto não foi confirmado. */
+	public static function ganhador_publico( $sorteio_id ) {
+		return self::pendente( $sorteio_id ) ? 0 : (int) get_post_meta( (int) $sorteio_id, CAV_Conteudo::META_GANHADOR, true );
+	}
+
+	/** Sorteia entre $participantes e grava como "aguardando confirmação". Devolve o ganhador. */
+	public static function registrar( $sorteio_id, array $participantes ) {
+		$participantes = array_values( $participantes );
+		if ( ! $participantes ) {
+			return 0;
+		}
+		$ganhador = (int) $participantes[ random_int( 0, count( $participantes ) - 1 ) ];
+		update_post_meta( $sorteio_id, CAV_Conteudo::META_GANHADOR, $ganhador );
+		update_post_meta( $sorteio_id, '_cav_participantes_total', count( $participantes ) );
+		update_post_meta( $sorteio_id, CAV_Conteudo::META_APURADO, current_time( 'mysql' ) );
+		update_post_meta( $sorteio_id, self::META_PENDENTE, '1' );
+		delete_post_meta( $sorteio_id, self::META_CONFIRMADO );
+		return $ganhador;
+	}
+
+	/** Confirma o resultado: avisa o ganhador e publica para os alunos. */
+	public static function confirmar( $sorteio_id, $por = 0 ) {
+		$ganhador = (int) get_post_meta( $sorteio_id, CAV_Conteudo::META_GANHADOR, true );
+		if ( ! $ganhador || ! self::pendente( $sorteio_id ) ) {
+			return false;
+		}
+		delete_post_meta( $sorteio_id, self::META_PENDENTE );
+		update_post_meta( $sorteio_id, self::META_CONFIRMADO, [ 'em' => current_time( 'mysql' ), 'por' => (int) $por ] );
+		CAV_Emails::sorteio_ganhador( $sorteio_id, $ganhador );
+		do_action( 'cav_sorteio_apurado', $sorteio_id, $ganhador );
+		return true;
+	}
+
+	/**
+	 * Sorteia de novo: o ganhador atual vai para o histórico (com o motivo) e não concorre mais.
+	 * Devolve o novo ganhador, ou 0 se não sobrou ninguém (nesse caso nada muda).
+	 */
+	public static function sortear_de_novo( $sorteio_id, $motivo, $por = 0 ) {
+		$anterior = (int) get_post_meta( $sorteio_id, CAV_Conteudo::META_GANHADOR, true );
+		if ( ! $anterior ) {
+			return 0;
+		}
+		$hist   = get_post_meta( $sorteio_id, self::META_HISTORICO, true );
+		$hist   = is_array( $hist ) ? $hist : [];
+		$novo   = [
+			'ganhador'   => $anterior,
+			'apurado_em' => (string) get_post_meta( $sorteio_id, CAV_Conteudo::META_APURADO, true ),
+			'total'      => (int) get_post_meta( $sorteio_id, '_cav_participantes_total', true ),
+			'motivo'     => $motivo,
+			'por'        => (int) $por,
+			'em'         => current_time( 'mysql' ),
+			'confirmado' => ! self::pendente( $sorteio_id ),
+		];
+		$fora          = array_merge( self::excluidos( $sorteio_id ), array_map( static function ( $h ) { return (int) $h['ganhador']; }, $hist ), [ $anterior ] );
+		$participantes = array_values( array_diff( self::participantes(), $fora ) );
+		if ( ! $participantes ) {
+			return 0;
+		}
+		$hist[] = $novo;
+		update_post_meta( $sorteio_id, self::META_HISTORICO, $hist );
+		$g = self::registrar( $sorteio_id, $participantes );
+		do_action( 'cav_sorteio_refeito', $sorteio_id, $g, $anterior, $motivo );
+		return $g;
+	}
+
 	/** "Rafael M.": nome e inicial do sobrenome. É como o ganhador aparece para os outros alunos. */
 	public static function nome_publico( $user_id ) {
 		$user = get_userdata( (int) $user_id );
@@ -89,7 +168,10 @@ class CAV_Sorteio {
 			'meta_key'       => CAV_Conteudo::META_APURADO,
 			'orderby'        => 'meta_value',
 			'order'          => 'DESC',
-			'meta_query'     => [ [ 'key' => CAV_Conteudo::META_GANHADOR, 'value' => 0, 'compare' => '>', 'type' => 'NUMERIC' ] ],
+			'meta_query'     => [
+				[ 'key' => CAV_Conteudo::META_GANHADOR, 'value' => 0, 'compare' => '>', 'type' => 'NUMERIC' ],
+				[ 'key' => self::META_PENDENTE, 'compare' => 'NOT EXISTS' ],
+			],
 		] );
 	}
 
@@ -105,7 +187,10 @@ class CAV_Sorteio {
 			'meta_key'       => CAV_Conteudo::META_APURADO,
 			'orderby'        => 'meta_value',
 			'order'          => 'DESC',
-			'meta_query'     => [ [ 'key' => CAV_Conteudo::META_GANHADOR, 'value' => (int) $membro_id, 'type' => 'NUMERIC' ] ],
+			'meta_query'     => [
+				[ 'key' => CAV_Conteudo::META_GANHADOR, 'value' => (int) $membro_id, 'type' => 'NUMERIC' ],
+				[ 'key' => self::META_PENDENTE, 'compare' => 'NOT EXISTS' ],
+			],
 		] );
 	}
 
