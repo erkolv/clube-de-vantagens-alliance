@@ -79,7 +79,8 @@ class CAV_Conteudo {
 		$premio   = get_post_meta( $post->ID, self::META_PREMIO, true );
 		$ganhador = (int) get_post_meta( $post->ID, self::META_GANHADOR, true );
 		$apurado  = get_post_meta( $post->ID, self::META_APURADO, true );
-		$inscritos = CAV_Sorteio::contar();
+		$inscritos = count( CAV_Sorteio::participantes_do_sorteio( $post->ID ) );
+		$tirados   = count( array_intersect( CAV_Sorteio::excluidos( $post->ID ), CAV_Sorteio::participantes() ) );
 
 		wp_nonce_field( 'cav_salvar_sorteio', 'cav_sorteio_nonce' );
 		?>
@@ -103,6 +104,12 @@ class CAV_Conteudo {
 		<hr>
 		<p>
 			<strong><?php echo esc_html( $inscritos ); ?></strong> participante(s) agora (membros com matrícula ativa).
+			<?php if ( $tirados ) : ?>
+				<span class="description">(<?php echo (int) $tirados; ?> tirado(s) da lista)</span>
+			<?php endif; ?>
+			<?php if ( current_user_can( 'cav_gerenciar' ) && 'publish' === $post->post_status ) : ?>
+				<br><a href="<?php echo esc_url( admin_url( 'admin.php?page=cav-sorteio-ao-vivo&sorteio=' . $post->ID ) ); ?>">Sorteio ao vivo: escolher quem participa e abrir a tela do sorteio</a>
+			<?php endif; ?>
 			<?php if ( $ganhador ) :
 				$g = get_userdata( $ganhador ); ?>
 				<br><strong>Ganhador:</strong> <?php echo esc_html( $g ? $g->display_name : '#' . $ganhador ); ?>
@@ -248,8 +255,8 @@ class CAV_Conteudo {
 			'em'         => current_time( 'mysql' ),
 		];
 
-		// Ninguém que já foi sorteado nesse sorteio entra de novo.
-		$fora          = array_map( static function ( $h ) { return (int) $h['ganhador']; }, $hist );
+		// Ninguém que já foi sorteado nesse sorteio entra de novo, nem quem foi tirado da lista.
+		$fora          = array_merge( CAV_Sorteio::excluidos( $sorteio_id ), array_map( static function ( $h ) { return (int) $h['ganhador']; }, $hist ) );
 		$participantes = array_values( array_diff( CAV_Sorteio::participantes(), $fora ) );
 		if ( ! $participantes ) {
 			wp_die( 'Não sobrou nenhum participante com matrícula ativa para sortear.', '', [ 'back_link' => true ] );
@@ -299,7 +306,7 @@ class CAV_Conteudo {
 			wp_die( 'Este sorteio já foi apurado.' );
 		}
 
-		$participantes = CAV_Sorteio::participantes();
+		$participantes = CAV_Sorteio::participantes_do_sorteio( $sorteio_id );
 		if ( ! $participantes ) {
 			wp_die( 'Nenhum participante com matrícula ativa para sortear.' );
 		}

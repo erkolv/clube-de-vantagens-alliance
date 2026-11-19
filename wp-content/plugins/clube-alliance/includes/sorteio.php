@@ -21,6 +21,30 @@ class CAV_Sorteio {
 		} ) );
 	}
 
+	/** Meta do sorteio com quem foi tirado da lista na tela de sorteio ao vivo (testes, equipe...). */
+	const META_EXCLUIDOS = '_cav_excluidos';
+
+	/** Quem foi tirado deste sorteio. */
+	public static function excluidos( $sorteio_id ) {
+		$ids = get_post_meta( (int) $sorteio_id, self::META_EXCLUIDOS, true );
+		return is_array( $ids ) ? array_map( 'intval', $ids ) : [];
+	}
+
+	/**
+	 * Quem concorre neste sorteio: membros ativos, menos quem foi tirado da lista
+	 * e menos quem já ganhou este sorteio antes de ele ser refeito.
+	 */
+	public static function participantes_do_sorteio( $sorteio_id ) {
+		$fora = self::excluidos( $sorteio_id );
+		$hist = get_post_meta( (int) $sorteio_id, '_cav_sorteio_refeito', true );
+		if ( is_array( $hist ) ) {
+			foreach ( $hist as $h ) {
+				$fora[] = (int) $h['ganhador'];
+			}
+		}
+		return array_values( array_diff( self::participantes(), $fora ) );
+	}
+
 	public static function contar() {
 		return count( self::participantes() );
 	}
